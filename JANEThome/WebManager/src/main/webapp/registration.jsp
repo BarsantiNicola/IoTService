@@ -13,6 +13,7 @@
     <title>JANET home User Registration</title>
 
     <!-- Icons font CSS-->
+    <link rel="icon" type="image/png" href="resources/login/images/icons/favicon.ico"/>
     <link href="resources/registration/vendor/mdi-font/css/material-design-iconic-font.min.css" rel="stylesheet" media="all">
     <link href="resources/registration/vendor/font-awesome-4.7/css/font-awesome.min.css" rel="stylesheet" media="all">
 
@@ -29,59 +30,57 @@
         <div class="wrapper wrapper--w680">
             <div class="card card-4">
                 <div class="card-body">
+                    <div class="login100-pic js-tilt pic-reg" data-tilt>
+                        <img src="resources/login/images/logo.png" alt="IMG">
+                    </div>
                     <h2 class="title">Registration Form</h2>
+
                     <form method="POST">
                         <div class="row row-space">
+
                             <div class="col-2">
-                                <div class="input-group">
-                                    <label class="label">first name</label>
-                                    <input class="input--style-4" type="text" name="first_name">
+                                <div class="wrap-input100 validate-input" data-validate = "Valid email is required: ex@abc.xyz">
+                                    <input class="input100" type="text" name="name" placeholder="First Name">
+                                    <span class="focus-input100"></span>
+                                    <span class="symbol-input100">
+                                        <i class="fa fa-user-circle" aria-hidden="true"></i>
+						            </span>
                                 </div>
                             </div>
                             <div class="col-2">
-                                <div class="input-group">
-                                    <label class="label">last name</label>
-                                    <input class="input--style-4" type="text" name="last_name">
-                                </div>
-                            </div>
-                        </div>
-                        <div class="row row-space">
-                            <div class="col-2">
-                                <div class="input-group">
-                                    <label class="label">Birthday</label>
-                                    <div class="input-group-icon">
-                                        <input class="input--style-4 js-datepicker" type="text" name="birthday">
-                                        <i class="zmdi zmdi-calendar-note input-icon js-btn-calendar"></i>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="col-2">
-                                <div class="input-group">
-                                    <label class="label">Gender</label>
-                                    <div class="p-t-10">
-                                        <label class="radio-container m-r-45">Male
-                                            <input type="radio" checked="checked" name="gender">
-                                            <span class="checkmark"></span>
-                                        </label>
-                                        <label class="radio-container">Female
-                                            <input type="radio" name="gender">
-                                            <span class="checkmark"></span>
-                                        </label>
-                                    </div>
+                                <div class="wrap-input100 validate-input" data-validate = "Valid email is required: ex@abc.xyz">
+                                    <input class="input100" type="text" name="surname" placeholder="Last Name">
+                                    <span class="focus-input100"></span>
+                                    <span class="symbol-input100">
+                                        <i class="fa fa-user-circle" aria-hidden="true"></i>
+						            </span>
                                 </div>
                             </div>
                         </div>
                         <div class="row row-space">
                             <div class="col-2">
-                                <div class="input-group">
-                                    <label class="label">Email</label>
-                                    <input class="input--style-4" type="email" name="email">
+                                <div class="wrap-input100 validate-input" >
+                                </div>
+
+                            </div>
+                        </div>
+                        <div class="row row-space">
+                            <div class="col-2">
+                                <div class="wrap-input100 validate-input" data-validate = "Valid email is required: ex@abc.xyz">
+                                    <input class="input100" type="text" name="email" placeholder="Email">
+                                    <span class="focus-input100"></span>
+                                    <span class="symbol-input100">
+                                        <i class="fa fa-envelope" aria-hidden="true"></i>
+						            </span>
                                 </div>
                             </div>
                             <div class="col-2">
-                                <div class="input-group">
-                                    <label class="label">Phone Number</label>
-                                    <input class="input--style-4" type="text" name="phone">
+                                <div class="wrap-input100 validate-input">
+                                    <input class="input100" type="password" name="password" placeholder="Password">
+                                    <span class="focus-input100"></span>
+                                    <span class="symbol-input100">
+                                        <i class="fa fa-lock" aria-hidden="true"></i>
+						            </span>
                                 </div>
                             </div>
                         </div>
@@ -101,6 +100,7 @@
     </div>
 
 </body><!-- This templates was made by Colorlib (https://colorlib.com) -->
+
 
 </html>
 <!-- end document-->

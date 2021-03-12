@@ -33,12 +33,12 @@
                     <h2 class="title">Change Password</h2>
                     <form method="POST">
                         <div class="row row-space">
-                                <p class="paragraph">Insert the mail used during registration to receive a link to change your password</p>
-                                <div class="wrap-input100 validate-input" data-validate = "Valid email is required: ex@abc.xyz">
-                                    <input class="input100" type="text" name="email" placeholder="Email">
+                                <p class="paragraph">Insert the new password, the old password will be replaced</p>
+                                <div class="wrap-input100 validate-input">
+                                    <input class="input100" type="text" name="password" placeholder="New Password">
                                     <span class="focus-input100"></span>
                                     <span class="symbol-input100">
-                                        <i class="fa fa-envelope" aria-hidden="true"></i>
+                                        <i class="fa fa-lock" aria-hidden="true"></i>
 						            </span>
                                 </div>
                         </div>
@@ -48,7 +48,6 @@
                             </div>
                         </div>
                         <div class="p-t-15">
-                            <button class="buttonC btn btn--radius-2 btn--blue" type="button" onclick="location.href = 'login.jsp';">Return</button>
                             <button class="btn btn--radius-2 btn--green" type="submit">Send Email</button>
                         </div>
                     </form>

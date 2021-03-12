@@ -70,7 +70,7 @@
 						<span class="txt1">
 							Forgot
 						</span>
-                    <a class="txt2" href="#" onclick="location.href = 'password.jsp';">
+                    <a class="txt2" href="#" onclick="location.href = 'status.jsp';">
                         Username / Password?
                     </a>
                 </div>
