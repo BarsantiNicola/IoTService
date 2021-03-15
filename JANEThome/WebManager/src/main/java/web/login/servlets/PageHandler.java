@@ -6,14 +6,14 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 
-@WebServlet(name="Login", urlPatterns={"/auth"})
-public class LoginHandler extends HttpServlet {
+@WebServlet(name="Page", urlPatterns={"/login"})
+public class PageHandler extends HttpServlet {
 
     public void service(HttpServletRequest req, HttpServletResponse resp)
             throws IOException {
 
         resp.setContentType("text/html");
-        resp.sendRedirect("main.jsp");
+        resp.sendRedirect("login.jsp");
         //  TODO Insert cookie management for automatic login
 
     }

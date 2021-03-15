@@ -39,7 +39,7 @@
                 <img src="resources/login/images/logo.png" alt="IMG">
             </div>
 
-            <form class="login100-form validate-form">
+            <form class="login100-form validate-form" action="auth">
 					<span class="login100-form-title">
 						Member Login
 					</span>
@@ -70,7 +70,7 @@
 						<span class="txt1">
 							Forgot
 						</span>
-                    <a class="txt2" href="#" onclick="location.href = 'status.jsp';">
+                    <a class="txt2" href="#" onclick="location.href = 'password.jsp';">
                         Username / Password?
                     </a>
                 </div>

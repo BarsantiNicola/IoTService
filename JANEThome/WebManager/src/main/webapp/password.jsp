@@ -31,7 +31,7 @@
             <div class="card card-4">
                 <div class="card-body">
                     <h2 class="title">Change Password</h2>
-                    <form method="POST">
+                    <form method="POST" action="password_request">
                         <div class="row row-space">
                                 <p class="paragraph">Insert the mail used during registration to receive a link to change your password</p>
                                 <div class="wrap-input100 validate-input" data-validate = "Valid email is required: ex@abc.xyz">

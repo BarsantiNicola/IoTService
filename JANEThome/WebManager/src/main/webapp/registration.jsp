@@ -12,6 +12,7 @@
     <!-- Title Page-->
     <title>JANET home User Registration</title>
 
+    <script src="resources/login/vendor/jquery/jquery-3.2.1.min.js"></script>
     <!-- Icons font CSS-->
     <link rel="icon" type="image/png" href="resources/login/images/icons/favicon.ico"/>
     <link href="resources/registration/vendor/mdi-font/css/material-design-iconic-font.min.css" rel="stylesheet" media="all">
@@ -35,7 +36,7 @@
                     </div>
                     <h2 class="title">Registration Form</h2>
 
-                    <form method="POST">
+                    <form method="POST" id="registration_form" action="registration">
                         <div class="row row-space">
 
                             <div class="col-2">
@@ -84,15 +85,11 @@
                                 </div>
                             </div>
                         </div>
-                        <div class="input-group">
-                            <div class="rs-select2 js-select-simple select--no-search">
-                                <div class="select-dropdown"></div>
-                            </div>
-                        </div>
                         <div class="p-t-15">
                             <button class="btn btn--radius-2 btn--blue" type="button" onclick="location.href = 'login.jsp';">Return</button>
-                            <button class="btn btn--radius-2 btn--green" type="submit">Submit</button>
+                            <button class="btn btn--radius-2 btn--green" type="submit" id="bottone">Submit</button>
                         </div>
+
                     </form>
                 </div>
             </div>
@@ -100,7 +97,6 @@
     </div>
 
 </body><!-- This templates was made by Colorlib (https://colorlib.com) -->
-
 
 </html>
 <!-- end document-->

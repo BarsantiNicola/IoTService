@@ -34,23 +34,43 @@
     <div class="wrapper wrapper--w680">
         <div class="card card-4">
             <div class="card-body">
-                <%if(request.getParameter("request_state").compareTo("registration") == 0){%>
-                <h2 class="title">Registration Completed</h2>
-                <%}
-                else {%>
-                <h2 class="title">Error</h2>
-                <% } %>
+                <%switch(Integer.parseInt(request.getParameter("request_state"))){
+                    case 0: %>
+                        <h2 class="title">Registration Completed</h2>
+                        <%  break;
+                    case 1: %>
+                        <h2 class="title">Confirm your registration</h2>
+                        <%  break;
+                    case 2: %>
+                        <h2 class="title">Reset Password</h2>
+                    <%  break;
+                    default:%>
+                        <h2 class="title">Error</h2>
+                <%}%>
+
                 <form method="POST">
-                    <%if(request.getParameter("request_state").compareTo("registration") == 0){%>
-                    <div class="row row-space">
-                        <p class="paragraph">You have correctly registered into the JANET home Service.</p>
-                    </div>
-                    <%}
-                    else {%>
-                    <div class="row row-space">
-                        <p class="paragraph">An error as occured during the management of the request</p>
-                    </div>
-                    <% } %>
+                    <%switch(Integer.parseInt(request.getParameter("request_state"))){
+                        case 0: %>
+                            <div class="row row-space">
+                            <p class="paragraph">You have correctly registered into the JANET home Service.</p>
+                            </div>
+                            <%  break;
+                        case 1: %>
+                            <div class="row row-space">
+                                <p class="paragraph">We have sent an email to the provided address to confirm your registration</p>
+                            </div>
+                            <%  break;
+                        case 2: %>
+                            <div class="row row-space">
+                                <p class="paragraph">We have sent an email to the provided address for the password change</p>
+                            </div>
+                            <%  break;
+
+                        default:%>
+                            <div class="row row-space">
+                                <p class="paragraph">An error as occured during the management of the request</p>
+                            </div>
+                    <%}%>
                     <div class="input-group">
                         <div class="rs-select2 js-select-simple select--no-search">
                             <div class="select-dropdown"></div>
