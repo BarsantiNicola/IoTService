@@ -3,8 +3,10 @@ package weblogic.login.beans;
 import weblogic.login.interfaces.NamedTokenRemote;
 
 import javax.ejb.Stateful;
+import javax.inject.Named;
 
 @Stateful
+@Named("userData")
 public class UserData extends BasicData implements NamedTokenRemote {
 
     private String firstName;

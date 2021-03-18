@@ -4,6 +4,8 @@ import utils.mail.interfaces.EmailServiceLocal;
 
 import javax.annotation.Resource;
 import javax.ejb.Stateless;
+import javax.enterprise.context.ApplicationScoped;
+import javax.inject.Named;
 import javax.mail.*;
 import javax.mail.internet.*;
 
@@ -14,9 +16,11 @@ import javax.mail.internet.*;
     //               mail to a destination
 
 @Stateless
+@Named("mailService")
 public class EmailSender implements EmailServiceLocal {
 
         @Resource(name = "mail/mailSession")
+        @ApplicationScoped
         public Session mailSession;
 
         //  private function to perform the send of an email using the glassfish javamail session. The session isn't

@@ -1,5 +1,6 @@
 package weblogic.login.servlets;
 
+import javax.enterprise.context.SessionScoped;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;

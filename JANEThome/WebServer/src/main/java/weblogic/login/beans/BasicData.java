@@ -3,10 +3,12 @@ package weblogic.login.beans;
 import weblogic.login.interfaces.BasicTokenRemote;
 
 import javax.ejb.Stateful;
+import javax.enterprise.context.SessionScoped;
 import java.security.SecureRandom;
 import java.util.Random;
 
 @Stateful
+@SessionScoped
 public class BasicData implements BasicTokenRemote {
 
     protected String token;

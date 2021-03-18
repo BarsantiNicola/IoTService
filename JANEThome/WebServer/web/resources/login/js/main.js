@@ -2,7 +2,7 @@
 (function ($) {
     "use strict";
 
-    const input = $('.validate-input .input100');
+    const input = $('.validate-input .input');
 
     $('.validate-form').on('submit',function(){
         let check = true;
@@ -18,7 +18,7 @@
     });
 
 
-    $('.validate-form .input100').each(function(){
+    $('.validate-form .input').each(function(){
         $(this).focus(function(){
            hideValidate(this);
         });
@@ -64,3 +64,4 @@ async function sha256(message) {
     return Array.from(new Uint8Array(hashBuffer));
 
 }
+

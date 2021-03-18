@@ -3,6 +3,7 @@ package weblogic.login.servlets;
 import utils.mail.interfaces.EmailServiceLocal;
 import weblogic.login.interfaces.BasicTokenRemote;
 import javax.ejb.EJB;
+import javax.enterprise.context.SessionScoped;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
@@ -18,6 +19,7 @@ public class PasswordServlet extends HttpServlet {
     @EJB
     private EmailServiceLocal mailService;
 
+    @SessionScoped
     public void service(HttpServletRequest req, HttpServletResponse resp)
             throws IOException {
 

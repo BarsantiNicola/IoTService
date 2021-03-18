@@ -19,35 +19,39 @@
 <body onload="init()">
 
         <div class="limiter">
-            <div id="wrap_main_login" class="container-login100">
-                <div  class="wrap-login100">
-                    <div class="login100-pic js-tilt" data-tilt>
-                        <img src="resources/login/images/logo.png" alt="IMG">
+            <div id="wrap_main_login" class="container-login">
+                <div  class="wrap-login">
+                    <div class="login-pic js-tilt" data-tilt>
+                        <img src="resources/login/images/logo.png" alt="logo">
                     </div>
 
-                    <form class="login100-form validate-form" action="auth">
-					    <span class="login100-form-title">
+                    <form class="login-form validate-form" action="auth">
+					    <span class="login-form-title">
 						    Member Login
 					    </span>
 
-                        <div class="wrap-input100 validate-input" data-validate = "Valid email is required: ex@abc.xyz">
-                            <input class="input100" type="text" name="email" placeholder="Email">
-                            <span class="focus-input100"></span>
-                            <span class="symbol-input100">
+                        <div class="wrap-input validate-input" data-validate = "Valid email is required: ex@abc.xyz">
+                            <label>
+                                <input class="input" type="text" name="email" placeholder="Email">
+                            </label>
+                            <span class="focus-input"></span>
+                            <span class="symbol-input">
 						        <i class="fa fa-envelope" aria-hidden="true"></i>
 					        </span>
                         </div>
 
-                        <div class="wrap-input100 validate-input" data-validate = "Password is required">
-                            <input class="input100" type="password" name="pass" placeholder="Password">
-                            <span class="focus-input100"></span>
-                            <span class="symbol-input100">
+                        <div class="wrap-input validate-input" data-validate = "Password is required">
+                            <label>
+                                <input class="input" type="password" name="pass" placeholder="Password">
+                            </label>
+                            <span class="focus-input"></span>
+                            <span class="symbol-input">
 						        <i class="fa fa-lock" aria-hidden="true"></i>
 					        </span>
                         </div>
 
-                        <div class="container-login100-form-btn">
-                            <button class="login100-form-btn">Login</button>
+                        <div class="container-login-form-btn">
+                            <button class="login-form-btn">Login</button>
                         </div>
 
                         <div class="text-center p-t-12">
@@ -68,8 +72,6 @@
                     </form>
                 </div>
             </div>
-
-            </p>
         </div>
 
         <script src="resources/login/vendor/jquery/jquery-3.2.1.min.js"></script>
