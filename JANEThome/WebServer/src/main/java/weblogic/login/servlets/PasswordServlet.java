@@ -9,12 +9,14 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.util.Scanner;
 
 @WebServlet(name="PasswordRequest", urlPatterns={"/password"})
 public class PasswordServlet extends HttpServlet {
 
     @EJB
+    @SessionScoped
     private BasicTokenRemote data;
 
     @EJB
@@ -37,7 +39,7 @@ public class PasswordServlet extends HttpServlet {
             s.close();
             data.createToken(email);
             if(mailService.sendMailPasswordChange(email,data.getToken(),fragment1, fragment2))
-                resp.sendRedirect("status.jsp?request_state=1");
+                resp.sendRedirect("status.jsp?request_state=2");
             else
                 resp.sendRedirect("status.jsp?request_state=10");
 
@@ -47,12 +49,12 @@ public class PasswordServlet extends HttpServlet {
 
         String token = req.getParameter("token");
         String password = req.getParameter( "password" );
-        if (token != null && password != null ) {
+        if (token != null && password != null && data.isValid(token)) {
             // TODO add verification and password update on mongo
             resp.sendRedirect("status.jsp?request_state=3");
             data.resetToken();
         }else
-            resp.sendRedirect( "password.jsp" );
+            resp.sendRedirect("password.jsp");
 
     }
 

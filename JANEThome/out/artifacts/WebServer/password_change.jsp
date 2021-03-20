@@ -37,16 +37,18 @@
                 <p class="txt2">Insert a new password for your profile</p>
             </div>
             <div class="row row-space">
+
                 <div class="wrap-input validate-input" data-validate = "Password is required">
                     <label>
+
                         <input id="passInput" class="input" type="password" name="password" placeholder="Password">
                     </label>
                     <span id="pass" class="symbol-input">
                                 <i  class="fa fa-user-circle" aria-hidden="true"></i>
                         </span>
-
+                    <input type="hidden" name="token" value=<% out.print('"'+request.getParameter("token")+'"');%>>
                 </div>
-                <input type="hidden" name="token" placeholder="<%out.print(request.getParameter("token"));%>">
+
                 <div class="row2">
                     <div class="container-login-form-btn">
                         <button type="submit" class="login-form-btn">Submit</button>
