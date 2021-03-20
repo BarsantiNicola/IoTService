@@ -26,7 +26,7 @@
 
     function validate (input) {
         if($(input).attr('type') === 'email' || $(input).attr('name') === 'email') {
-            if($(input).val().trim().match(/^([a-zA-Z0-9_\-\.]+)@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.)|(([a-zA-Z0-9\-]+\.)+))([a-zA-Z]{1,5}|[0-9]{1,3})(\]?)$/) == null) {
+            if($(input).val().trim().match(/^([a-zA-Z0-9_\-]+)@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.)|(([a-zA-Z0-9\-]+\.)+))([a-zA-Z]{1,5}|[0-9]{1,3})(?)$/) == null) {
                 return false;
             }
         }
@@ -56,6 +56,18 @@
 $('.js-tilt').tilt({
     scale: 1.1
 })
+function passwordHide(){
+        alert("ok");
+        var elem = document.getElementById("passInput");
+        var icon = document.getElementById('pass');
+        if (elem.getAttribute('type') === 'password') {
+            elem.setAttribute('type', 'text');
+            icon.classList.replace('fa fa-lock', 'fa fa-unlock');
+        } else {
+            elem.setAttribute('type', 'password');
+            icon.classList.replace('fa fa-unlock', 'fa fa-lock');
+        }
+}
 
 async function sha256(message) {
 

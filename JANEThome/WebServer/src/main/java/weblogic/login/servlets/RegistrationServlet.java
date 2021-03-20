@@ -4,11 +4,13 @@ import utils.mail.interfaces.EmailServiceLocal;
 import weblogic.login.interfaces.NamedTokenRemote;
 
 import javax.ejb.EJB;
+import javax.enterprise.context.SessionScoped;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.util.Scanner;
 
 
 @WebServlet(name="Registration", urlPatterns={"/registration"})
@@ -20,6 +22,7 @@ public class RegistrationServlet extends HttpServlet {
     @EJB
     private EmailServiceLocal mailService;
 
+    @SessionScoped
     public void service(HttpServletRequest req, HttpServletResponse resp)
             throws IOException {
 
@@ -30,7 +33,14 @@ public class RegistrationServlet extends HttpServlet {
 
         if(name !=null && surname != null && email != null && password != null ){
             data.setInformations(name, surname, email, password);
-            if(mailService.sendMailLoginConfirm(email,data.getToken()))
+            Scanner s = new Scanner(this.getServletContext().getResourceAsStream("/WEB-INF/registration_confirm_fragment_1")).useDelimiter("\\A");
+            String fragment1 = s.hasNext() ? s.next() : "";
+            s.close();
+            s = new Scanner(this.getServletContext().getResourceAsStream("/WEB-INF/registration_confirm_fragment_2")).useDelimiter("\\A");
+            String fragment2 = s.hasNext() ? s.next() : "";
+            s.close();
+
+            if(mailService.sendMailLoginConfirm(email,data.getToken(), fragment1, fragment2))
                 resp.sendRedirect("status.jsp?request_state=1");
             else
                 resp.sendRedirect("status.jsp?request_state=10");

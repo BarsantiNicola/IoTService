@@ -5,7 +5,7 @@ import javax.ejb.Remote;
 @Remote
 public interface EmailServiceLocal {
 
-    boolean sendMailPasswordChange(String email, String token);
-    boolean sendMailLoginConfirm(String email, String token);
+    boolean sendMailPasswordChange(String email, String token, String fragment1, String fragment2);
+    boolean sendMailLoginConfirm(String email, String token, String fragment1, String fragment2);
 
 }

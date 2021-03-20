@@ -19,7 +19,7 @@ public class UserData extends BasicData implements NamedTokenRemote {
         this.lastName = lastName;
         this.email = email;
         this.password = password;
-        this.createToken();
+        this.createToken(email);
     }
 
     public void resetInformations(){

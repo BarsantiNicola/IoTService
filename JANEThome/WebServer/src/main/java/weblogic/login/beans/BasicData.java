@@ -12,9 +12,10 @@ import java.util.Random;
 public class BasicData implements BasicTokenRemote {
 
     protected String token;
+    private String email;
     protected static final char[] allAllowed = "abcdefghijklmnopqrstuvwxyzABCDEFGJKLMNPRSTUVWXYZ0123456789".toCharArray();
 
-    public void createToken(){
+    public void createToken(String email){
 
         StringBuilder password = new StringBuilder();
         Random random = new SecureRandom();
@@ -22,6 +23,7 @@ public class BasicData implements BasicTokenRemote {
             password.append(allAllowed[random.nextInt(allAllowed.length)]);
 
         this.token = password.toString();
+        this.email = email;
 
     }
 
@@ -41,4 +43,5 @@ public class BasicData implements BasicTokenRemote {
         return token;
     }
 
+    public String getUser(){ return email; }
 }

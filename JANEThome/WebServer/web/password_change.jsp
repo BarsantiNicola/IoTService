@@ -32,22 +32,25 @@
 
         <h2 class="registration-form-title">Password Change</h2>
 
-        <form method="POST" id="password_form" action="password">
+        <form class="registration-form" method="POST" id="password_form" action="password">
             <div class="row row-space">
-                <p class="txt2">Insert the mail used during registration to receive a link to change your password</p>
+                <p class="txt2">Insert a new password for your profile</p>
             </div>
             <div class="row row-space">
-                    <div class="wrap-input validate-input" data-validate = "Valid email is required: ex@abc.xyz">
-                        <label>
-                            <input class="input" type="email" name="email" placeholder="Email">
-                        </label>
-                        <span class="symbol-input">
-                                <i class="fa fa-user-circle" aria-hidden="true"></i>
+                <div class="wrap-input validate-input" data-validate = "Password is required">
+                    <label>
+                        <input id="passInput" class="input" type="password" name="password" placeholder="Password">
+                    </label>
+                    <span id="pass" class="symbol-input">
+                                <i  class="fa fa-user-circle" aria-hidden="true"></i>
                         </span>
 
+                </div>
+                <input type="hidden" name="token" placeholder="<%out.print(request.getParameter("token"));%>">
+                <div class="row2">
+                    <div class="container-login-form-btn">
+                        <button type="submit" class="login-form-btn">Submit</button>
                     </div>
-                <div class="container-login-form-btn">
-                    <button type="submit" class="login-form-btn">Submit</button>
                 </div>
             </div>
             <div class="row2">
@@ -71,5 +74,3 @@
 </body><!-- This templates was made by Colorlib (https://colorlib.com) -->
 
 </html>
-
-<!-- end document-->

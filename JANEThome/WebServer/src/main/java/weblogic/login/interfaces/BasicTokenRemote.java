@@ -8,7 +8,8 @@ public interface BasicTokenRemote extends Serializable {
 
     boolean isValid( String token );
     String getToken();
-    void createToken();
+    void createToken( String user );
     void resetToken();
+    String getUser();
 
 }

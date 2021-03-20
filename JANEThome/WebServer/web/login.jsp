@@ -42,11 +42,11 @@
 
                         <div class="wrap-input validate-input" data-validate = "Password is required">
                             <label>
-                                <input class="input" type="password" name="pass" placeholder="Password">
+                                <input id="passInput" class="input" type="password" name="pass" placeholder="Password">
                             </label>
                             <span class="focus-input"></span>
-                            <span class="symbol-input">
-						        <i class="fa fa-lock" aria-hidden="true"></i>
+                            <span id="pass" class="symbol-input" onclick="passwordHide()">
+						        <i  class="fa fa-lock" aria-hidden="true"></i>
 					        </span>
                         </div>
 

@@ -9,6 +9,7 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.util.Scanner;
 
 @WebServlet(name="PasswordRequest", urlPatterns={"/password"})
 public class PasswordServlet extends HttpServlet {
@@ -28,9 +29,14 @@ public class PasswordServlet extends HttpServlet {
         if( email!=null ){
 
             // TODO mail presence verification
-
-            data.createToken();
-            if(mailService.sendMailPasswordChange(email,data.getToken()))
+            Scanner s = new Scanner(this.getServletContext().getResourceAsStream("/WEB-INF/password_change_fragment_1")).useDelimiter("\\A");
+            String fragment1 = s.hasNext() ? s.next() : "";
+            s.close();
+            s = new Scanner(this.getServletContext().getResourceAsStream("/WEB-INF/password_change_fragment_2")).useDelimiter("\\A");
+            String fragment2 = s.hasNext() ? s.next() : "";
+            s.close();
+            data.createToken(email);
+            if(mailService.sendMailPasswordChange(email,data.getToken(),fragment1, fragment2))
                 resp.sendRedirect("status.jsp?request_state=1");
             else
                 resp.sendRedirect("status.jsp?request_state=10");
@@ -40,17 +46,13 @@ public class PasswordServlet extends HttpServlet {
         }
 
         String token = req.getParameter("token");
-        if (token != null) {
-            if (data.isValid(token)) {
-
-                // TODO add user registration to mongo
-                resp.sendRedirect("status.jsp?request_state=0&token="+token);
-                data.resetToken();
-
-            } else
-                resp.sendRedirect("status.jsp?request_state=10");
+        String password = req.getParameter( "password" );
+        if (token != null && password != null ) {
+            // TODO add verification and password update on mongo
+            resp.sendRedirect("status.jsp?request_state=3");
+            data.resetToken();
         }else
-                resp.sendRedirect( "password.jsp" );
+            resp.sendRedirect( "password.jsp" );
 
     }
 

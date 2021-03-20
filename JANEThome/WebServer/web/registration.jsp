@@ -44,7 +44,6 @@
                             <label>
                                 <input class="input" type="text" name="name" placeholder="First Name">
                             </label>
-                            <span class="focus-input"></span>
                             <span class="symbol-input">
                                 <i class="fa fa-user-circle" aria-hidden="true"></i>
                             </span>
@@ -55,7 +54,6 @@
                             <label>
                                 <input class="input" type="text" name="surname" placeholder="Last Name">
                             </label>
-                            <span class="focus-input"></span>
                             <span class="symbol-input">
                                 <i class="fa fa-user-circle" aria-hidden="true"></i>
                             </span>
@@ -74,7 +72,6 @@
                             <label>
                                 <input class="input" type="text" name="email" placeholder="boo">
                             </label>
-                            <span class="focus-input"></span>
                             <span class="symbol-input">
                                 <i class="fa fa-envelope" aria-hidden="true"></i>
                             </span>
@@ -83,11 +80,10 @@
                     <div class="col-2">
                         <div class="wrap-input validate-input">
                             <label>
-                                <input class="input" type="password" name="password" placeholder="Password">
+                                <input id="passInput" class="input"  type="password" name="password" placeholder="Password">
                             </label>
-                            <span class="focus-input"></span>
-                            <span class="symbol-input">
-                                <i class="fa fa-lock" aria-hidden="true"></i>
+                            <span  class="symbol-input">
+                                <i id="pass" class="fa fa-lock" aria-hidden="true"></i>
                             </span>
                         </div>
                     </div>
@@ -98,7 +94,7 @@
                     </div>
                     <a class="txt2" href="login.jsp">
                         <i class="fa fa-long-arrow-left m-l-5" aria-hidden="true"></i>
-                        Return
+                        Return to Login
                     </a>
 
                 </div>
