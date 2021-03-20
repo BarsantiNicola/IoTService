@@ -1,8 +1,8 @@
 package weblogic.login.interfaces;
 
-import javax.ejb.Local;
+import javax.ejb.Remote;
 
-@Local
+@Remote
 public interface NamedTokenRemote extends BasicTokenRemote {
 
     void setInformations(String name, String surname, String email, String password);

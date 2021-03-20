@@ -1,9 +1,9 @@
 package weblogic.login.interfaces;
 
-import javax.ejb.Local;
+import javax.ejb.Remote;
 import java.io.Serializable;
 
-@Local
+@Remote
 public interface BasicTokenRemote extends Serializable {
 
     boolean isValid( String token );

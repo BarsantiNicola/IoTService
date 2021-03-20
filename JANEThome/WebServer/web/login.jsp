@@ -1,5 +1,3 @@
-
-<%@ page contentType="text/html;charset=UTF-8" %>
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -25,7 +23,7 @@
                         <img src="resources/login/images/logo.png" alt="logo">
                     </div>
 
-                    <form class="login-form validate-form" action="auth">
+                    <form class="login-form validate-form" action="login">
 					    <span class="login-form-title">
 						    Member Login
 					    </span>
