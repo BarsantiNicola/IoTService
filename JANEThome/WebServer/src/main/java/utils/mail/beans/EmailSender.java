@@ -3,21 +3,11 @@ package utils.mail.beans;
 import utils.mail.interfaces.EmailServiceLocal;
 
 import javax.annotation.Resource;
-import javax.ejb.EJBContext;
 import javax.ejb.Stateless;
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Named;
 import javax.mail.*;
 import javax.mail.internet.*;
-import javax.naming.InitialContext;
-import javax.servlet.ServletContext;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.PrintWriter;
-import java.nio.file.Files;
-import java.nio.file.Paths;
-import java.util.Objects;
-import java.util.Scanner;
 
 //  EmailSender
     //
