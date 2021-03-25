@@ -25,6 +25,7 @@ public class EmailSender implements EmailServiceLocal {
         private final String IP="localhost";
         private final String PORT="8080";
         private final boolean SECURE = false;
+
         //  private function to perform the send of an email using the glassfish javamail session. The session isn't
         //  directly available in the private components of the server and it is passed from the servlet interface which
         //  calls the methods
@@ -79,7 +80,6 @@ public class EmailSender implements EmailServiceLocal {
             return email != null && email.length()>0 && sendEmail(email, object, message);
 
         }
-
 
 }
 
