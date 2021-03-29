@@ -1,3 +1,4 @@
+
 const button_wrap = document.getElementById("button_wrap");
 const left_angle = document.getElementById("angle_left");
 const right_angle = document.getElementById("angle_right");
@@ -15,7 +16,7 @@ let location_code = " <div class=\"delete_button_wrapper\">\n" +
     "                                </p>\n" +
     "                            </a>\n" +
     "                            <a href=\"#\">\n" +
-    "                                <p class=\"location_button\" id=\"delete_location_button\">\n" +
+    "                                <p class=\"location_button\" onclick='deleteLocation(this)'>\n" +
     "                                    <span class=\"bg\" id=\"delete_back\"></span>\n" +
     "                                    <span class=\"base\"></span>\n" +
     "                                    <span class=\"text\">Delete Location</span>\n" +
@@ -33,28 +34,33 @@ let location_code = " <div class=\"delete_button_wrapper\">\n" +
     "                                               <input class=\"input\" type=\"text\" name=\"loc_rename\" placeholder=\"Location Name\">"+
     "                                               <i class=\"fa fa-location-arrow\"></i>"+
     "                                           </label>"+
-    "                                           <button class=\"login-form-btn\" onclick='renameLocation(this)'>Rename Location</button>"+
+    "                                           <button class=\"login-form-btn\" onclick='renameLocationAction(this)'>Rename Location</button>"+
     "                                        </div>"+
     "                                   </div>\n" +
     "                                   <div class=\"add_sublocation_popup popups\">\n" +
-    "                                           <img alt='img' src='#'>"+
-    "                                           <div class=\"outer\">"+
-    "                                               <div class=\"inner\"></div>"+
-    "                                           </div>"+
-    "                                           <div class=\"popup_input_wrapper\">" +
-    "                                               <h1>Rename Sublocation</h1>    " +
-    "                                               <label>" +
-    "                                                   <input class=\"input\" type=\"text\" name=\"loc_rename\" placeholder=\"Location Name\">"+
-    "                                                   <i class=\"fa fa-location-arrow\"></i>"+
-    "                                               </label>"+
-    "                                               <button class=\"login-form-btn\">Rename Sublocation</button>"+
-    "                                           </div>"+
+    "                                       <div class=\"info_col\">\n" +
+    "                                           <img src=\"resources/login/images/sublocation.png\" alt=\"\"><br>\n" +
+    "                                       </div>\n" +
+    "                                       <div class=\"outer\">\n" +
+    "                                           <div class=\"inner\"></div>\n" +
+    "                                       </div>\n" +
+    "                                       <div class=\"add_sublocation_form\" id=\"location_form\">\n" +
+    "                                           <i class=\"fa fa-times close_button\" onclick='closePopup(this)'></i>"+
+    "                                           <span class=\"location_form_title\">\n" +
+    "                                                Add Sublocation" +
+    "                                           </span>\n" +
+    "                                           <label>\n" +
+    "                                               <input class=\"input\" type=\"text\" name=\"name\" placeholder=\"Location Name\">\n" +
+    "                                               <i class=\"fa fa-location-arrow\"></i>\n" +
+    "                                           </label>\n" +
+    "                                           <button class=\"add_location_submit\" onclick='addSublocation(this)' id=\"add_sublocation_sub\" >Add</button>\n" +
+    "                                       </div>\n" +
+    "                                   </div>"+
     "                                   </div>" +
     "                               </div>" +
-    "                       </div>" +
     "                       <div class=\"sublocation_header_wrapper\">"+
     "                            <h1 class=\"heading_sublocation\">Default</h1>\n" +
-    "                            <a class=\"add_sublocation_wrapper\" href=\"#\" onclick=\"addSublocation('prova',this)\">\n" +
+    "                            <a class=\"add_sublocation_wrapper\" href=\"#\" onclick=\"openSublocation()\">\n" +
     "                            <p class=\"add_sublocation_button\">\n" +
     "                               <span class=\"bg\" id=\"delete_back\"></span>\n" +
     "                               <span class=\"base\"></span>\n" +
@@ -85,7 +91,7 @@ let sublocation_code =
     "                                               <input class=\"input\" type=\"text\" name=\"subloc_rename\" placeholder=\"Sublocation Name\">"+
     "                                               <i class=\"fa fa-location-arrow\"></i>"+
     "                                           </label>"+
-    "                                           <button class=\"login-form-btn\" onclick='rename_subloc(this)'>Rename Sublocation</button>"+
+    "                                           <button class=\"login-form-btn\" onclick='renameSublocationAction(this)'>Rename Sublocation</button>"+
     "                                        </div>"+
     "                                   </div>\n" +
     "                                   <div class=\"add_device_popup\"></div>\n" +
@@ -103,7 +109,7 @@ let sublocation_code_2 = "</h1>\n" +
     "                                   <span class=\"text\">Rename sublocation</span>\n" +
     "                               </p>\n" +
     "                            </a>\n" +
-    "                            <a class=\"delete_sublocation_wrapper\" href=\"#\" onclick=\"deleteSublocation()\">\n" +
+    "                            <a class=\"delete_sublocation_wrapper\" href=\"#\" onclick=\"deleteSublocation(this)\">\n" +
     "                               <p class=\"delete_sublocation_button\">\n" +
     "                                   <span class=\"bg\" id=\"delete_back\"></span>\n" +
     "                                   <span class=\"base\"></span>\n" +
@@ -230,6 +236,41 @@ function createLocationPage(name){
 
 }
 
+function deleteLocation(elem){
+    let location = elem.parentNode.parentNode.parentNode;
+    let body = document.getElementById("body-webapp");
+    let location_name = location.id.replace("location_page_","");
+    document.getElementById("scroller").removeChild(document.getElementById(location_name));
+    body.removeChild(location);
+}
+
+function deleteSublocation(elem){
+    let sub_location = elem.parentNode.parentNode;
+    let container =  sub_location.parentNode;
+    container.removeChild(sub_location);
+}
+
+function renameLocationAction(elem){
+    let location = elem.parentNode.parentNode.parentNode.parentNode.parentNode.parentNode;
+    let new_location_name = elem.parentNode.getElementsByClassName("input")[0].value;
+    let location_name = location.id.replace("location_page_","");
+    location.id = "location_page_"+new_location_name;
+    let button = document.getElementById(location_name);
+    button.id=new_location_name;
+    let button_label = button.getElementsByClassName("text")[0];
+    button_label.textContent = new_location_name;
+
+
+}
+
+function renameSublocationAction(elem){
+    let sublocation = elem.parentNode.parentNode.parentNode.parentNode.parentNode.parentNode;
+    let header = elem.parentNode.parentNode.parentNode.parentNode.parentNode.getElementsByClassName("heading_sublocation")[0];
+    let new_sublocation_name = elem.parentNode.getElementsByClassName("input")[0].value;
+    sublocation.id = "sublocation_wrapper_"+new_sublocation_name;
+    header.textContent = new_sublocation_name;
+}
+
 function closePopup(node){
     node.parentNode.parentNode.parentNode.parentNode.style.display = "none";
 }
@@ -243,8 +284,9 @@ function renameLocation(node){
     popup_container.style.display="flex";
 }
 
-function addSublocation(name, node){
-    let wrapper = node.parentNode.parentNode.parentNode;
+function addSublocation(node){
+    let wrapper = node.parentNode.parentNode.parentNode.parentNode.parentNode.parentNode;
+    let name = node.parentNode.getElementsByTagName('input')[0].value;
     let div = document.createElement('div');
     div.className = "sublocation_wrapper";
     div.id = "sublocation_wrapper_"+name;
@@ -253,7 +295,8 @@ function addSublocation(name, node){
     adaptLocationScrolling();
 }
 
-function openAddSublocation(){
+
+function openSublocation(){
     let popup_container = document.getElementById("sublocation_wrapper_default").getElementsByClassName("container-popups")[0]
     let popups = popup_container.getElementsByClassName('popups');
     for( let popup of popups )

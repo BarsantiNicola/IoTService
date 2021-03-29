@@ -30,13 +30,13 @@ public class LoginServlet extends HttpServlet {
         if( username != null && password != null ){
             // TODO perform login
             userData.setParameters(username, password);
-            resp.sendRedirect("main.html");
+            resp.sendRedirect("main.jsp");
             return;
         }
 
         if( userData.getUsername() != null && userData.getPassword() != null ){
             // TODO perform automatic login
-            resp.sendRedirect("main.html");
+            resp.sendRedirect("main.jsp");
         }else
             resp.sendRedirect("login.jsp");
             //  TODO Insert cookie management for automatic login

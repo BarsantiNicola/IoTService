@@ -1,3 +1,4 @@
+
 const button_wrap = document.getElementById("button_wrap");
 const left_angle = document.getElementById("angle_left");
 const right_angle = document.getElementById("angle_right");
@@ -15,7 +16,7 @@ let location_code = " <div class=\"delete_button_wrapper\">\n" +
     "                                </p>\n" +
     "                            </a>\n" +
     "                            <a href=\"#\">\n" +
-    "                                <p class=\"location_button\" id=\"delete_location_button\">\n" +
+    "                                <p class=\"location_button\" onclick='deleteLocation(this)'>\n" +
     "                                    <span class=\"bg\" id=\"delete_back\"></span>\n" +
     "                                    <span class=\"base\"></span>\n" +
     "                                    <span class=\"text\">Delete Location</span>\n" +
@@ -33,7 +34,7 @@ let location_code = " <div class=\"delete_button_wrapper\">\n" +
     "                                               <input class=\"input\" type=\"text\" name=\"loc_rename\" placeholder=\"Location Name\">"+
     "                                               <i class=\"fa fa-location-arrow\"></i>"+
     "                                           </label>"+
-    "                                           <button class=\"login-form-btn\" onclick='renameLocation(this)'>Rename Location</button>"+
+    "                                           <button class=\"login-form-btn\" onclick='renameLocationAction(this)'>Rename Location</button>"+
     "                                        </div>"+
     "                                   </div>\n" +
     "                                   <div class=\"add_sublocation_popup popups\">\n" +
@@ -90,7 +91,7 @@ let sublocation_code =
     "                                               <input class=\"input\" type=\"text\" name=\"subloc_rename\" placeholder=\"Sublocation Name\">"+
     "                                               <i class=\"fa fa-location-arrow\"></i>"+
     "                                           </label>"+
-    "                                           <button class=\"login-form-btn\" onclick='rename_subloc(this)'>Rename Sublocation</button>"+
+    "                                           <button class=\"login-form-btn\" onclick='renameSublocationAction(this)'>Rename Sublocation</button>"+
     "                                        </div>"+
     "                                   </div>\n" +
     "                                   <div class=\"add_device_popup\"></div>\n" +
@@ -108,7 +109,7 @@ let sublocation_code_2 = "</h1>\n" +
     "                                   <span class=\"text\">Rename sublocation</span>\n" +
     "                               </p>\n" +
     "                            </a>\n" +
-    "                            <a class=\"delete_sublocation_wrapper\" href=\"#\" onclick=\"deleteSublocation()\">\n" +
+    "                            <a class=\"delete_sublocation_wrapper\" href=\"#\" onclick=\"deleteSublocation(this)\">\n" +
     "                               <p class=\"delete_sublocation_button\">\n" +
     "                                   <span class=\"bg\" id=\"delete_back\"></span>\n" +
     "                                   <span class=\"base\"></span>\n" +
@@ -233,6 +234,41 @@ function createLocationPage(name){
     div.innerHTML = location_code;
     body_page.appendChild(div);
 
+}
+
+function deleteLocation(elem){
+    let location = elem.parentNode.parentNode.parentNode;
+    let body = document.getElementById("body-webapp");
+    let location_name = location.id.replace("location_page_","");
+    document.getElementById("scroller").removeChild(document.getElementById(location_name));
+    body.removeChild(location);
+}
+
+function deleteSublocation(elem){
+    let sub_location = elem.parentNode.parentNode;
+    let container =  sub_location.parentNode;
+    container.removeChild(sub_location);
+}
+
+function renameLocationAction(elem){
+    let location = elem.parentNode.parentNode.parentNode.parentNode.parentNode.parentNode;
+    let new_location_name = elem.parentNode.getElementsByClassName("input")[0].value;
+    let location_name = location.id.replace("location_page_","");
+    location.id = "location_page_"+new_location_name;
+    let button = document.getElementById(location_name);
+    button.id=new_location_name;
+    let button_label = button.getElementsByClassName("text")[0];
+    button_label.textContent = new_location_name;
+
+
+}
+
+function renameSublocationAction(elem){
+    let sublocation = elem.parentNode.parentNode.parentNode.parentNode.parentNode.parentNode;
+    let header = elem.parentNode.parentNode.parentNode.parentNode.parentNode.getElementsByClassName("heading_sublocation")[0];
+    let new_sublocation_name = elem.parentNode.getElementsByClassName("input")[0].value;
+    sublocation.id = "sublocation_wrapper_"+new_sublocation_name;
+    header.textContent = new_sublocation_name;
 }
 
 function closePopup(node){

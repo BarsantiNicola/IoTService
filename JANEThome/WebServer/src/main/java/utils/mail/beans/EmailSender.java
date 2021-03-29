@@ -19,8 +19,8 @@ import javax.mail.internet.*;
 @Named("mailService")
 public class EmailSender implements EmailServiceLocal {
 
-        @Resource(name = "mail/mailSession")
         @ApplicationScoped
+        @Resource(lookup = "mail/mailSession")
         private Session mailSession;
         private final String IP="localhost";
         private final String PORT="8080";

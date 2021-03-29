@@ -412,7 +412,18 @@ label .fa{
     border-radius: 20px;
     width: 300px;
     height: 300px;
-    margin:auto;
+    margin: 50px auto auto;
+    background: white;
+    display:flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+}
+
+.add_sublocation_form{
+    border-radius: 20px;
+    width: 300px;
+    height: 300px;
+    margin: 0 auto auto;
     background: white;
     display:flex;
     flex-direction: row;
@@ -836,7 +847,7 @@ a:focus{
     flex-direction: column;
     flex-wrap: wrap;
     margin-top: 20px;
-    margin-bottom: 20px;
+    margin-bottom: 40px;
     height:375px;
     width:100%;
 }
@@ -976,27 +987,31 @@ a:focus{
     flex-direction: column;
     margin-left:auto;
     margin-right:auto;
-    width:50%;
+    width:min-content;
+    border-radius: 20px;
     height:95%;
+
     background: rgba(255,255,255,1);
 }
 
+.rename_sublocation_popup button{
+    height: 50px;
+}
+
 .add_sublocation_popup {
-    width:50%;
+    width:min-content;
     height:95%;
     margin-left:auto;
     margin-right:auto;
     border-radius: 20px;
-    position:relative;
-    z-index:13;
-    display:none;
+    display:flex;
     flex-direction: row;
     background: rgba(255,255,255,1);
 }
 
 .add_sublocation_popup img{
-    margin-top:auto;
-    margin-bottom:auto;
+    height:250px;
+    margin: auto 20px;
 }
 
 .popup_input_wrapper{
@@ -1006,7 +1021,21 @@ a:focus{
     flex-direction: column;
     width:500px;
     height:90%;
-    margin: auto;
+    margin:auto;
+    padding-bottom:50px;
+
+}
+
+.rename_sublocation_popup .popup_input_wrapper{
+    background:rgba(255,255,255,1);
+    border-radius: 20px;
+    display: flex;
+    flex-direction: column;
+    width:500px;
+    height:90%;
+    margin:auto;
+    padding-bottom:30px;
+
 }
 
 .popup_input_wrapper h1{
@@ -1015,6 +1044,7 @@ a:focus{
     font-size: 24px;
     color: #333333;
     line-height: 1.2;
+
 }
 
 
@@ -1079,9 +1109,7 @@ a:focus{
 .rename_location_popup{
     display:none;
 }
-.rename_sublocation_popup {
-    display:none;
-}
+
 
 .add_device_popup {
     display: none;
