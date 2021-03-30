@@ -24,6 +24,7 @@ hs_err_pid*
 
 # personal
 .idea/
+out/
 WebServer/target/
 WebServer/src/main/webapp
 PasswordRequestHandler.java
