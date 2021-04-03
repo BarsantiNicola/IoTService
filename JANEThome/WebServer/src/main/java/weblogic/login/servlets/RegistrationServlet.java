@@ -41,9 +41,9 @@ public class RegistrationServlet extends HttpServlet {
             s.close();
 
             if(mailService.sendMailLoginConfirm(email,data.getToken(), fragment1, fragment2))
-                resp.sendRedirect("status.jsp?request_state=1");
+                resp.setStatus(200);
             else
-                resp.sendRedirect("status.jsp?request_state=10");
+                resp.setStatus(500);
 
         }else {
 
@@ -52,11 +52,11 @@ public class RegistrationServlet extends HttpServlet {
                 if (data.isValid(token)) {
 
                     // TODO add user registration to mongo
-                    resp.sendRedirect("status.jsp?request_state=0");
+                    resp.sendRedirect("registration.jsp?state=2");
                     data.resetInformations();
 
                 } else
-                    resp.sendRedirect("status.jsp?request_state=10");
+                    resp.sendRedirect("registration.jsp?state=3");
             }else
                 resp.sendRedirect( "registration.jsp" );
         }

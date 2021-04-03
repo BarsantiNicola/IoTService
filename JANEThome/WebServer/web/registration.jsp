@@ -1,114 +1,107 @@
-
 <!DOCTYPE html>
 <html lang="en">
 
-<head>
+    <head>
+        <meta name="author" content="Barsanti Nicola">
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <link rel="icon" type="image/png" href="resources/pics/logo2.png"/>
+        <link rel="stylesheet" type="text/css" href="resources/login/vendor/bootstrap/css/bootstrap.min.css">
+        <link rel="stylesheet" type="text/css" href="resources/login/fonts/font-awesome-4.7.0/css/font-awesome.min.css">
+        <link rel="stylesheet" type="text/css" href="resources/login/vendor/animate/animate.css">
+        <link rel="stylesheet" type="text/css" href="resources/login/vendor/select2/select2.min.css">
+        <link rel="stylesheet" type="text/css" href="resources/css/registration.css">
+        <title>JANET home</title>
+    </head>
 
-    <!-- Required meta tags-->
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-    <meta name="description" content="Colorlib Templates">
-    <meta name="author" content="Colorlib">
-    <meta name="keywords" content="Colorlib Templates">
-
-    <!-- Title Page-->
-    <title>JANEThome Registration</title>
-
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <link rel="icon" type="image/png" href="resources/login/images/icons/favicon.ico"/>
-    <link rel="stylesheet" type="text/css" href="resources/login/vendor/bootstrap/css/bootstrap.min.css">
-    <link rel="stylesheet" type="text/css" href="resources/login/fonts/font-awesome-4.7.0/css/font-awesome.min.css">
-    <link rel="stylesheet" type="text/css" href="resources/login/vendor/animate/animate.css">
-    <link rel="stylesheet" type="text/css" href="resources/login/vendor/css-hamburgers/hamburgers.min.css">
-    <link rel="stylesheet" type="text/css" href="resources/login/vendor/select2/select2.min.css">
-    <link rel="stylesheet" type="text/css" href="resources/login/css/util.css">
-    <link rel="stylesheet" type="text/css" href="resources/login/css/registration.css">
-    <link href="resources/login/css/registration.css" rel="stylesheet" media="all">
-</head>
-
-<body>
-
-    <div class="container-registration">
-        <div class="wrap-login">
-
-            <div class="login-pic resource-pic js-tilt pic-reg" data-tilt>
-                 <img src="resources/login/images/logo.png" alt="IMG">
-            </div>
-            <h2 class="registration-form-title">Registration Form</h2>
-
-            <form method="POST" id="registration_form" action="registration">
-                <div class="row row-space">
-
-                    <div class="col-2">
-                        <div class="wrap-input validate-input" data-validate = "Valid email is required: ex@abc.xyz">
+    <body>
+        <div class="registration-page">
+            <div class="page-wrapper">
+                <% switch(Integer.parseInt(request.getParameter("state")==null?"0":request.getParameter("state"))){
+                        case 0:%>
+                <div class="registration-pic js-tilt" data-tilt>
+                    <img src="resources/pics/logo.png" alt="logo">
+                </div>
+                <h1 class="registration-form-title">Registration</h1>
+                <form class="registration-form">
+                    <div class="row-space">
+                        <div class="wrap-input">
                             <label>
-                                <input class="input" type="text" name="name" placeholder="First Name">
+                                <input id="nameInput" class="input" type="text" name="first-name" placeholder="First Name" required>
+                            </label>
+                            <span class="symbol-input">
+                                <i class="fa fa-user-circle" aria-hidden="true"></i>
+                            </span>
+                        </div>
+                        <div class="wrap-input">
+                            <label>
+                                <input id="surnameInput" class="input" type="text" name="Surname" placeholder="Last Name" required>
                             </label>
                             <span class="symbol-input">
                                 <i class="fa fa-user-circle" aria-hidden="true"></i>
                             </span>
                         </div>
                     </div>
-                    <div class="col-2">
-                        <div class="wrap-input validate-input" data-validate = "Valid email is required: ex@abc.xyz">
+                    <div class="row-space">
+                        <div class="wrap-input">
                             <label>
-                                <input class="input" type="text" name="surname" placeholder="Last Name">
-                            </label>
-                            <span class="symbol-input">
-                                <i class="fa fa-user-circle" aria-hidden="true"></i>
-                            </span>
-                        </div>
-                    </div>
-                </div>
-                <div class="row row-space">
-                    <div class="col-2">
-                        <div class="wrap-input validate-input" >
-                        </div>
-                    </div>
-                </div>
-                <div class="row row-space">
-                    <div class="col-2">
-                        <div class="wrap-input validate-input" data-validate = "Valid email is required: ex@abc.xyz">
-                            <label>
-                                <input class="input" type="text" name="email" placeholder="boo">
+                                <input id="emailInput" class="input" type="email" name="email" placeholder="Email" required>
                             </label>
                             <span class="symbol-input">
                                 <i class="fa fa-envelope" aria-hidden="true"></i>
                             </span>
                         </div>
-                    </div>
-                    <div class="col-2">
-                        <div class="wrap-input validate-input">
+                        <div class="wrap-input">
                             <label>
-                                <input id="passInput" class="input"  type="password" name="password" placeholder="Password">
+                                <input id="passInput" class="input" type="password" name="pass" placeholder="Password" required>
                             </label>
-                            <span  class="symbol-input">
-                                <i id="pass" class="fa fa-lock" aria-hidden="true"></i>
+                            <span id="pass" class="symbol-input">
+                                <i  class="fa fa-lock" aria-hidden="true"></i>
+                            </span>
+                            <span class="hide-page">
+                                <i id="passButton" class="fa fa-lock" aria-hidden="true"></i>
                             </span>
                         </div>
                     </div>
-                </div>
-                <div class="row2">
-                    <div class="container-login-form-btn">
-                        <button type="submit" class="login-form-btn">Submit</button>
+
+                    <div class="container-registration-button">
+                        <button id="registration_button" class="registration-form-button">Send</button>
+                        <span id="loadingPlaceholder" class="loading_placeholder" >
+                            <img src="resources/pics/loading.gif" alt="#">
+                        </span>
+                        <span id="errorPlaceholder" class="error_placeholder" >
+                            <i class="fa fa-times" aria-hidden="true"></i>
+                        </span>
                     </div>
-                    <a class="txt2" href="login.jsp">
-                        <i class="fa fa-long-arrow-left m-l-5" aria-hidden="true"></i>
-                        Return to Login
-                    </a>
+                </form>
+                <%  break;
+                    case 1:%>
+                <h1 class="registration-form-title">Confirm your account</h1>
+                <p class="txt2">We have sent an email to the provided email. Open it to confirm your account and been able to use our service</p>
+                <%  break;
+                    case 2:%>
+                <h1 class="registration-form-title">Welcome!</h1>
+                <p class="txt2">Welcome to JANEThome!<br> You can now login to our service to install and control your JANETHome IoT devices</p>
+                <%  break;
+                    default:%>
+                <h1 class="registration-form-title">Error</h1>
+                <p class="txt2">An error as occurred during your request management</p>
+                <%}%>
+                <a class="txt p-t-50" href="login.jsp">
+                    <i class="fa fa-long-arrow-left m-l-5" aria-hidden="true"></i>
+                    Home
+                </a>
+            </div>
 
-                </div>
-            </form>
         </div>
-    </div>
 
-    <script src="resources/login/vendor/jquery/jquery-3.2.1.min.js"></script>
-    <script src="resources/login/vendor/bootstrap/js/popper.js"></script>
-    <script src="resources/login/vendor/bootstrap/js/bootstrap.min.js"></script>
-    <script src="resources/login/vendor/select2/select2.min.js"></script>
-    <script src="resources/login/vendor/tilt/tilt.jquery.min.js"></script>
-    <script src="resources/login/js/main.js"></script>
-</body><!-- This templates was made by Colorlib (https://colorlib.com) -->
+        <script src="resources/login/vendor/jquery/jquery-3.2.1.min.js"></script>
+        <script src="resources/login/vendor/bootstrap/js/popper.js"></script>
+        <script src="resources/login/vendor/bootstrap/js/bootstrap.min.js"></script>
+        <script src="resources/login/vendor/select2/select2.min.js"></script>
+        <script src="resources/login/vendor/tilt/tilt.jquery.min.js"></script>
+        <script src="resources/js/crypto.js"></script>
+        <script src="resources/js/registration.js"></script>
+    </body>
 
 </html>
-<!-- end document-->

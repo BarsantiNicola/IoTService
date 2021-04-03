@@ -57,7 +57,7 @@ public class EmailSender implements EmailServiceLocal {
 
             String object = "JANEThome Password Change Request";
             String URL = SECURE?"https":"http";
-            URL = URL + "://" + IP + ":" + PORT + "/WebServer/password_change.jsp?token=" + token;
+            URL = URL + "://" + IP + ":" + PORT + "/WebServer/password.jsp?state=1&auth=" + token;
 
             String message = fragment1 + URL + fragment2;
             return email != null && email.length()>0 && sendEmail( email, object, message);

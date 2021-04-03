@@ -55,6 +55,7 @@
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="library" name="javax.mail:mail:1.4.7" level="project" />
     <orderEntry type="library" name="javax.resource-api-1.7.1" level="project" />
+    <orderEntry type="library" name="org.json:json:20210307" level="project" />
     <orderEntry type="library" scope="PROVIDED" name="Maven: javax:javaee-web-api:8.0.1" level="project" />
     <orderEntry type="library" scope="TEST" name="Maven: org.junit.jupiter:junit-jupiter-api:5.6.2" level="project" />
     <orderEntry type="library" scope="TEST" name="Maven: org.apiguardian:apiguardian-api:1.1.0" level="project" />
@@ -64,5 +65,8 @@
     <orderEntry type="library" scope="TEST" name="Maven: org.junit.platform:junit-platform-engine:1.6.2" level="project" />
     <orderEntry type="library" name="Maven: com.sun.mail:javax.mail:1.6.2" level="project" />
     <orderEntry type="library" name="Maven: javax.activation:activation:1.1" level="project" />
+    <orderEntry type="library" name="Maven: org.json:json:20190722" level="project" />
+    <orderEntry type="library" name="Maven: com.googlecode.json-simple:json-simple:1.1" level="project" />
+    <orderEntry type="library" name="Maven: dsmt.iot.project:OAuth2Service:1.0-SNAPSHOT" level="project" />
   </component>
 </module>

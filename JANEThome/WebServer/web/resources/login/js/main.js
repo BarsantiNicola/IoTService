@@ -1,4 +1,20 @@
 
+$("#pass_lock").on('click', function(e){
+    alert("ok");
+    let button = document.getElementById("login_pass");
+    let input = document.getElementById("pass_input");
+
+    if( button.className === "fa fa-lock"){
+        button.className = "fa fa-unlock";
+        button.style.color = "#57b846";
+        input.style.type = "text";
+    }else{
+        button.className = "fa fa-lock";
+        button.style.color = "#721c24";
+        input.style.type = "password";
+    }
+})
+
 (function ($) {
     "use strict";
 
@@ -56,6 +72,7 @@
 $('.js-tilt').tilt({
     scale: 1.1
 })
+
 function passwordHide(){
         alert("ok");
         var elem = document.getElementById("passInput");

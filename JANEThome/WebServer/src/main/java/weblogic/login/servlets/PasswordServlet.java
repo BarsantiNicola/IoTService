@@ -39,22 +39,22 @@ public class PasswordServlet extends HttpServlet {
             s.close();
             data.createToken(email);
             if(mailService.sendMailPasswordChange(email,data.getToken(),fragment1, fragment2))
-                resp.sendRedirect("status.jsp?request_state=2");
+                resp.setStatus(200);
             else
-                resp.sendRedirect("status.jsp?request_state=10");
+                resp.setStatus(500);
 
             return;
 
         }
 
-        String token = req.getParameter("token");
+        String token = req.getParameter("auth");
         String password = req.getParameter( "password" );
         if (token != null && password != null && data.isValid(token)) {
             // TODO add verification and password update on mongo
-            resp.sendRedirect("status.jsp?request_state=3");
+            resp.setStatus(200);
             data.resetToken();
         }else
-            resp.sendRedirect("password.jsp");
+            resp.setStatus(500);
 
     }
 
