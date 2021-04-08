@@ -38,7 +38,7 @@
                                 <input id="passInput" class="input" type="password" name="pass" placeholder="Password" required>
                             </label>
                             <span id="pass" class="symbol-input">
-						        <i  class="fa fa-lock" aria-hidden="true"></i>
+						        <i  class="fa fa-key" aria-hidden="true"></i>
 					        </span>
                             <span class="hide-page">
 						        <i id="passButton" class="fa fa-lock" aria-hidden="true"></i>

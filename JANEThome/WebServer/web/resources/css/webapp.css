@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css?family=Lato:100&display=swap');
+
 @font-face {
     font-family: Poppins-Regular;
     src: url('../fonts/poppins/Poppins-Regular.ttf');
@@ -30,7 +30,7 @@
 body, html {
     height: 100%;
     font-family: Poppins-Regular, sans-serif;
-    min-width: 445px;
+    min-width: 650px;
 }
 
 /*----------------------[ CUSTOMS ]------------------------*/
@@ -441,6 +441,20 @@ label .fa{
     padding-bottom:20px;
 }
 
+.sublocation_form_title{
+    font-family: Poppins-Bold, sans-serif;
+    font-size: 24px;
+    color: #333333;
+    line-height: 1.2;
+    text-align: center;
+
+    width: 100%;
+    display: block;
+
+    padding-top:30px;
+    padding-bottom:20px;
+}
+
 .add_location_submit{
     font-family: Montserrat-Bold, sans-serif;
     font-size: 15px;
@@ -452,12 +466,21 @@ label .fa{
     width: 70%;
     height: 50px;
     border-radius: 25px;
+}
+
+
+.add_location_submit .loading_placeholder{
+    font-family: Montserrat-Bold, sans-serif;
+    display: none;
+    font-size: 15px;
+    line-height: 1.5;
+    color: #fff;
+    text-transform: uppercase;
+    position:relative;
+    width: 100%;
+    height: 50px;
+    border-radius: 25px;
     background: #57b846;
-    display: -webkit-box;
-    display: -webkit-flex;
-    display: -moz-box;
-    display: -ms-flexbox;
-    display: flex;
     justify-content: center;
     align-items: center;
     padding: 0 25px;
@@ -466,6 +489,147 @@ label .fa{
     -o-transition: all 0.4s;
     -moz-transition: all 0.4s;
     transition: all 0.4s;
+}
+
+.add_location_submit span img{
+    height:25px;
+    margin:auto;
+}
+
+.add_location_submit .error_placeholder{
+    font-family: Montserrat-Bold, sans-serif;
+    position: relative;
+    display: none;
+    font-size: 25px;
+    line-height: 1.5;
+    color: #fff;
+    text-transform: uppercase;
+    animation-name: shake;
+    animation-duration: 5s;
+    animation-iteration-count: 1;
+    animation-timing-function: ease-in;
+    width: 100%;
+    height: 50px;
+    border-radius: 25px;
+    background: #c80000;
+    justify-content: center;
+    align-items: center;
+    padding: 0 25px;
+
+    -webkit-transition: all 0.4s;
+    -o-transition: all 0.4s;
+    -moz-transition: all 0.4s;
+    transition: all 0.4s;
+}
+
+.add_sublocation_submit{
+    font-family: Montserrat-Bold, sans-serif;
+    font-size: 15px;
+    line-height: 1.5;
+    color: #fff;
+    text-transform: uppercase;
+    margin-left: auto;
+    margin-right:auto;
+    width: 70%;
+    height: 50px;
+    border-radius: 25px;
+    margin-bottom: 30px;
+}
+
+
+.add_sublocation_submit .loading_placeholder{
+    font-family: Montserrat-Bold, sans-serif;
+    display: none;
+    font-size: 15px;
+    line-height: 1.5;
+    color: #fff;
+    text-transform: uppercase;
+    position:relative;
+    width: 100%;
+    height: 50px;
+    border-radius: 25px;
+    background: #57b846;
+    justify-content: center;
+    align-items: center;
+    padding: 0 25px;
+
+    -webkit-transition: all 0.4s;
+    -o-transition: all 0.4s;
+    -moz-transition: all 0.4s;
+    transition: all 0.4s;
+}
+
+.add_sublocation_submit span img{
+    height:25px;
+    margin:auto;
+}
+
+.add_sublocation_submit .error_placeholder{
+    font-family: Montserrat-Bold, sans-serif;
+    position: relative;
+    display: none;
+    font-size: 25px;
+    line-height: 1.5;
+    color: #fff;
+    text-transform: uppercase;
+    animation-name: shake;
+    animation-duration: 5s;
+    animation-iteration-count: 1;
+    animation-timing-function: ease-in;
+    width: 100%;
+    height: 50px;
+    border-radius: 25px;
+    background: #c80000;
+    justify-content: center;
+    align-items: center;
+    padding: 0 25px;
+
+    -webkit-transition: all 0.4s;
+    -o-transition: all 0.4s;
+    -moz-transition: all 0.4s;
+    transition: all 0.4s;
+}
+
+@keyframes shake {
+    0% {left: 0}
+    1% {left: -3px}
+    2% {left: 5px}
+    3% {left: -8px}
+    4% {left: 8px}
+    5% {left: -5px}
+    6% {left: 3px}
+    7% {left: 0}
+}
+
+.error_placeholder i:hover{
+    color: white;
+}
+
+.button-animation{
+    animation-duration: 5s;
+    animation-name:shake;
+}
+
+.add_sublocation_form label{
+    height:50px;
+}
+.add_sublocation_btn{
+
+    font-family: Montserrat-Bold, sans-serif;
+    font-size: 15px;
+    line-height: 1.5;
+    color: #fff;
+    text-transform: uppercase;
+    width:100%;
+    height:100%;
+    background: #57b846;
+    border-radius: 25px;
+    margin-left: auto;
+    margin-right: auto;
+
+}
+.add_sublocation_btn:hover {
+    background: #333333;
 }
 
 .input {
@@ -485,7 +649,34 @@ label .fa{
     z-index:2;
 }
 
-.add_location_submit:hover {
+.location-form-button {
+    font-family: Montserrat-Bold, sans-serif;
+    font-size: 15px;
+    z-index:1;
+    line-height: 1.5;
+    color: #fff;
+    text-transform: uppercase;
+
+    width: 100%;
+    height: 50px;
+    border-radius: 25px;
+    background: #57b846;
+    display: -webkit-box;
+    display: -webkit-flex;
+    display: -moz-box;
+    display: -ms-flexbox;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 0 25px;
+
+    -webkit-transition: all 0.4s;
+    -o-transition: all 0.4s;
+    -moz-transition: all 0.4s;
+    transition: all 0.4s;
+}
+
+.location-form-button:hover {
     background: #333333;
 }
 
@@ -499,7 +690,7 @@ label .fa{
 }
 
 
-.delete_button_wrapper{
+.location_button_wrapper{
 
     height: 65px;
     width: 500px;
@@ -510,7 +701,7 @@ label .fa{
     border-radius: 20px;
     margin-bottom: 50px;
 }
-.delete_button_wrapper a {
+.location_button_wrapper a {
 
     width: 100%;
     max-width: 240px;
@@ -529,22 +720,22 @@ label .fa{
     margin: 0 10px;
 }
 
-.delete_button_wrapper a.transparent:hover > p {
+.location_button_wrapper a.transparent:hover > p {
     color: #ece8e1;
 }
-.delete_button_wrapper a.transparent:hover > p span.text {
+.location_button_wrapper a.transparent:hover > p span.text {
     box-shadow: 0 0 0 1px #ece8e1;
 }
 
-.delete_button_wrapper a.transparent > p span.base {
+.location_button_wrapper a.transparent > p span.base {
     border: 1px solid #ece8e1;
 }
 
-.delete_button_wrapper a:before {
+.location_button_wrapper a:before {
     right: 0;
     left: initial;
 }
-.delete_button_wrapper a p {
+.location_button_wrapper a p {
     margin: 0;
     height: 54px;
     line-height: 54px;
@@ -571,7 +762,7 @@ label .fa{
     border: 3px solid #e0a800;
 }
 
-.location_button .base {
+.location_delete_button .base {
 
     box-sizing: border-box;
     position: absolute;
@@ -584,7 +775,7 @@ label .fa{
 }
 
 
-.delete_button_wrapper a p span.base:before {
+.location_button_wrapper a p span.base:before {
     content: "";
     width: 2px;
     height: 2px;
@@ -607,7 +798,7 @@ label .fa{
     transform: skewX(-10deg);
 }
 
-.location_button .bg {
+.location_delete_button .bg {
     left: -5%;
     position: absolute;
 
@@ -621,7 +812,7 @@ label .fa{
 
 
 
-.delete_button_wrapper a p span.text {
+.location_button_wrapper a p span.text {
     z-index: 4;
     width: 100%;
     height: 100%;
@@ -631,7 +822,7 @@ label .fa{
     left: 0;
     top: 0;
 }
-.delete_button_wrapper a p span.text:after {
+.location_button_wrapper a p span.text:after {
     content: "Delete";
     width: 4px;
     height: 4px;
@@ -643,13 +834,13 @@ label .fa{
     z-index: 5;
 }
 
-.delete_button_wrapper a:hover {
+.location_button_wrapper a:hover {
     color: #ece8e1;
 }
-.delete_button_wrapper a:hover span.bg {
+.location_button_wrapper a:hover span.bg {
     width: 110%;
 }
-.delete_button_wrapper a:hover span.text:after {
+.location_button_wrapper a:hover span.text:after {
     background: #ece8e1;
 }
 
@@ -910,16 +1101,7 @@ a:focus{
     justify-content: flex-start;
 }
 
-.device{
-    height: 250px;
-    width: 400px;
-    min-width: 400px;
-    display:block;
-    border-radius: 20px;
-    background: white;
-    margin-left:20px;
-    overflow: hidden;
-}
+
 
 .heading_sublocation {
 
@@ -984,16 +1166,167 @@ a:focus{
     flex-direction: column;
     margin-left:auto;
     margin-right:auto;
-    width:min-content;
+    width:400px;
     border-radius: 20px;
     height:95%;
 
     background: rgba(255,255,255,1);
 }
 
+.rename_location_popup{
+    display: flex;
+    flex-direction: column;
+    margin-left:auto;
+    margin-right:auto;
+    width:400px;
+    border-radius: 20px;
+    height:95%;
+
+    background: rgba(255,255,255,1);
+}
+
+.add_device_popup{
+    display: flex;
+    flex-direction: column;
+    margin-left:auto;
+    margin-right:auto;
+    width:400px;
+    border-radius: 20px;
+    height:95%;
+
+    background: rgba(255,255,255,1);
+}
+
+.add_device_popup select{
+    margin-left: auto;
+    margin-right: auto;
+    width:200px;
+    height: 50px;
+    font-family: Montserrat-Bold, sans-serif;
+    font-size: 15px;
+    line-height: 1.5;
+    color: #333333;
+    text-transform: uppercase;
+    border-radius: 25px;
+    text-align: center;
+    display: block;
+    border: hidden;
+}
+.simple_sublocation_btn{
+
+    font-family: Montserrat-Bold, sans-serif;
+    font-size: 15px;
+    line-height: 1.5;
+    color: #fff;
+    text-transform: uppercase;
+    width:100%;
+    height:100%;
+    background: #57b846;
+    border-radius: 25px;
+    display:block;
+
+}
+.simple_sublocation_btn:hover {
+    background: #333333;
+}
+
 .rename_sublocation_popup button{
     height: 50px;
+    width:100%;
+
 }
+
+.popups i{
+    z-index:3;
+}
+
+
+.rename_sublocation_popup form{
+    margin-top: auto;
+    margin-bottom: auto;
+    justify-content: center;
+}
+
+.rename_sublocation_popup label{
+    width: 100%;
+    margin-left: auto;
+    margin-right: auto;
+    position:relative;
+    border: hidden;
+}
+
+.add_device_popup form{
+    margin-top: auto;
+    margin-bottom: auto;
+    justify-content: center;
+}
+
+.add_device_popup label{
+    width: 100%;
+    margin-left: auto;
+    margin-right: auto;
+    position:relative;
+}
+
+.rename_location_popup label{
+    width: 100%;
+    margin-left: auto;
+    margin-right: auto;
+    position:relative;
+}
+
+.rename_sublocation_popup .input{
+    width: 280px;
+}
+
+.rename_location_popup .input{
+    width: 280px;
+}
+
+.add_device_popup .input{
+    width: 280px;
+}
+
+.rename_location_popup form{
+    margin-top: auto;
+    margin-bottom: auto;
+    justify-content: center;
+
+}
+
+.add_device_popup form{
+    margin-top: auto;
+    margin-bottom: auto;
+    justify-content: center;
+
+}
+
+.rename_sublocation_popup .close_button{
+    margin-left: auto;
+    margin-right: 0;
+    position: relative;
+    left:360px;
+}
+
+.add_device_popup .close_button{
+    margin-left: auto;
+    margin-right: 0;
+    position: relative;
+    left:360px;
+}
+
+.rename_location_popup .close_button{
+    margin-top: auto;
+    margin-bottom: 0;
+    position: relative;
+    left:360px;
+}
+
+.rename_location_popup button{
+    height: 50px;
+    width:100%;
+}
+
 
 .add_sublocation_popup {
     width:min-content;
@@ -1116,6 +1449,66 @@ a:focus{
     display:none;
 }
 
+.device{
+    height: 250px;
+    width: 400px;
+    min-width: 400px;
+    display:flex;
+    flex-direction: column;
+    border-radius: 20px;
+    background: white;
+    margin-left:20px;
+    overflow: hidden;
+}
+
+.wrapper{
+    width:100%;
+    display: flex;
+    flex-direction:row;
+}
+
+.device_buttons{
+    height:100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: right;
+    width:40%;
+    margin-right:10px;
+}
+
+.device_expander .fa{
+    font-size:10px;
+    margin-right:0;
+    height: 100%;
+}
+
+
+.device img{
+    height: 200px;
+    width: 200px;
+}
+
+.device .img_container{
+    height: 200px;
+    width:200px;
+    border-radius: 25px;
+    overflow:hidden;
+    margin-left:20px;
+    margin-top:auto;
+    margin-right:auto;
+    background: rgb(131,131,131);
+    background: radial-gradient(circle, rgba(131,131,131,1) 0%, rgba(198,198,198,1) 100%);
+}
+
+.device_title{
+    font-family: Poppins-Bold, sans-serif;
+    font-size: 15px;
+    color: #333333;
+    line-height: 1.2;
+    margin-left:23px;
+    margin-top:10px;
+    text-transform: uppercase;
+}
 @media (max-width: 1270px){
     .add_location_wrapper{
         width:90%;
@@ -1132,7 +1525,7 @@ a:focus{
     .outer{
         display:none;
     }
-    .delete_button_wrapper{
+    .location_button_wrapper{
         margin-left:auto;
         margin-right:auto;
     }
@@ -1141,12 +1534,11 @@ a:focus{
 
 @media (max-width: 490px) {
     .add_location_wrapper {
-        margin:0;
+        margin: 50px 0 0;
         width:100%;
         border-radius: 0;
         height:100%;
     }
-
 
     .info_col{
         display:none;
@@ -1154,5 +1546,9 @@ a:focus{
     .outer{
         display:none;
     }
-
+    .location_button_wrapper{
+        margin-left:0;
+        margin-right:auto;
+        justify-content: left;
+    }
 }

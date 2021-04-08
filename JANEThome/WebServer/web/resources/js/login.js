@@ -65,7 +65,7 @@ $("#login_button").on('click',function(event){
             },
             success: function(msg) {
 
-                window.location = "main.jsp"+msg;
+                window.location = "webapp.jsp"+msg;
             },
             error: function(){
 

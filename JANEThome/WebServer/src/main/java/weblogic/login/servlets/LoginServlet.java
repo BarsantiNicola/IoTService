@@ -50,7 +50,7 @@ public class LoginServlet extends HttpServlet {
             if (authtoken.isPresent() && email.isPresent() && permissionArchive.verify(authtoken.get(), email.get())) {
                 //  redirection to the application page
                 //  to be here the user has cookies, i can directly use them
-                resp.sendRedirect("main.jsp");
+                resp.sendRedirect("webapp.jsp");
                 return;
 
             }

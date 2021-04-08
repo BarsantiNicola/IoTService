@@ -257,6 +257,10 @@ body, html {
     margin:auto;
 }
 
+.error_placeholder i:hover{
+    color: white;
+}
+
 .container-login-form-button .error_placeholder{
     font-family: Montserrat-Bold, sans-serif;
     position: relative;

@@ -297,6 +297,10 @@ body, html {
     transition: all 0.4s;
 }
 
+.error_placeholder i:hover{
+    color: white;
+}
+
 .button-animation{
     animation-duration: 5s;
     animation-name:shake;
