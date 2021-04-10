@@ -9,6 +9,48 @@ let actual_loc = null;
 let throttled = false;
 let errorFlag = false;
 
+
+////////   DYNAMIC PAGE CREATION FUNCTIONS
+
+//// PRIMARY FUNCTIONS[TO BE USED]
+
+//  creates a new location
+function createLocation(name){
+
+    let div = document.createElement('div');
+    div.className = "location_wrapper location";
+    div.id = name;
+    div.appendChild(createLocationButtons());
+    div.appendChild(createSublocation(name));
+    body_page.appendChild(div);
+
+}
+
+//  creates a new sublocation into a location
+function createSublocation(location, name="Default"){
+
+    let container = document.createElement("div");
+    let splitter = document.createElement("div");
+    splitter.className = "divider_sublocation";
+    splitter.append(document.createElement("span"));
+
+    container.className = "sublocation_wrapper";
+    container.id = location+"_"+name;
+    if( name === "Default")
+        container.append(createPopupContainer());
+    else
+        container.append(createPopupContainer(false));
+
+    container.append(createSublocationHeader(name));
+    container.append(splitter);
+    container.append(createSublocationContent());
+    return container;
+
+}
+
+//// SUPPORT FUNCTIONS[TO NOT BE USED DIRECTLY]
+
+//  creates the rename/delete location buttons for a location
 function createLocationButtons(){
 
     let button_location_wrapper = document.createElement("div");
@@ -20,6 +62,7 @@ function createLocationButtons(){
 
 }
 
+//  creates a rename location button
 function createLocationRenameButton() {
     let button_anchor = document.createElement("a");
     let button_paragraph = document.createElement("p");
@@ -40,6 +83,7 @@ function createLocationRenameButton() {
     return button_anchor;
 }
 
+//  creates a delete location button
 function createLocationDeleteButton(){
     let button_anchor = document.createElement("a");
     let button_paragraph = document.createElement("p");
@@ -60,6 +104,7 @@ function createLocationDeleteButton(){
     return button_anchor;
 }
 
+//  creates sublocation popup container(where will be placed the interactions popups)
 function createPopupContainer(default_container=true){
 
     let popups_container = document.createElement("div");
@@ -67,8 +112,8 @@ function createPopupContainer(default_container=true){
     popups_container.className = "container-popups";
     popups_wrapper.className = "popups-wrapper";
     if( default_container ) {
-        popups_wrapper.appendChild(createRenamePopup());
-        popups_wrapper.append(createAddPopup());
+        popups_wrapper.appendChild(createRenameLocationPopup());
+        popups_wrapper.append(createAddSubLocationPopup());
         popups_wrapper.appendChild(createAddDevicePopup());
     }else{
         popups_wrapper.appendChild(createRenameSubLocationPopup());
@@ -79,7 +124,8 @@ function createPopupContainer(default_container=true){
 
 }
 
-function createRenamePopup(){
+//  creates the popup for the rename of the location
+function createRenameLocationPopup(){
 
     let popup_container = document.createElement("div");
     let icon = document.createElement("i");
@@ -138,7 +184,9 @@ function createRenamePopup(){
 
 }
 
+//  creates the popup for the rename of the sublocation
 function createRenameSubLocationPopup(){
+
     let popup_container = document.createElement("div");
     let icon = document.createElement("i");
     let icon2 = document.createElement("i");
@@ -167,7 +215,6 @@ function createRenameSubLocationPopup(){
     button_main.appendChild(span2);
     button_main.appendChild(span3);
 
-
     popup_container.className = "rename_sublocation_popup popups";
     icon.className = "fa fa-times close_button";
     icon.addEventListener("click",function(){closePopup(this);});
@@ -195,7 +242,8 @@ function createRenameSubLocationPopup(){
     return popup_container;
 }
 
-function createAddPopup(){
+//  creates the popup for adding new sublocations
+function createAddSubLocationPopup(){
 
     let popup_container = document.createElement("div");
     let col1 = document.createElement("div");
@@ -229,7 +277,6 @@ function createAddPopup(){
     button_main.appendChild(button);
     button_main.appendChild(span2);
     button_main.appendChild(span3);
-
 
     popup_container.className = "add_sublocation_popup popups";
     col1.className = "info_col";
@@ -268,6 +315,7 @@ function createAddPopup(){
     return popup_container;
 }
 
+//  creates the popup to add new devices into a sublocation
 function createAddDevicePopup(){
 
     let popup_container = document.createElement("div");
@@ -316,12 +364,13 @@ function createAddDevicePopup(){
     button.addEventListener("click",function(event){ event.preventDefault(); addDevice(this);});
     button.textContent = "Add";
 
-    let options = [ "Light", "Fan", "Door", "Thermostat", "Heater"];
+    let options = [ "Light", "Fan", "Door", "Thermostat", "Conditioner"];
     for( let option of options){
         let app = document.createElement("option");
         app.textContent = option;
         select.appendChild(app);
     }
+
     label.appendChild(input);
     label.appendChild(icon2);
     label2.appendChild(select);
@@ -336,6 +385,7 @@ function createAddDevicePopup(){
     return popup_container;
 }
 
+// creates the header of a sublocation
 function createSublocationHeader(sublocation_name = "Default"){
 
     let wrapper = document.createElement("div");
@@ -350,6 +400,7 @@ function createSublocationHeader(sublocation_name = "Default"){
     header.className = "heading_sublocation";
     header.textContent = sublocation_name;
     if( sublocation_name === "Default") {
+
         anchor.className = "add_sublocation_wrapper";
         anchor.href = "#";
         anchor.addEventListener("click", function () {
@@ -366,7 +417,9 @@ function createSublocationHeader(sublocation_name = "Default"){
         anchor.appendChild(paragraph);
         wrapper.appendChild(header);
         wrapper.appendChild(anchor);
+
     }else{
+
         anchor.className = "rename_sublocation_wrapper";
         anchor.href = "#";
         anchor.addEventListener("click", function () {
@@ -411,6 +464,7 @@ function createSublocationHeader(sublocation_name = "Default"){
     return wrapper;
 }
 
+//  creates to body of a sublocation
 function createSublocationContent(){
     let wrapper = document.createElement("div");
     let device_wrapper = document.createElement("div");
@@ -441,141 +495,8 @@ function createSublocationContent(){
 
 }
 
-function createSublocation(location, name="Default"){
-
-    let container = document.createElement("div");
-    let splitter = document.createElement("div");
-    splitter.className = "divider_sublocation";
-    splitter.append(document.createElement("span"));
-
-    container.className = "sublocation_wrapper";
-    container.id = location+"_"+name;
-    if( name === "Default")
-        container.append(createPopupContainer());
-    else
-        container.append(createPopupContainer(false));
-
-    container.append(createSublocationHeader(name));
-    container.append(splitter);
-    container.append(createSublocationContent());
-    return container;
-
-}
-
-$(window).resize(function() {
-    //  optimization of window resizing
-    //  prevent too calls on adaptLocationScrolling
-    if (!throttled) {
-        throttled = true;
-        setTimeout(function() {
-            adaptLocationScrolling();
-            throttled = false;
-        }, 500);
-    }
-
-});
-
-$("#add_location").on('click', function(){
-
-    if( actual_loc != null )
-        actual_loc.style.display = "none";
-    actual_loc = document.getElementById("add_location_page");
-    actual_loc.style.display="flex";
-
-})
-
-$("#add_location_sub").on('click', function(e){
-    e.preventDefault();
-
-    let button = this.getElementsByClassName("location-form-button")[0];
-    let loading = this.getElementsByClassName("loading_placeholder")[0];
-    let error = this.getElementsByClassName("error_placeholder")[0];
-    let form = document.getElementById("location_form");
-
-    button.style.display = "none";
-    loading.style.display = "flex";
-
-    let location_name = form.elements['location'].value.toLowerCase();
-    let address = form.elements['address'].value;
-
-    if( location_name.length !== 0 && address.length !== 0 && validateAddress(address)){
-        let locations = document.getElementsByClassName("location");
-        for( let location of locations )
-            if( location.id === location_name ){
-                loading.style.display = "none";
-                error.style.display = "flex";
-                errorFlag = true;
-                return;
-            }
-        //  TODO SERVER VERIFICATION
-        if( requestServerLocation(location_name, address)){
-            createLocationPage(location_name);
-            createButton(location_name);
-            form.elements['location'].value="";
-            form.elements['address'].value="";
-            loading.style.display = "none";
-            button.style.display = "flex";
-
-            if (button_wrap.getBoundingClientRect().width < scroller.getBoundingClientRect().width){
-
-                left_angle.style.display= "inline";
-                right_angle.style.display= "inline";
-
-            } else {
-
-                left_angle.style.display= "none";
-                right_angle.style.display= "none";
-
-            }
-
-        }else{
-            loading.style.display = "none";
-            error.style.display = "flex";
-            errorFlag = true;
-        }
-    }else{
-        loading.style.display = "none";
-        error.style.display = "flex";
-        errorFlag = true;
-    }
-
-})
-
-function validateAddress(ipaddress) {
-    return /^(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/.test(ipaddress);
-}
-
-$("#locInput").on('keyup',function(){
-
-    let form = this.parentNode.parentNode;
-    let button = form.getElementsByClassName("location-form-button")[0];
-    let loading = form.getElementsByClassName("loading_placeholder")[0];
-    let error = form.getElementsByClassName("error_placeholder")[0];
-
-    if( errorFlag ) {
-        error.style.display = "none";
-        loading.style.display = "none";
-        button.style.display = "flex";
-        errorFlag = false;
-    }
-})
-
-$("#addrInput").on('keyup',function(){
-
-    let form = this.parentNode.parentNode;
-    let button = form.getElementsByClassName("location-form-button")[0];
-    let loading = form.getElementsByClassName("loading_placeholder")[0];
-    let error = form.getElementsByClassName("error_placeholder")[0];
-
-    if( errorFlag ) {
-        error.style.display = "none";
-        loading.style.display = "none";
-        button.style.display = "flex";
-        errorFlag = false;
-    }
-})
-
-function createButton(name){
+//  creates a new button for reaching a location
+function createLocationButton(name){
 
     let button = document.createElement('a');
     let paragraph = document.createElement('p');
@@ -600,47 +521,9 @@ function createButton(name){
 
 }
 
-function adaptLocationScrolling(){
+////////  DYNAMIC PAGE ELEMENTS REMOVAL
 
-    let elements = document.getElementsByClassName("location");
-    for( let elem of elements )
-        adaptScroll(elem);
-}
-
-function adaptScroll(location){
-
-    let wrapper = location.getElementsByClassName("wrapper")[0];
-
-    let scroller = wrapper.getElementsByClassName("scroller")[0];
-    let left_angle = location.getElementsByClassName("left_direction")[0];
-    let right_angle = location.getElementsByClassName("right_direction")[0];
-
-    if( scroller.getBoundingClientRect().width < wrapper.getBoundingClientRect().width){
-
-        scroller.style.left="0";
-        left_angle.style.display= "none";
-        right_angle.style.display= "none";
-
-    } else {
-
-        left_angle.style.display= "inline";
-        right_angle.style.display= "inline";
-
-    }
-
-}
-
-function createLocationPage(name){
-
-    let div = document.createElement('div');
-    div.className = "location_wrapper location";
-    div.id = name;
-    div.appendChild(createLocationButtons());
-    div.appendChild(createSublocation(name));
-    body_page.appendChild(div);
-
-}
-
+//  removes a location
 function deleteLocation(elem){
 
     if( elem.getElementsByClassName("bg")[0].getBoundingClientRect().width< elem.getBoundingClientRect().width )
@@ -652,12 +535,73 @@ function deleteLocation(elem){
     body.removeChild(location);
 }
 
+//  removes a sublocation
 function deleteSublocation(elem){
     let sub_location = elem.parentNode.parentNode;
     let container =  sub_location.parentNode;
     container.removeChild(sub_location);
 }
 
+//////// DYNAMIC PAGE ELEMENT SHOW
+
+//  shows the add sublocation popup
+function openSublocation(node){
+    let location = node.parentNode.parentNode.parentNode.id;
+    let popup_container = document.getElementById(location+"_Default").getElementsByClassName("container-popups")[0]
+    let popups = popup_container.getElementsByClassName('popups');
+    for( let popup of popups )
+        popup.style.display="none";
+    popup_container.getElementsByClassName("add_sublocation_popup")[0].style.display="flex";
+    popup_container.style.display="flex";
+}
+
+// shows the rename location popup
+function renameLocation(node){
+    let loc_elem = node.parentNode.parentNode;
+    let location = loc_elem.id;
+    let popup_container = document.getElementById(location + "_Default").getElementsByClassName("container-popups")[0]
+    let popups = popup_container.getElementsByClassName('popups');
+    for( let popup of popups )
+        popup.style.display="none";
+    popup_container.getElementsByClassName("rename_location_popup")[0].style.display="flex";
+    popup_container.style.display="flex";
+}
+
+//  shows the rename sublocation popup
+function renameSublocation(node){
+    let popup_container = node.parentNode.parentNode;
+    popup_container = popup_container.getElementsByClassName("container-popups")[0];
+    let popups = popup_container.getElementsByClassName('popups');
+    for( let popup of popups )
+        popup.style.display="none";
+    popup_container.getElementsByClassName("rename_sublocation_popup")[0].style.display="flex";
+    popup_container.style.display="flex";
+    popup_container.focus();
+}
+
+//  shows the add device popup
+function addDevicePopup(node){
+    let loc_elem = node.parentNode.parentNode;
+    let popup_container = loc_elem.getElementsByClassName("container-popups")[0]
+    let popups = popup_container.getElementsByClassName('popups');
+    for( let popup of popups )
+        popup.style.display="none";
+    popup_container.getElementsByClassName("add_device_popup")[0].style.display="flex";
+    popup_container.style.display="flex";
+}
+
+//  shows a sublocation
+function changePage(){
+    if( actual_loc != null )
+        actual_loc.style.display ="none";
+    actual_loc = document.getElementById(this.textContent);
+    actual_loc.style.display = "flex";
+    adaptLocationScrolling();
+}
+
+//// ELEMENTS ACTION HANDLERS
+
+//  action on rename location popup submit button
 function renameLocationAction(elem){
 
     let form = elem.parentNode.parentNode;
@@ -685,7 +629,7 @@ function renameLocationAction(elem){
 
     let location = elem.parentNode.parentNode.parentNode.parentNode.parentNode.parentNode.parentNode;
     let old_location = location.id;
-    alert(old_location);
+
     if( renameServerLocation(old_location, input)){
         let sublocations = document.getElementsByClassName("sublocation_wrapper");
         for( let sublocation of sublocations )
@@ -704,9 +648,9 @@ function renameLocationAction(elem){
         error.style.display = "flex";
     }
 
-
 }
 
+//  action on rename sublocation popup submit button
 function renameSublocationAction(elem){
 
     let button = elem.parentNode.getElementsByTagName("button")[0];
@@ -750,31 +694,7 @@ function renameSublocationAction(elem){
 
 }
 
-function closePopup(node){
-    node.parentNode.parentNode.parentNode.parentNode.style.display = "none";
-}
-
-function renameLocation(node){
-    let loc_elem = node.parentNode.parentNode;
-    let location = loc_elem.id;
-    let popup_container = document.getElementById(location + "_Default").getElementsByClassName("container-popups")[0]
-    let popups = popup_container.getElementsByClassName('popups');
-    for( let popup of popups )
-        popup.style.display="none";
-    popup_container.getElementsByClassName("rename_location_popup")[0].style.display="flex";
-    popup_container.style.display="flex";
-}
-
-function addDevicePopup(node){
-    let loc_elem = node.parentNode.parentNode;
-    let popup_container = loc_elem.getElementsByClassName("container-popups")[0]
-    let popups = popup_container.getElementsByClassName('popups');
-    for( let popup of popups )
-        popup.style.display="none";
-    popup_container.getElementsByClassName("add_device_popup")[0].style.display="flex";
-    popup_container.style.display="flex";
-}
-
+//  reaction on add sublocation popup submit button
 function addSublocation(node){
     let form = node.parentNode.parentNode;
     let button = form.getElementsByClassName("add_sublocation_btn")[0];
@@ -814,6 +734,14 @@ function addSublocation(node){
 
 }
 
+//  close of a displayed popup
+function closePopup(node){
+    node.parentNode.parentNode.parentNode.parentNode.style.display = "none";
+}
+
+//  MANAGEMENT OF STYLE ELEMENTS
+
+//  release lock on add sublocation button
 function releaseLock(node){
     let form = node.parentNode.parentNode;
     let button = form.getElementsByClassName("add_sublocation_btn")[0];
@@ -827,6 +755,7 @@ function releaseLock(node){
     }
 }
 
+//  release lock on add popups submit button
 function releaseSubLock(node){
     let form = node.parentNode.parentNode;
     let button = form.getElementsByClassName("simple_sublocation_btn")[0];
@@ -840,27 +769,59 @@ function releaseSubLock(node){
     }
 }
 
-function openSublocation(node){
-    let location = node.parentNode.parentNode.parentNode.id;
-    let popup_container = document.getElementById(location+"_Default").getElementsByClassName("container-popups")[0]
-    let popups = popup_container.getElementsByClassName('popups');
-    for( let popup of popups )
-        popup.style.display="none";
-    popup_container.getElementsByClassName("add_sublocation_popup")[0].style.display="flex";
-    popup_container.style.display="flex";
+//  used by all lists to scrolling on the left
+function lclick(elem){
+    let scroller = elem.parentNode.getElementsByClassName("scroller")[0];
+    let position = parseInt(scroller.style.left, 10) +40;
+    if( position > 0 ) position = 0;
+    scroller.style.left = position+"px";
 }
 
-function renameSublocation(node){
-    let popup_container = node.parentNode.parentNode;
-    popup_container = popup_container.getElementsByClassName("container-popups")[0];
-    let popups = popup_container.getElementsByClassName('popups');
-    for( let popup of popups )
-        popup.style.display="none";
-    popup_container.getElementsByClassName("rename_sublocation_popup")[0].style.display="flex";
-    popup_container.style.display="flex";
-    popup_container.focus();
+//  used by all lists to scrolling on the right
+function rclick(elem){
+    let scroller = elem.parentNode.getElementsByClassName("scroller")[0];
+    let position = parseInt(scroller.style.left, 10) -40;
+    if( position < -(scroller.getBoundingClientRect().width-420) )
+        position = -(scroller.getBoundingClientRect().width-420);
+
+    scroller.style.left = position+"px";
 }
 
+//  apply the scrolling adaptation for all the page's lists
+function adaptLocationScrolling(){
+
+    let elements = document.getElementsByClassName("location");
+    for( let elem of elements )
+        adaptScroll(elem);
+}
+
+//  shows elements for scrolling if needed for all the sublocation of a location
+function adaptScroll(location) {
+
+    let wrapper = location.getElementsByClassName("wrapper")[0];
+
+    let scroller = wrapper.getElementsByClassName("scroller")[0];
+    let left_angle = location.getElementsByClassName("left_direction")[0];
+    let right_angle = location.getElementsByClassName("right_direction")[0];
+
+    if (scroller.getBoundingClientRect().width < wrapper.getBoundingClientRect().width) {
+
+        scroller.style.left = "0";
+        left_angle.style.display = "none";
+        right_angle.style.display = "none";
+
+    } else {
+
+        left_angle.style.display = "inline";
+        right_angle.style.display = "inline";
+
+    }
+}
+
+//  verification of IP address
+function validateAddress(ipaddress) {
+    return /^(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/.test(ipaddress);
+}
 
 function addDevice(element){
 
@@ -872,7 +833,7 @@ function addDevice(element){
     let name = form.getElementsByClassName("input")[0].value.toLowerCase();
     let sublocation = form.parentNode.parentNode.parentNode.parentNode;
     let location = sublocation.parentNode.parentNode;
-    alert(name);
+
     button.style.display = "none";
     loading.style.display = "flex";
 
@@ -903,137 +864,123 @@ function addDevice(element){
 
 }
 
-function createDevice(type,name){
+//// STATIC ELEMENTS ACTION HANDLERS
 
-    let device = document.createElement('div');
-    let wrapper = document.createElement("div");
-    let col = document.createElement("div");
-    let header = document.createElement("h1");
-    let pic = document.createElement("image");
-    let expand = document.createElement("i");
-    let button = document.createElement("button");
-
-    device.className="device";
-    device.id = name;
-    header.textContent = name;
-    header.className = "device_title";
-    button.className = "img_container";
-    expand.className = "fa fa-arrows-alt device_expander";
-    col.className = "device_buttons";
-    col.appendChild(expand);
-    device.appendChild(header);
-
-    switch(type){
-        case "Light":
-            let bright_title = document.createElement("p");
-            bright_title.textContent = "Brightness"
-            let range = document.createElement("input");
-            range.type = "range";
-            let color_title = document.createElement("p");
-            color_title.textContent="Color";
-            let color = document.createElement("input");
-            color.type = "color";
-            pic.alt="light";
-            col.appendChild(bright_title);
-            col.appendChild(range);
-            col.appendChild(color_title);
-            col.appendChild(color);
-            break;
-
-        case "Door":
-            pic.alt="Door";
-            let lock_title = document.createElement("p");
-            let lock = document.createElement("input");
-            col.appendChild(lock_title);
-            col.appendChild(lock);
-            break;
-
-        case "Fan":
-            pic.alt="Fan";
-            let speed_title = document.createElement("p");
-            let speed = document.createElement("input");
-            col.appendChild(speed_title);
-            col.appendChild(speed);
-            break;
-        case "Thermostat":
-            pic.alt="Thermostat";
-            let temperature = document.createElement("p");
-            let set_temp_title = document.createElement("p");
-            let temp = document.createElement("input");
-            pic.appendChild(temperature);
-            col.appendChild(set_temp_title);
-            col.appendChild(temp);
-            break;
-        case "Heater":
-            pic.alt="Heater";
-            let temperature_env = document.createElement("p");
-            let heat_temp_title = document.createElement("p");
-            let heat = document.createElement("input");
-            let fan_title = document.createElement("p");
-            let fan = document.createElement("input");
-            pic.appendChild(temperature_env);
-            col.appendChild(heat_temp_title);
-            col.appendChild(heat);
-            col.appendChild(fan_title);
-            col.appendChild(fan);
-            break;
-    }
-
-    button.appendChild(pic);
-    wrapper.appendChild(button);
-    wrapper.appendChild(col);
-    device.appendChild(wrapper);
-    return device;
-
-}
-
-function changePage(){
-    if( actual_loc != null )
-        actual_loc.style.display ="none";
-    actual_loc = document.getElementById(this.textContent);
-    actual_loc.style.display = "flex";
-    adaptLocationScrolling();
-}
-
+//  adaptation of scrolling on page loading
 $(window).on('load', function(){
     adaptLocationScrolling();
 })
 
-function lclick(elem){
-    let scroller = elem.parentNode.getElementsByClassName("scroller")[0];
-    let position = parseInt(scroller.style.left, 10) +40;
-    if( position > 0 ) position = 0;
-    scroller.style.left = position+"px";
-}
+//  manages the resize of the page scrollers
+$(window).resize(function() {
+    //  optimization of window resizing
+    //  prevent too calls on adaptLocationScrolling
+    if (!throttled) {
+        throttled = true;
+        setTimeout(function() {
+            adaptLocationScrolling();
+            throttled = false;
+        }, 500);
+    }
 
-function rclick(elem){
-    let scroller = elem.parentNode.getElementsByClassName("scroller")[0];
-    let position = parseInt(scroller.style.left, 10) -40;
-    if( position < -(scroller.getBoundingClientRect().width-420) )
-        position = -(scroller.getBoundingClientRect().width-420);
+});
 
-    scroller.style.left = position+"px";
-}
+//  opens the popup for new locations creation
+$("#add_location").on('click', function(){
 
-///////////////  LINK FUNCTIONS
+    if( actual_loc != null )
+        actual_loc.style.display = "none";
+    actual_loc = document.getElementById("add_location_page");
+    actual_loc.style.display="flex";
 
+})
 
-function requestServerLocation(location, address){
-    return true;
-}
+//  creates a new location
+$("#add_location_sub").on('click', function(e){
+    e.preventDefault();
 
-function requestServerSublocation(location, sublocation){
-    return true;
-}
+    let button = this.getElementsByClassName("location-form-button")[0];
+    let loading = this.getElementsByClassName("loading_placeholder")[0];
+    let error = this.getElementsByClassName("error_placeholder")[0];
+    let form = document.getElementById("location_form");
 
-function renameServerLocation(old_name, new_name){
-    return true;
-}
+    button.style.display = "none";
+    loading.style.display = "flex";
 
-function renameServerSublocation(old_name, new_name){
-    return true;
-}
+    let location_name = form.elements['location'].value.toLowerCase();
+    let address = form.elements['address'].value;
 
-function addServerDevice(location, sublocation, dID, type){
-    return true;
-}
+    if( location_name.length !== 0 && address.length !== 0 && validateAddress(address)){
+        let locations = document.getElementsByClassName("location");
+        for( let location of locations )
+            if( location.id === location_name ){
+                loading.style.display = "none";
+                error.style.display = "flex";
+                errorFlag = true;
+                return;
+            }
+        //  TODO SERVER VERIFICATION
+        if( requestServerLocation(location_name, address)){
+            createLocation(location_name);
+            createLocationButton(location_name);
+            form.elements['location'].value="";
+            form.elements['address'].value="";
+            loading.style.display = "none";
+            button.style.display = "flex";
+
+            if (button_wrap.getBoundingClientRect().width < scroller.getBoundingClientRect().width){
+
+                left_angle.style.display= "inline";
+                right_angle.style.display= "inline";
+
+            } else {
+
+                left_angle.style.display= "none";
+                right_angle.style.display= "none";
+
+            }
+
+        }else{
+            loading.style.display = "none";
+            error.style.display = "flex";
+            errorFlag = true;
+        }
+    }else{
+        loading.style.display = "none";
+        error.style.display = "flex";
+        errorFlag = true;
+    }
+
+})
+
+//  function to undo add location button error state
+$("#locInput").on('keyup',function(){
+
+    let form = this.parentNode.parentNode;
+    let button = form.getElementsByClassName("location-form-button")[0];
+    let loading = form.getElementsByClassName("loading_placeholder")[0];
+    let error = form.getElementsByClassName("error_placeholder")[0];
+
+    if( errorFlag ) {
+        error.style.display = "none";
+        loading.style.display = "none";
+        button.style.display = "flex";
+        errorFlag = false;
+    }
+})
+
+//  function to undo add location button error state
+$("#addrInput").on('keyup',function(){
+
+    let form = this.parentNode.parentNode;
+    let button = form.getElementsByClassName("location-form-button")[0];
+    let loading = form.getElementsByClassName("loading_placeholder")[0];
+    let error = form.getElementsByClassName("error_placeholder")[0];
+
+    if( errorFlag ) {
+        error.style.display = "none";
+        loading.style.display = "none";
+        button.style.display = "flex";
+        errorFlag = false;
+    }
+})

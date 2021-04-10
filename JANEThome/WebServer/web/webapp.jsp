@@ -108,6 +108,8 @@
         <script src="resources/vendor/bootstrap/js/bootstrap.min.js"></script>
         <script src="resources/vendor/select2/select2.min.js"></script>
         <script src="resources/vendor/tilt/tilt.jquery.min.js"></script>
+        <script src="resources/js/connection.js"></script>
+        <script src="resources/js/devices.js"></script>
         <script src="resources/js/webapp.js"></script>
 
     </body>
