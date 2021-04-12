@@ -845,7 +845,7 @@ function addDevice(element){
 
     let devices = document.getElementsByClassName("device");
     for( let device of devices )
-        if( device.id === name ){
+        if( device.id === "device_"+name ){
             loading.style.display = "none";
             error.style.display = "flex";
             return;

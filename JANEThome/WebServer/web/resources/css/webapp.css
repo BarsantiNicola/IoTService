@@ -1479,6 +1479,21 @@ a:focus{
     overflow: hidden;
 }
 
+.device .fa-circle{
+    color: #57b846;
+    font-size: 15px;
+}
+
+.device .fa-arrows-alt{
+    color: black;
+    font-size: 20px;
+    margin-left:220px;
+}
+
+.range_input{
+    width: 130px;
+}
+
 .wrapper{
     width:100%;
     display: flex;
@@ -1486,12 +1501,15 @@ a:focus{
 }
 
 .device_buttons{
-    height:100%;
     display: flex;
     flex-direction: column;
-    width:38%;
-    margin-right:20px;
+    width:50%;
+    margin-top: auto;
+    margin-bottom: auto;
+    margin-right: 20px;
+    height: min-content;
 }
+
 
 .range{
     width: 10%;
@@ -1537,8 +1555,8 @@ a:focus{
 }
 
 .device .img_container{
-    height: 208px;
-    width:208px;
+    height: 200px;
+    width:200px;
     border-radius: 25px;
     overflow:hidden;
     margin-top:auto;
@@ -1546,11 +1564,15 @@ a:focus{
     background: none;
 }
 
+.device .conditioner_img_container{
+    display: inline;
+}
+
 .img_container img{
     background: none;
 }
 
-.sublocation_content_wrapper div .temperature_icon{
+.sublocation_content_wrapper div .temperature_bar{
     padding-left:4px;
     padding-right:4px;
     padding-top:0;
@@ -1558,8 +1580,8 @@ a:focus{
     height:15px;
     background: #0a8dff;
     position:relative;
-    top:115px;
-    left: 88px;
+    top:112px;
+    left: 91px;
     z-index: 4;
     display: inline;
     min-width:10px;
@@ -1570,14 +1592,48 @@ a:focus{
     font-family: Poppins-Medium, sans-serif;
     font-size: 36px;
     text-align: right;
-    top:36px;
+    top:32px;
+    color: black;
+    left: 52px;
+    z-index: 4;
+    display: inline;
+}
+
+.sublocation_content_wrapper .conditioner_img_container .temperature_bar{
+    padding-left:4px;
+    padding-right:4px;
+    padding-top:0;
+    border-radius: 20px;
+    height:15px;
+    background: #0a8dff;
+    position:relative;
+    top:80px;
+    left: 87px;
+    z-index: 4;
+    display: inline;
+    min-width:10px;
+}
+
+.sublocation_content_wrapper .conditioner_img_container .temperature_sensor{
+    position:relative;
+    font-family: Poppins-Medium, sans-serif;
+    font-size: 36px;
+    text-align: right;
     color: black;
     left: 48px;
     z-index: 4;
     display: inline;
 }
 
-.temp_set{
+.conditioner_pic{
+
+    position: relative;
+    top: -30px;
+    left: 30px;
+}
+
+
+.set_temperature{
     width:70px;
 }
 
@@ -1585,23 +1641,26 @@ a:focus{
     width:40px;
     height:40px;
     position: relative;
-    display: inline;
-    left: -142px;
-    top:135px;
+    left: 7px;
+    top:115px;
     margin:0;
 }
+
 .sublocation_content_wrapper div .light_ball{
     display: none;
     width: 5px;
     height: 5px;
+    left: -94px;
+    top: 90px;
     position: relative;
-    top:45%;
-    left:50%;
     border-radius: 50%;
     background-color: #fff;
     box-shadow: 0 0 60px 40px #ECFF00;
     opacity: 0;
+    z-index: 4;
 }
+
+
 .device_title{
     font-family: Poppins-Bold, sans-serif;
     font-size: 15px;
@@ -1612,7 +1671,7 @@ a:focus{
     text-transform: uppercase;
 }
 
-.device_range_value{
+.brightness_value{
     font-family: Poppins-Medium, sans-serif;
     font-size: 15px;
     font-weight: lighter;
@@ -1623,6 +1682,49 @@ a:focus{
     margin-left: 5px;
     text-transform: uppercase;
 }
+
+.brightness_input{
+    width: 150px;
+}
+
+.device .fa-unlock:hover{
+    color: #57b846;
+}
+
+.device .fa-unlock{
+    color: #28a745;
+}
+
+.device .fa-lock:hover{
+    color: #5897fb;
+}
+
+.device .fa-lock{
+    color: #007bff;
+}
+
+
+.speed_value{
+    font-family: Poppins-Medium, sans-serif;
+    font-size: 15px;
+    font-weight: lighter;
+    color: #333333;
+    line-height: 1.2;
+    margin-top: auto;
+    margin-bottom: auto;
+    margin-left: 5px;
+    text-transform: uppercase;
+}
+
+.speed_input{
+    width: 150px;
+}
+
+.color_input{
+    background: none;
+    width: 40px;
+}
+
 
 @media (max-width: 1270px){
     .add_location_wrapper{

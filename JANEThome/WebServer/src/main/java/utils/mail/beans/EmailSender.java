@@ -22,7 +22,7 @@ public class EmailSender implements EmailServiceLocal {
         @ApplicationScoped
         @Resource(lookup = "mail/mailSession")
         private Session mailSession;
-        private final String IP="localhost";
+        private final String IP="78.13.122.14";
         private final String PORT="8080";
         private final boolean SECURE = false;
 
