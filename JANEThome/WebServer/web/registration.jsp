@@ -51,16 +51,18 @@
                                 <i class="fa fa-envelope" aria-hidden="true"></i>
                             </span>
                         </div>
-                        <div class="wrap-input">
+                        <div class="wrap-input row-input">
                             <label>
                                 <input id="passInput" class="input" type="password" name="pass" placeholder="Password" required>
+                                <span id="pass" class="symbol-input">
+                                    <i  class="fa fa-lock" aria-hidden="true"></i>
+                                </span>
+                                <span class="hide-page">
+                                    <i id="passButton" class="fa fa-lock" aria-hidden="true"></i>
+                                </span>
                             </label>
-                            <span id="pass" class="symbol-input">
-                                <i  class="fa fa-lock" aria-hidden="true"></i>
-                            </span>
-                            <span class="hide-page">
-                                <i id="passButton" class="fa fa-lock" aria-hidden="true"></i>
-                            </span>
+
+
                         </div>
                     </div>
 

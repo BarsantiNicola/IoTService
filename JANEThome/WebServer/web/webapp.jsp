@@ -34,7 +34,7 @@
                         </div>
                     </div>
                 </div>
-                <div class="location_menu location">
+                <div class="location_menu sublocation">
                     <i class="fa fa-plus-square-o" aria-hidden="true" id="add_location"></i>
                     <i class="fa fa-angle-left left_direction" aria-hidden="true" id="angle_left" ></i>
                     <div class="button-wrapper wrapper" id="button_wrap">
@@ -100,6 +100,7 @@
                         </div>
                     </div>
                 </div>
+                <div class="fuller"></div>
             </div>
         </div>
 

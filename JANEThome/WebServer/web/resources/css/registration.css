@@ -25,12 +25,21 @@
 * {
     margin: 0;
     padding: 0;
-    box-sizing: border-box;
 }
 
+body{
+    background: #9053c7;
+    background: -webkit-linear-gradient(-135deg, #c850c0, #4158d0);
+    background: -o-linear-gradient(-135deg, #c850c0, #4158d0);
+    background: -moz-linear-gradient(-135deg, #c850c0, #4158d0);
+    background: linear-gradient(-135deg, #c850c0, #4158d0);
+}
 body, html {
     height: 100%;
     font-family: Poppins-Regular, sans-serif;
+    margin:0;
+    padding:0;
+    min-height: 800px;
 }
 
 .fa:hover{
@@ -51,6 +60,9 @@ body, html {
 
 .p-t-136 {padding-top: 136px;}
 
+.limiter{
+    height: 100%;
+}
 .txt{
     font-family: Poppins-Regular, sans-serif;
     font-size: 15px;
@@ -93,7 +105,9 @@ body, html {
 .registration-page{
 
     width: 100%;
-    min-height: 100vh;
+    height: 100%;
+    min-width: 300px;
+
     display: -webkit-box;
     display: -webkit-flex;
     display: -moz-box;
@@ -101,21 +115,18 @@ body, html {
     display: flex;
     flex-flow: column;
     justify-content: center;
-    background: #9053c7;
-    background: -webkit-linear-gradient(-135deg, #c850c0, #4158d0);
-    background: -o-linear-gradient(-135deg, #c850c0, #4158d0);
-    background: -moz-linear-gradient(-135deg, #c850c0, #4158d0);
-    background: linear-gradient(-135deg, #c850c0, #4158d0);
+    flex-wrap: wrap;
 
 }
 
 .page-wrapper{
     width: min-content;
     min-width: 1200px;
+    min-height: 500px;
     height: min-content;
     background: #fff;
+    margin-top: 50px;
     border-radius: 20px;
-    overflow: hidden;
     margin-left:auto;
     margin-right:auto;
     display: -webkit-box;
@@ -183,14 +194,14 @@ body, html {
     position:relative;
 
     align-items: center;
-
     border-radius: 25px;
     width: min-content;
     height: 100%;
     padding-left: 30px;
     color: #666666;
     justify-content: left;
-
+    margin-top: auto;
+    margin-bottom: auto;
     -webkit-transition: all 0.4s;
     -o-transition: all 0.4s;
     -moz-transition: all 0.4s;
@@ -198,9 +209,11 @@ body, html {
 }
 
 .hide-page{
-    position:relative;
-    top: -75px;
-    left: 410px;
+
+    position: relative;
+    top: -50%;
+    left: 80%;
+    height: 50px;
     width: min-content;
 }
 
@@ -335,6 +348,9 @@ body, html {
     .page-wrapper{
         min-width:800px;
     }
+    .hide-page{
+        left: 70%;
+    }
 }
 
 @media (max-width: 800px) {
@@ -343,15 +359,41 @@ body, html {
         flex-direction: column;
     }
     .page-wrapper{
-        padding: 40px 60px 30px 60px;
-        min-width: 310px;
+        padding: 40px 20px 30px 20px;
+        min-width: 350px;
+        margin-top:0;
     }
 
     .registration-pic{
         display:none;
     }
+
+    .registration-form-title{
+        padding-bottom: 20px;
+    }
     .page-wrapper p{
         font-size:14px;
+    }
+
+    .container-registration-button{
+        width:90%;
+        margin-left: auto;
+        margin-right: auto;
+    }
+
+    .p-t-50{
+        padding-top: 25px;
+    }
+
+    .wrap-input{
+        width: 90%;
+        margin-left: auto;
+        margin-right: auto;
+    }
+
+    .registration-page{
+        padding-top: 50px;
+        padding-bottom: 50px;
     }
 }
 

@@ -169,7 +169,7 @@ function createRenameLocationPopup(){
     input.placeholder = "Location Name";
     input.addEventListener( "keyup" , function(){releaseSubLock(this);});
     button.className = "simple_sublocation_btn";
-    button.addEventListener("click",function(event){event.preventDefault(); renameLocationAction(this);});
+    button.addEventListener("click",function(event){event.preventDefault(); renameLocationAction(this); closePopup(this.parentNode)});
     button.textContent = "Rename";
 
     label.appendChild(input);
@@ -227,7 +227,7 @@ function createRenameSubLocationPopup(){
     input.placeholder = "Location Name";
     input.addEventListener( "keyup" , function(){releaseSubLock(this);});
     button.className = "simple_sublocation_btn";
-    button.addEventListener("click",function(event){ event.preventDefault(); renameSublocationAction(this);});
+    button.addEventListener("click",function(event){ event.preventDefault(); renameSublocationAction(this);closePopup(this.parentNode)});
     button.textContent = "Rename";
 
     label.appendChild(input);
@@ -296,7 +296,7 @@ function createAddSubLocationPopup(){
     input.placeholder = "Location Name";
     input.addEventListener( "keyup" , function(){releaseLock(this);});
     button.className = "add_sublocation_btn";
-    button.addEventListener("click",function(){addSublocation(this);});
+    button.addEventListener("click",function(){addSublocation(this);closePopup(this.parentNode)});
     button.textContent = "Add";
 
     label.appendChild(input);
@@ -474,7 +474,7 @@ function createSublocationContent(){
     let icon2 = document.createElement("i");
     let icon3 = document.createElement("i");
 
-    wrapper.className = "sublocation_content_wrapper location";
+    wrapper.className = "sublocation_content_wrapper sublocation";
     device_wrapper.className = "device_wrapper wrapper";
     device_scroller.className = "device_scroller scroller";
 
@@ -537,6 +537,10 @@ function deleteLocation(elem){
 
 //  removes a sublocation
 function deleteSublocation(elem){
+
+    if( elem.getElementsByClassName("bg")[0].getBoundingClientRect().width< elem.getBoundingClientRect().width )
+        return;
+
     let sub_location = elem.parentNode.parentNode;
     let container =  sub_location.parentNode;
     container.removeChild(sub_location);
@@ -739,6 +743,7 @@ function closePopup(node){
     node.parentNode.parentNode.parentNode.parentNode.style.display = "none";
 }
 
+
 //  MANAGEMENT OF STYLE ELEMENTS
 
 //  release lock on add sublocation button
@@ -781,8 +786,8 @@ function lclick(elem){
 function rclick(elem){
     let scroller = elem.parentNode.getElementsByClassName("scroller")[0];
     let position = parseInt(scroller.style.left, 10) -40;
-    if( position < -(scroller.getBoundingClientRect().width-420) )
-        position = -(scroller.getBoundingClientRect().width-420);
+    if( position < -(scroller.getBoundingClientRect().width) )
+        position = -(scroller.getBoundingClientRect().width);
 
     scroller.style.left = position+"px";
 }
@@ -790,7 +795,7 @@ function rclick(elem){
 //  apply the scrolling adaptation for all the page's lists
 function adaptLocationScrolling(){
 
-    let elements = document.getElementsByClassName("location");
+    let elements = document.getElementsByClassName("sublocation");
     for( let elem of elements )
         adaptScroll(elem);
 }

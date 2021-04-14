@@ -41,22 +41,22 @@ input{
     outline: none;
 }
 
+body{
+
+    background: #9053c7;
+    background: -webkit-linear-gradient(-135deg, #c850c0, #4158d0);
+    background: -o-linear-gradient(-135deg, #c850c0, #4158d0);
+    background: -moz-linear-gradient(-135deg, #c850c0, #4158d0);
+    background: linear-gradient(-135deg, #c850c0, #4158d0);
+}
+
 body, html {
-    height: 100%;
+    height: min-content;
+    width: 100%;
     font-family: Poppins-Regular, sans-serif;
-    min-width: 650px;
-}
-
-
-/*----------------------[ CUSTOMS ]------------------------*/
-
-.limiter {
-    width: 100%;
-    margin: 0 auto;
-}
-
-.container-webapp{
-    width: 100%;
+    margin:0;
+    padding:0;
+    min-width:575px;
     min-height: 100vh;
     display: -webkit-box;
     display: -webkit-flex;
@@ -64,12 +64,28 @@ body, html {
     display: -ms-flexbox;
     display: flex;
     flex-flow: column;
-    flex-wrap: wrap;
-    background: #9053c7;
-    background: -webkit-linear-gradient(-135deg, #c850c0, #4158d0);
-    background: -o-linear-gradient(-135deg, #c850c0, #4158d0);
-    background: -moz-linear-gradient(-135deg, #c850c0, #4158d0);
-    background: linear-gradient(-135deg, #c850c0, #4158d0);
+
+}
+
+
+/*----------------------[ CUSTOMS ]------------------------*/
+
+.limiter {
+
+    height: min-content;
+    width: 100%;
+
+}
+
+.container-webapp{
+
+    display: -webkit-box;
+    display: -webkit-flex;
+    display: -moz-box;
+    display: -ms-flexbox;
+    display: flex;
+    flex-flow: column;
+
 }
 
 .header-webapp{
@@ -150,7 +166,8 @@ body, html {
 .body-webapp{
     width:100%;
     height: 100%;
-    flex-grow:1;
+    min-height: 300px;
+    margin-bottom:auto;
 }
 
 .account-wrapper{
@@ -1135,6 +1152,7 @@ a:focus{
     border-bottom: 3px solid #FFF;
     background-color: #DADADA;
     height: 1px;
+    min-width: 483px;
     margin: 0.5em 0 1.5em;
 }
 
@@ -1173,6 +1191,7 @@ a:focus{
     background: rgba(0,0,0,0.6);
     width:100%;
     height: 356.5px;
+    min-width:483px;
     top:44px;
 }
 
@@ -1215,7 +1234,9 @@ a:focus{
 .add_device_popup select{
     margin-left: auto;
     margin-right: auto;
-    width:200px;
+    width:min-content;
+    padding-left: 25px;
+    padding-right: 25px;
     height: 50px;
     font-family: Montserrat-Bold, sans-serif;
     font-size: 15px;
@@ -1224,8 +1245,15 @@ a:focus{
     text-transform: uppercase;
     border-radius: 25px;
     text-align: center;
+    text-align-last:center;
     display: block;
     border: hidden;
+}
+
+.add_device_popup option{
+    width: min-content;
+    text-align: center;
+    text-align-last:center;
 }
 .simple_sublocation_btn{
 
@@ -1466,8 +1494,8 @@ a:focus{
 
 .device{
     height: 250px;
-    width: 400px;
-    min-width: 400px;
+    width: 350px;
+    min-width: 350px;
     display:flex;
     flex-direction: column;
     border-radius: 20px;
@@ -1487,7 +1515,8 @@ a:focus{
 .device .fa-arrows-alt{
     color: black;
     font-size: 20px;
-    margin-left:220px;
+    margin-left:auto;
+    margin-right:25px;
 }
 
 .range_input{
@@ -1717,7 +1746,7 @@ a:focus{
 }
 
 .speed_input{
-    width: 150px;
+    width: 100px;
 }
 
 .color_input{
@@ -1730,11 +1759,13 @@ a:focus{
     .add_location_wrapper{
         width:90%;
     }
+
 }
 
 @media (max-width: 840px){
+
     .add_location_wrapper{
-        width:98%;
+        width:95%;
     }
     .info_col{
         display:none;
@@ -1749,23 +1780,23 @@ a:focus{
 
 }
 
-@media (max-width: 490px) {
-    .add_location_wrapper {
-        margin: 50px 0 0;
-        width:100%;
-        border-radius: 0;
-        height:100%;
-    }
-
+@media (max-width: 576px) {
+    
     .info_col{
         display:none;
     }
+
     .outer{
         display:none;
     }
+
     .location_button_wrapper{
         margin-left:0;
         margin-right:auto;
         justify-content: left;
+    }
+
+    body,html{
+        min-height: 1080px;
     }
 }

@@ -588,11 +588,9 @@ function changeTemperature(dID, temperature){
         return false;
 
     temp.value = temperature;
-    alert(parseFloat(temp.value));
-    alert(parseFloat(env.value));
+
     switch( type.value ){
         case "Thermostat":
-            alert("therm");
             if( parseFloat(temp.value) < parseFloat(env.value)){
                 thermostat.src = "resources/pics/devices/thermostat-hot.png";
                 thermostat.alt = "Thermostat-on";
@@ -603,7 +601,6 @@ function changeTemperature(dID, temperature){
             break;
 
         case "Conditioner":
-            alert("cond");
             if( parseFloat(temp.value) < parseFloat(env.value)){
                 thermostat.src = "resources/pics/devices/thermostat-hot.png";
                 thermostat.alt = "Conditioner-hot";
@@ -614,7 +611,6 @@ function changeTemperature(dID, temperature){
             break;
 
         default:
-            alert(type);
             return false;
     }
 
@@ -668,7 +664,6 @@ function updateEnvironmentTemperature(dID, temp){
             break;
 
         default:
-            alert(type);
             return false;
     }
     return true;
