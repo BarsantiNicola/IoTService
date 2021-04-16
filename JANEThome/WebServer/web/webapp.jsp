@@ -12,7 +12,101 @@
         <link rel="stylesheet" type="text/css" href="resources/css/webapp.css">
     </head>
     <body>
-        <div class="limiter">
+        <div id="container_expand" class="container_expand">
+            <div class="expand_device">
+                <div class="info_device">
+                    <p class="device_expander_name">PROVA
+                    </p>
+                    <div class="delete_device_wrapper" onclick="deleteDevice(this)">
+                        <a href="#"><span>Delete Device</span></a>
+                    </div>
+                    <i class="fa fa-close" onclick="closeExpander()"></i>
+                </div>
+                <div class="actions_header">
+                    <div class="actions_header_name">Device Name</div>
+                    <div class="actions_header_loc">Device Sublocation</div>
+                </div>
+                <div class="device_actions">
+                    <label>
+                        <input class="device_input" type="text" name="name" placeholder="Device Name" onkeydown="unlockDeviceName(this)" required>
+                        <input type="hidden" class="device_name">
+                        <input type="hidden" class="device_location">
+                        <input type="hidden" class="device_sublocation">
+                        <input type="hidden" class="device_type">
+                    </label>
+                    <div class="device_change_submit">
+                        <button  class="location-form-button"  onclick="renameDevice(this)" >Change</button>
+                        <span class="loading_placeholder" >
+                            <img src="resources/pics/loading.gif" alt="#">
+                        </span>
+                        <span class="error_placeholder" >
+                            <i class="fa fa-times" aria-hidden="true"></i>
+                        </span>
+                    </div>
+
+                    <label>
+                        <select onchange="changeDeviceSublocation(this)">
+                        </select>
+                    </label>
+                </div>
+                <div class="device_statistics">
+                    <div class="statistics_header">
+                        <i class="fa fa-line-chart" aria-hidden="true"></i>
+                        Statistics
+
+                    </div>
+
+                    <div class="statistics">
+                        <div class="statistic">
+                            <div class="statistic_header">
+                                Statistics
+                            </div>
+                            <div class="statistic_period">
+                                <label> Start-time:
+                                    <input type="date" class="date_picker">
+                                </label>
+                                <label> End-time:
+                                    <input type="date" class="date_picker">
+                                </label>
+                                <i class="fa fa-search search_ok" aria-hidden="true"></i>
+                            </div>
+                            <div class="statistic_graph">
+                                <div class="graph_loader">
+                                    <img src="resources/pics/stat_loading.gif">
+                                </div>
+                                <div class="graph" id="chart_1"></div>
+                                <div class="cheater"></div>
+                            </div>
+                        </div>
+                        <div class="statistic">
+                            <div class="statistic_header">
+                                Statistics
+                            </div>
+                            <div class="statistic_period">
+                                <label> Start-time:
+                                    <input type="date" class="date_picker">
+                                </label>
+                                <label> End-time:
+                                    <input type="date" class="date_picker">
+                                </label>
+                                <i class="fa fa-search search_ok" aria-hidden="true"></i>
+                            </div>
+                            <div class="statistic_graph">
+                                <div class="statistic_graph">
+                                    <div class="graph_loader">
+                                        <img src="resources/pics/stat_loading.gif">
+                                    </div>
+                                    <div class="graph" id="chart_2">
+                                    </div>
+                                    <div class="cheater"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div id="limiter" class="limiter">
             <div class="container-webapp">
                 <div class="header-webapp">
                     <div class="account-wrapper">
@@ -22,11 +116,6 @@
                         </div>
                         <img class="js-tilt" src="resources/pics/logo2.png" alt="logo" data-tilt="">
                         <div class="account-button-wrapper">
-                            <a href="#" class="btn">
-                                <i class="fa fa-cog"></i>
-                                <p id="settings_label">Settings</p>
-                            </a>
-                            <br>
                             <a href="login.jsp" class="btn">
                                 <i class="fa fa-sign-out"></i>
                                 <p id="logout_label">Logout</p>
@@ -109,6 +198,7 @@
         <script src="resources/vendor/bootstrap/js/bootstrap.min.js"></script>
         <script src="resources/vendor/select2/select2.min.js"></script>
         <script src="resources/vendor/tilt/tilt.jquery.min.js"></script>
+        <script src="resources/vendor/canvasJS/canvasjs.min.js"></script>
         <script src="resources/js/connection.js"></script>
         <script src="resources/js/devices.js"></script>
         <script src="resources/js/webapp.js"></script>

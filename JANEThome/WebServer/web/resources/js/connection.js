@@ -47,3 +47,11 @@ function serverThermostatTemperatureRequest(dID, temperature){
 function serverDevicePowerRequest(dID, value){
     return true;
 }
+
+function serverRenameDevice(old_name, new_name){
+    return true;
+}
+
+function serverChangeDeviceSublocation(dID, location, new_sublocation){
+    return true;
+}

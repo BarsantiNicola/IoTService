@@ -68,5 +68,6 @@
     <orderEntry type="library" name="Maven: org.json:json:20190722" level="project" />
     <orderEntry type="library" name="Maven: com.googlecode.json-simple:json-simple:1.1" level="project" />
     <orderEntry type="library" name="Maven: dsmt.iot.project:OAuth2Service:1.0-SNAPSHOT" level="project" />
+    <orderEntry type="library" name="canvasjs" level="application" />
   </component>
 </module>

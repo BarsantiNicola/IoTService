@@ -18,6 +18,7 @@ function createDevice(type,name) {
     status_icon.className = "fa fa-circle";
     expand_icon.className = "fa fa-arrows-alt";
 
+
     type_info.type = "hidden";
     type_info.className = "type";
     type_info.value = type;
@@ -28,7 +29,7 @@ function createDevice(type,name) {
     header_wrapper.appendChild(type_info);
 
     device.appendChild(header_wrapper);
-
+    expand_icon.addEventListener("click", function(){openExpander(this.parentNode.parentNode);});
     switch (type) {
         case "Light":
             device.appendChild(createLight(name));

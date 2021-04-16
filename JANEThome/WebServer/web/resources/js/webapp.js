@@ -169,7 +169,7 @@ function createRenameLocationPopup(){
     input.placeholder = "Location Name";
     input.addEventListener( "keyup" , function(){releaseSubLock(this);});
     button.className = "simple_sublocation_btn";
-    button.addEventListener("click",function(event){event.preventDefault(); renameLocationAction(this); closePopup(this.parentNode)});
+    button.addEventListener("click",function(event){event.preventDefault(); if(renameLocationAction(this)) closePopup(this.parentNode)});
     button.textContent = "Rename";
 
     label.appendChild(input);
@@ -227,7 +227,7 @@ function createRenameSubLocationPopup(){
     input.placeholder = "Location Name";
     input.addEventListener( "keyup" , function(){releaseSubLock(this);});
     button.className = "simple_sublocation_btn";
-    button.addEventListener("click",function(event){ event.preventDefault(); renameSublocationAction(this);closePopup(this.parentNode)});
+    button.addEventListener("click",function(event){ event.preventDefault(); if(renameSublocationAction(this)) closePopup(this.parentNode)});
     button.textContent = "Rename";
 
     label.appendChild(input);
@@ -296,7 +296,7 @@ function createAddSubLocationPopup(){
     input.placeholder = "Location Name";
     input.addEventListener( "keyup" , function(){releaseLock(this);});
     button.className = "add_sublocation_btn";
-    button.addEventListener("click",function(){addSublocation(this);closePopup(this.parentNode)});
+    button.addEventListener("click",function(){if(addSublocation(this)) closePopup(this.parentNode)});
     button.textContent = "Add";
 
     label.appendChild(input);
@@ -605,6 +605,33 @@ function changePage(){
 
 //// ELEMENTS ACTION HANDLERS
 
+function renameLocationAct(old_name, new_name){
+
+    if( new_name.length === 0 )
+        return false;
+
+    let selected_location = document.getElementById(old_name);
+    if( selected_location === undefined )
+        return false;
+
+    let locations = document.getElementsByClassName("location");
+    for( let location of locations )
+        if(location.id === new_name )
+            return false;
+
+    let sublocations = selected_location.getElementsByClassName("sublocation_wrapper");
+    for( let sublocation of sublocations )
+        sublocation.id = new_name + "_"+ sublocation.id.replace(old_name+"_","");
+    selected_location.id = new_name;
+    let button = document.getElementById("button_"+ old_name);
+    button.id = "button_" + new_name;
+    button.getElementsByClassName("text")[0].textContent = new_name;
+
+    return true;
+
+
+}
+
 //  action on rename location popup submit button
 function renameLocationAction(elem){
 
@@ -615,43 +642,32 @@ function renameLocationAction(elem){
 
     button.style.display = "none";
     loading.style.display = "flex";
+
     let input = form.getElementsByClassName("input")[0].value.toLowerCase();
-
-    if( input.length === 0 ){
-        loading.style.display = "none";
-        error.style.display = "flex";
-        return;
-    }
-
-    let locations = document.getElementsByClassName("location");
-    for( let location of locations )
-        if(location.id === input ){
-            loading.style.display = "none";
-            error.style.display = "flex";
-            return;
-        }
-
     let location = elem.parentNode.parentNode.parentNode.parentNode.parentNode.parentNode.parentNode;
     let old_location = location.id;
 
-    if( renameServerLocation(old_location, input)){
-        let sublocations = document.getElementsByClassName("sublocation_wrapper");
-        for( let sublocation of sublocations )
-            sublocation.id = input + "_" + sublocation.id.replace(old_location+"_","");
-
-        location.id = input;
-        let loc_button = document.getElementById("button_"+ old_location);
-        loc_button.id="button_"+input;
-        let button_label = loc_button.getElementsByClassName("text")[0];
-        button_label.textContent = input;
+    if( renameServerLocation(old_location, input) && renameLocationAct(old_location, input)){
 
         loading.style.display = "none";
         button.style.display = "inline";
+        return true;
     }else{
         loading.style.display = "none";
         error.style.display = "flex";
+        return false;
     }
 
+}
+
+function renameSublocationAct(location_name, old_name, new_name){
+    let sublocation = document.getElementById(location_name+"_"+old_name);
+    if( sublocation === undefined || new_name.length === 0 || document.getElementById(location_name+"_"+new_name) !== null)
+        return false;
+
+    sublocation.id = location_name + "_" + new_name;
+    sublocation.getElementsByClassName("heading_sublocation")[0].textContent = new_name;
+    return true;
 }
 
 //  action on rename sublocation popup submit button
@@ -665,37 +681,40 @@ function renameSublocationAction(elem){
     loading.style.display = "flex";
 
     let sublocation = elem.parentNode.parentNode.parentNode.parentNode.parentNode.parentNode;
-    let subloc_name = elem.parentNode.parentNode;
-    subloc_name = subloc_name.getElementsByClassName("input")[0].value.toLowerCase();
+    let location = sublocation.parentNode.id;
+    let old_name = sublocation.id.replace(location+"_","");
+    let new_name = elem.parentNode.parentNode;
+    new_name = new_name.getElementsByClassName("input")[0].value.toLowerCase();
 
-    if( subloc_name.length === 0 ){
-        loading.style.display = "none";
-        error.style.display = "flex";
-        return;
-    }
-
-    let location = sublocation.parentNode;
-    let sublocations = location.getElementsByClassName("sublocation_wrapper");
-    let new_sublocation_name = location.id + "_" + subloc_name;
-
-    for( let subloc of sublocations)
-        if( subloc.id === new_sublocation_name ){
-            loading.style.display = "none";
-            error.style.display = "flex";
-            return;
-        }
-
-    if( renameServerSublocation( sublocation.id.replace(location.id+"_",""), subloc_name)){
-        let header = sublocation.getElementsByClassName("heading_sublocation")[0];
-        sublocation.id = new_sublocation_name;
-        header.textContent = subloc_name;
+    if( renameServerSublocation( location, old_name, new_name) && renameSublocationAct(location, old_name, new_name )){
         loading.style.display = "none";
         button.style.display = "flex";
+        return true;
     }else{
         loading.style.display = "none";
         error.style.display = "flex";
+        return false;
     }
 
+}
+
+function addSublocationAct(location, sub_location){
+
+    if( sub_location === null || sub_location.length === 0)
+        return false;
+    let selected_location = document.getElementById(location);
+    if( selected_location === null )
+        return false;
+    let id = location+"_"+sub_location;
+
+    let sub_locations = selected_location.getElementsByClassName("sublocation_wrapper");
+    for( let sub_loc of sub_locations )
+        if( sub_loc.id === id )
+            return false;
+
+    selected_location.appendChild(createSublocation(location,sub_location));
+    adaptLocationScrolling();
+    return true;
 }
 
 //  reaction on add sublocation popup submit button
@@ -711,29 +730,16 @@ function addSublocation(node){
     let wrapper = node.parentNode.parentNode.parentNode.parentNode.parentNode.parentNode.parentNode;
     let location = wrapper.id;
     let name = form.getElementsByClassName('input')[0].value.toLowerCase();
-    if( name.length === 0 ){
-        loading.style.display = "none";
-        error.style.display = "flex";
-        return;
-    }
 
-    let new_name = location+"_"+name;
-    let sublocations = wrapper.getElementsByClassName("sublocation_wrapper");
-    for( let sublocation of sublocations )
-        if( sublocation.id === new_name ){
-            loading.style.display = "none";
-            error.style.display = "flex";
-            return;
-        }
-    if( requestServerSublocation(wrapper.id, name)){
+    if( requestServerSublocation(wrapper.id, name) && addSublocationAct(location,name)){
         form.getElementsByClassName('input')[0].value = "";
-        wrapper.appendChild(createSublocation(location,name));
-        adaptLocationScrolling();
         loading.style.display = "none";
         button.style.display = "inline";
+        return true;
     }else{
         loading.style.display = "none";
         error.style.display = "flex";
+        return false;
     }
 
 }
@@ -790,6 +796,14 @@ function rclick(elem){
         position = -(scroller.getBoundingClientRect().width);
 
     scroller.style.left = position+"px";
+}
+
+function closeExpander(){
+    let limiter = document.getElementById("limiter");
+    let expander = document.getElementById("container_expand");
+    expander.style.display = "none";
+    limiter.style.display = "inline";
+    adaptLocationScrolling();
 }
 
 //  apply the scrolling adaptation for all the page's lists
@@ -869,6 +883,246 @@ function addDevice(element){
 
 }
 
+function deleteDevice(node){
+    let dID = node.parentNode.getElementsByClassName("device_expander_name")[0].textContent;
+    deleteDeviceAct(dID);
+    adaptLocationScrolling();
+    closeExpander();
+}
+
+function deleteDeviceAct(dID){
+    let device = document.getElementById("device_" + dID);
+    if( device === null || !serverDeleteDevice(dID))
+        return false;
+    device.parentNode.removeChild(device);
+    return true;
+
+}
+
+function renameDevice(node){
+
+    let wrapper = node.parentNode.parentNode;
+    let old_name = wrapper.getElementsByClassName("device_name")[0].value;
+    let input = wrapper.getElementsByClassName("device_input")[0];
+    let new_name = input.value;
+    let button = wrapper.getElementsByClassName("location-form-button")[0];
+    let loading = wrapper.getElementsByClassName("loading_placeholder")[0];
+    let error = wrapper.getElementsByClassName("error_placeholder")[0];
+
+    button.style.display = "none";
+    loading.style.display = "flex";
+
+    if( serverRenameDevice(old_name, new_name) && renameDeviceAct(old_name,new_name)){
+        loading.style.display = "none";
+        button.style.display ="flex";
+        wrapper.parentNode.getElementsByClassName("device_expander_name")[0].textContent = new_name;
+        wrapper.getElementsByClassName("device_name")[0].value = new_name;
+    }else{
+        loading.style.display = "none";
+        error.style.display = "flex";
+    }
+
+}
+
+function renameDeviceAct(oldDID, newDID){
+
+    let device = document.getElementById("device_"+oldDID);
+    if( device === null )
+        return false;
+    let devices = document.getElementsByClassName("device");
+    let new_ID = "device_"+newDID;
+
+    for( let dev of devices )
+        if( dev.id === new_ID )
+            return false;
+
+        device.getElementsByClassName("device_title")[0].textContent = newDID+"["+device.getElementsByClassName("type")[0].value+"]";
+    device.id= "device_"+newDID;
+    return true;
+
+}
+
+function changeDeviceSublocation(node){
+
+    let wrapper = node.parentNode.parentNode;
+    let location = wrapper.getElementsByClassName("device_location")[0].value;
+    let dID = wrapper.getElementsByClassName("device_name")[0].value;
+    let sublocation = wrapper.getElementsByClassName("device_sublocation")[0].value;
+    let new_sublocation = node.value;
+    if( serverChangeDeviceSublocation(dID, location, new_sublocation) && changeDeviceSublocationAct(dID, location, new_sublocation))
+        wrapper.getElementsByClassName("device_sublocation")[0].value = new_sublocation;
+    else
+        node.value = sublocation;
+
+}
+
+function changeDeviceSublocationAct(dID, location, new_sublocation){
+
+    let device = document.getElementById("device_"+dID);
+    if( device === null )
+        return false;
+
+    let sublocation = document.getElementById(location+"_"+new_sublocation);
+    if( sublocation === null )
+        return false;
+
+    let wrapper = sublocation.getElementsByClassName("device_scroller")[0];
+    device.parentNode.removeChild(device);
+    wrapper.appendChild(device);
+    return true;
+
+
+}
+
+function unlockDeviceName(node){
+
+    let container = node.parentNode.parentNode;
+    let button = container.getElementsByClassName("location-form-button")[0];
+    let loading = container.getElementsByClassName("loading_placeholder")[0];
+    let error = container.getElementsByClassName("error_placeholder")[0];
+
+    if( error.style.display !== "none"){
+        error.style.display = "none";
+        loading.style.display = "none";
+        button.style.display = "flex";
+    }
+}
+
+
+function openExpander(elem){
+    let expander = document.getElementById("container_expand");
+    let title = document.getElementsByClassName("device_expander_name")[0];
+    let input = document.getElementsByClassName("device_input")[0];
+    let dID = document.getElementsByClassName("device_name")[0];
+    let location = document.getElementsByClassName("device_location")[0];
+    let sublocation = document.getElementsByClassName("device_sublocation")[0];
+    let type = document.getElementsByClassName("device_type")[0];
+    let select = document.getElementsByTagName("select")[0];
+    let dates = expander.getElementsByClassName("date_picker");
+
+    select.innerHTML = "";
+    let position = elem.parentNode.parentNode.parentNode.parentNode.id;
+    type.value = elem.parentNode.parentNode.parentNode.parentNode.getElementsByClassName("type")[0].value;
+    position = position.split("_");
+    location.value = position[0];
+    sublocation.value = position[1];
+    title.textContent = elem.id.replace("device_","");
+    input.value = title.textContent;
+    dID.value = title.textContent;
+    let sublocations = document.getElementById(position[0]).getElementsByClassName("sublocation_wrapper");
+    for( let sublocation of sublocations){
+        let option = document.createElement("option");
+        option.textContent =sublocation.id.replace(position[0]+"_","");
+        select.appendChild(option);
+    }
+
+    let today = new Date();
+    for( let date of dates)
+        date.valueAsDate = today;
+
+    chartCreation(elem.getElementsByClassName("type")[0].value);
+    document.getElementById("limiter").style.display = "none";
+    expander.style.display = "flex";
+}
+
+function chartCreation(device_type){
+
+    let charts = document.getElementsByClassName("graph_loader");
+    let graphs = document.getElementsByClassName("graph");
+    for( let graph of graphs )
+        graph.style.display = "none";
+    for( let chart of charts )
+        chart.style.display = "block";
+
+    switch(device_type){
+        case "Light":
+            createChart( 1, "Device Usage", null);
+            createChart( 2, "Brightness", null);
+            break;
+        case "Fan":
+            createChart( 1, "Device Usage", null);
+            createChart( 2, "Fan Speed", null);
+            break;
+        case "Door":
+            createChart( 1, "N. door opening", null);
+            createChart( 2, "N. door locking", null);
+            break;
+        case "Thermostat":
+            createChart( 1, "Device Usage", null);
+            createChart( 2, "Temperature", null);
+            break;
+        case "Conditioner":
+            createChart( 1, "Device Usage", null);
+            createChart( 2, "Temperature", null);
+            break;
+        default:
+    }
+    //  TODO TO BE REMOVED
+    for( let graph of graphs )
+        graph.style.display = "block";
+    for( let chart of charts )
+        chart.style.display = "none";
+    //
+}
+
+function createChart(id, name, data){
+
+    document.getElementsByClassName("statistic_header")[id-1].textContent = name;
+    let chart = new CanvasJS.Chart("chart_"+id,
+        {
+            height: 235,
+            width: 430,
+
+            axisX:{
+                valueFormatString: "DD-MMM" ,
+                interval: 10,
+                intervalType: "day",
+                labelAngle: -50,
+                labelFontColor: "#007bff",
+                minimum: new Date(2012,6,10)
+            },
+            axisY: {
+                valueFormatString: "#M,,.",
+                backgroundColor: "#333333",
+                labelFontColor: "#007bff",
+            },
+            data: [
+                {
+                    indexLabelFontColor: "darkSlateGray",
+                    type: "area",
+                    color: "#e0a800",
+
+                    markerType: "none",
+                    dataPoints: [
+                        { x: new Date(2012, 6, 15), y: 0 },
+                        { x: new Date(2012, 6, 18), y: 2000000 },
+                        { x: new Date(2012, 6, 23), y: 6000000 },
+                        { x: new Date(2012, 7, 1), y: 10000000 },
+                        { x: new Date(2012, 7, 11), y: 21000000 },
+                        { x: new Date(2012, 7, 23), y: 50000000 },
+                        { x: new Date(2012, 7, 31), y: 75000000 },
+                        { x: new Date(2012, 8, 4), y: 100000000 },
+                        { x: new Date(2012, 8, 10), y: 125000000 },
+                        { x: new Date(2012, 8, 13), y: 150000000 },
+                        { x: new Date(2012, 8, 16), y: 175000000 },
+                        { x: new Date(2012, 8, 18), y: 200000000 },
+                        { x: new Date(2012, 8, 21), y: 225000000 },
+                        { x: new Date(2012, 8, 24), y: 250000000 },
+                        { x: new Date(2012, 8, 26), y: 275000000 },
+                        { x: new Date(2012, 8, 28), y: 302000000 }
+                    ]
+                }
+            ]
+        });
+
+    chart.render();
+
+    let loader = document.getElementsByClassName("graph_loader")[id-1];
+    let graph = document.getElementsByClassName("graph")[id-1];
+
+    loader.style.display = "none";
+    graph.style.display = "inline";
+}
 //// STATIC ELEMENTS ACTION HANDLERS
 
 //  adaptation of scrolling on page loading
