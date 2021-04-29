@@ -1025,6 +1025,52 @@ function openExpander(elem){
     expander.style.display = "flex";
 }
 
+function refreshStat(node){
+
+    let period = node.parentNode.getElementsByClassName("date_picker");
+    let start_time = new Date(period[0].value);
+    let end_time = new Date(period[1].value);
+
+    if( start_time> end_time || node.className === "fa fa-search search_no")
+        return;
+
+    let dID = document.getElementsByClassName("device_name")[0].value;
+    let container =  node.parentNode.parentNode;
+    let loader = container.getElementsByClassName("graph_loader")[0];
+    let graph = container.getElementsByClassName("graph")[0];
+    let cheater = container.getElementsByClassName("cheater")[0];
+    graph.style.display = "none";
+    cheater.style.display = "none";
+    loader.style.display = "block";
+    let stat = container.getElementsByClassName("statistic_header")[0].textContent;
+    let graphID = parseInt(container.getElementsByClassName("graph")[0].id.replace("chart_",""));
+    node.className = "fa fa-search search_no";
+
+    if( serverStatRequest( dID, stat, start_time, end_time)){
+
+        let data = [
+            { x: new Date(2012, 6, 15), y: 0 },
+            { x: new Date(2012, 6, 18), y: 2000000 },
+            { x: new Date(2012, 6, 23), y: 6000000 },
+            { x: new Date(2012, 7, 1), y: 10000000 },
+            { x: new Date(2012, 7, 11), y: 21000000 },
+            { x: new Date(2012, 7, 23), y: 50000000 },
+            { x: new Date(2012, 7, 31), y: 75000000 },
+            { x: new Date(2012, 8, 4), y: 100000000 },
+            { x: new Date(2012, 8, 10), y: 125000000 },
+            { x: new Date(2012, 8, 13), y: 150000000 },
+            { x: new Date(2012, 8, 16), y: 175000000 },
+            { x: new Date(2012, 8, 18), y: 200000000 },
+            { x: new Date(2012, 8, 21), y: 225000000 },
+            { x: new Date(2012, 8, 24), y: 250000000 },
+            { x: new Date(2012, 8, 26), y: 275000000 },
+            { x: new Date(2012, 8, 28), y: 302000000 }
+        ];
+        createChart(graphID, stat, data);
+
+    }
+    node.className = "fa fa-search search_ok";
+}
 function chartCreation(device_type){
 
     let charts = document.getElementsByClassName("graph_loader");
@@ -1034,18 +1080,38 @@ function chartCreation(device_type){
     for( let chart of charts )
         chart.style.display = "block";
 
+    //  TODO to be removed
+
+    let data = [
+        { x: new Date(2012, 6, 15), y: 0 },
+        { x: new Date(2012, 6, 18), y: 2000000 },
+        { x: new Date(2012, 6, 23), y: 6000000 },
+        { x: new Date(2012, 7, 1), y: 10000000 },
+        { x: new Date(2012, 7, 11), y: 21000000 },
+        { x: new Date(2012, 7, 23), y: 50000000 },
+        { x: new Date(2012, 7, 31), y: 75000000 },
+        { x: new Date(2012, 8, 4), y: 100000000 },
+        { x: new Date(2012, 8, 10), y: 125000000 },
+        { x: new Date(2012, 8, 13), y: 150000000 },
+        { x: new Date(2012, 8, 16), y: 175000000 },
+        { x: new Date(2012, 8, 18), y: 200000000 },
+        { x: new Date(2012, 8, 21), y: 225000000 },
+        { x: new Date(2012, 8, 24), y: 250000000 },
+        { x: new Date(2012, 8, 26), y: 275000000 },
+        { x: new Date(2012, 8, 28), y: 302000000 }
+    ];
     switch(device_type){
         case "Light":
-            createChart( 1, "Device Usage", null);
-            createChart( 2, "Brightness", null);
+            createChart( 1, "Device Usage", data);
+            createChart( 2, "Brightness", data);
             break;
         case "Fan":
-            createChart( 1, "Device Usage", null);
-            createChart( 2, "Fan Speed", null);
+            createChart( 1, "Device Usage", data);
+            createChart( 2, "Fan Speed", data);
             break;
         case "Door":
-            createChart( 1, "N. door opening", null);
-            createChart( 2, "N. door locking", null);
+            createChart( 1, "N. door opening", data);
+            createChart( 2, "N. door locking", data);
             break;
         case "Thermostat":
             createChart( 1, "Device Usage", null);
@@ -1057,29 +1123,35 @@ function chartCreation(device_type){
             break;
         default:
     }
-    //  TODO TO BE REMOVED
-    for( let graph of graphs )
-        graph.style.display = "block";
-    for( let chart of charts )
-        chart.style.display = "none";
-    //
+
 }
 
 function createChart(id, name, data){
 
     document.getElementsByClassName("statistic_header")[id-1].textContent = name;
+    let max = 0;
+    for( let info of data)
+        if( info.y>max)
+            max = info.y;
+    let minutes = Math.ceil((data[data.length-1].x-data[0].x )/ (1000 * 60));
+    let format;
+    if( minutes <= 60*24 )
+        format = "hh-mm";
+    else
+        format = "DD-MMM-hh-mm"
+    document.getElementById("chart_"+id).innerHTML = "";
     let chart = new CanvasJS.Chart("chart_"+id,
         {
             height: 235,
             width: 430,
 
             axisX:{
-                valueFormatString: "DD-MMM" ,
-                interval: 10,
-                intervalType: "day",
+                valueFormatString: format ,
+                interval: Math.floor(minutes/8),
+                intervalType: "minute",
                 labelAngle: -50,
                 labelFontColor: "#007bff",
-                minimum: new Date(2012,6,10)
+                minimum: data[0].x
             },
             axisY: {
                 valueFormatString: "#M,,.",
@@ -1093,24 +1165,7 @@ function createChart(id, name, data){
                     color: "#e0a800",
 
                     markerType: "none",
-                    dataPoints: [
-                        { x: new Date(2012, 6, 15), y: 0 },
-                        { x: new Date(2012, 6, 18), y: 2000000 },
-                        { x: new Date(2012, 6, 23), y: 6000000 },
-                        { x: new Date(2012, 7, 1), y: 10000000 },
-                        { x: new Date(2012, 7, 11), y: 21000000 },
-                        { x: new Date(2012, 7, 23), y: 50000000 },
-                        { x: new Date(2012, 7, 31), y: 75000000 },
-                        { x: new Date(2012, 8, 4), y: 100000000 },
-                        { x: new Date(2012, 8, 10), y: 125000000 },
-                        { x: new Date(2012, 8, 13), y: 150000000 },
-                        { x: new Date(2012, 8, 16), y: 175000000 },
-                        { x: new Date(2012, 8, 18), y: 200000000 },
-                        { x: new Date(2012, 8, 21), y: 225000000 },
-                        { x: new Date(2012, 8, 24), y: 250000000 },
-                        { x: new Date(2012, 8, 26), y: 275000000 },
-                        { x: new Date(2012, 8, 28), y: 302000000 }
-                    ]
+                    dataPoints: data
                 }
             ]
         });
@@ -1119,9 +1174,11 @@ function createChart(id, name, data){
 
     let loader = document.getElementsByClassName("graph_loader")[id-1];
     let graph = document.getElementsByClassName("graph")[id-1];
+    let cheater = document.getElementsByClassName("cheater")[id-1];
 
     loader.style.display = "none";
-    graph.style.display = "inline";
+    graph.style.display = "block";
+    cheater.style.display = "block";
 }
 //// STATIC ELEMENTS ACTION HANDLERS
 

@@ -55,3 +55,7 @@ function serverRenameDevice(old_name, new_name){
 function serverChangeDeviceSublocation(dID, location, new_sublocation){
     return true;
 }
+
+function serverStatRequest( dID, stat, start_time, end_time){
+    return true;
+}

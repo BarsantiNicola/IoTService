@@ -2,13 +2,11 @@ package weblogic.login.beans;
 
 import weblogic.login.interfaces.BasicTokenRemote;
 
-import javax.ejb.Stateful;
-import javax.enterprise.context.SessionScoped;
+import javax.ejb.StatefulTimeout;
 import java.security.SecureRandom;
 import java.util.Random;
 
-@Stateful
-@SessionScoped
+@StatefulTimeout(60)
 public class BasicData implements BasicTokenRemote {
 
     protected String token;
@@ -25,6 +23,10 @@ public class BasicData implements BasicTokenRemote {
         this.token = password.toString();
         this.email = email;
 
+    }
+
+    public void recreateToken(){
+        createToken(this.email);
     }
 
     public void resetToken(){

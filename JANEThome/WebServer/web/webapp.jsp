@@ -68,11 +68,11 @@
                                 <label> End-time:
                                     <input type="date" class="date_picker">
                                 </label>
-                                <i class="fa fa-search search_ok" aria-hidden="true"></i>
+                                <i class="fa fa-search search_ok" aria-hidden="true"  onclick="refreshStat(this)"></i>
                             </div>
                             <div class="statistic_graph">
                                 <div class="graph_loader">
-                                    <img src="resources/pics/stat_loading.gif">
+                                    <img src="resources/pics/stat_loading.gif" alt="stats loading">
                                 </div>
                                 <div class="graph" id="chart_1"></div>
                                 <div class="cheater"></div>
@@ -80,7 +80,6 @@
                         </div>
                         <div class="statistic">
                             <div class="statistic_header">
-                                Statistics
                             </div>
                             <div class="statistic_period">
                                 <label> Start-time:
@@ -89,7 +88,7 @@
                                 <label> End-time:
                                     <input type="date" class="date_picker">
                                 </label>
-                                <i class="fa fa-search search_ok" aria-hidden="true"></i>
+                                <i class="fa fa-search search_ok" aria-hidden="true" onclick="refreshStat(this)"></i>
                             </div>
                             <div class="statistic_graph">
                                 <div class="statistic_graph">

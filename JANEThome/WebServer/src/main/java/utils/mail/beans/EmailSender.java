@@ -9,6 +9,8 @@ import javax.inject.Named;
 import javax.mail.*;
 import javax.mail.internet.*;
 
+import java.util.logging.Logger;
+
 //  EmailSender
     //
     //  Description: static class to send email to an address. The class is based on the GlassFish JavaMail Session
@@ -31,6 +33,9 @@ public class EmailSender implements EmailServiceLocal {
         //  calls the methods
         private boolean sendEmail(String address, String subject, String content){
 
+            Logger logger = Logger.getLogger(getClass().getName());
+            logger.info("Send email to ["+address+"] for ["+subject+"]");
+
             Message msg = new MimeMessage(mailSession);
             try {
 
@@ -42,10 +47,15 @@ public class EmailSender implements EmailServiceLocal {
                 Transport.send(msg);
 
             } catch(MessagingException me) {
+
+                logger.severe("Error during email sending");
                 me.printStackTrace();
                 return false;
+
             }
+            logger.fine("Email correctly sent");
             return true;
+
         }
 
         //  public method to send a password change email to a user. It returns true in case of success
@@ -53,14 +63,11 @@ public class EmailSender implements EmailServiceLocal {
         //      - mailSession: an instance of the JavaMail Session maintained by glassfish
         //      - email: email of the user
         //      - token: token given to the user to authorize the creation of the change password form
-        public boolean sendMailPasswordChange(String email, String token, String fragment1, String fragment2){
+        public boolean sendMailPasswordChange(String email, String content, String token){
 
             String object = "JANEThome Password Change Request";
-            String URL = SECURE?"https":"http";
-            URL = URL + "://" + IP + ":" + PORT + "/WebServer/password.jsp?state=1&auth=" + token;
 
-            String message = fragment1 + URL + fragment2;
-            return email != null && email.length()>0 && sendEmail( email, object, message);
+            return email != null && email.length()>0 && sendEmail(email, object, createEmailPasswordContent(content, token));
 
         }
 
@@ -69,17 +76,30 @@ public class EmailSender implements EmailServiceLocal {
         //      - mailSession: an instance of the JavaMail Session maintained by glassfish
         //      - email: email of the user
         //      - token: token given to the user to authorize the registration of the user
-        public boolean sendMailLoginConfirm( String email, String token, String fragment1, String fragment2){
+        public boolean sendMailLoginConfirm( String email, String content, String token){
 
             String object = "JANEThome registration confirm";
+
+            return email != null && email.length()>0 && sendEmail(email, object, createEmailRegistrationContent(content, token));
+
+        }
+
+        private String createEmailRegistrationContent(String email, String token){
+
             String URL = SECURE?"https":"http";
             URL = URL + "://" + IP + ":" + PORT + "/WebServer/registration?token=" + token;
 
-            String message = fragment1 + URL + fragment2;
-
-            return email != null && email.length()>0 && sendEmail(email, object, message);
-
+            return email.replaceFirst("--placeholder--", URL);
         }
+
+        private String createEmailPasswordContent(String email, String token){
+
+            String URL = SECURE?"https":"http";
+        URL = URL + "://" + IP + ":" + PORT + "/WebServer/password.jsp?state=1&auth=" + token;
+
+        return email.replaceFirst("--placeholder--", URL);
+
+    }
 
 }
 

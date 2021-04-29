@@ -231,6 +231,7 @@ body, html {
     background: white;
     top: -10px;
     position: relative;
+    z-index:5;
 }
 
 .statistic_period{
@@ -2054,7 +2055,7 @@ a:focus{
     display: none;
     width: 5px;
     height: 5px;
-    left: -94px;
+    left: -76px;
     top: 90px;
     position: relative;
     border-radius: 50%;

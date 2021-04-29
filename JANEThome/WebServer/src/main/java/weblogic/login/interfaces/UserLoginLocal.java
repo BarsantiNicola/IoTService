@@ -1,8 +1,8 @@
 package weblogic.login.interfaces;
 
-import javax.ejb.Local;
+import javax.ejb.Remote;
 
-@Local
+@Remote
 public interface UserLoginLocal {
 
     String getUsername();

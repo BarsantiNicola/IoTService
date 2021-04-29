@@ -1,13 +1,16 @@
 package weblogic.login.beans;
 
-import weblogic.login.interfaces.NamedTokenRemote;
+import weblogic.login.interfaces.RegistrationInterface;
 
-import javax.ejb.Stateful;
-import javax.inject.Named;
+import javax.ejb.StatefulTimeout;
 
-@Stateful
-@Named("userData")
-public class UserData extends BasicData implements NamedTokenRemote {
+///// UserData
+//
+//  Description: class designed for user registration cache. It mantains the information about
+//               an account registration request
+
+@StatefulTimeout(60)
+public class UserData extends BasicData implements RegistrationInterface{
 
     private String firstName;
     private String lastName;
@@ -15,20 +18,12 @@ public class UserData extends BasicData implements NamedTokenRemote {
     private String password;
 
     public void setInformations(String firstName, String lastName, String email, String password ){
+
         this.firstName = firstName;
         this.lastName = lastName;
         this.email = email;
         this.password = password;
         this.createToken(email);
-    }
-
-    public void resetInformations(){
-
-        this.firstName = null;
-        this.lastName = null;
-        this.email = null;
-        this.password = null;
-        super.resetToken();
 
     }
 
