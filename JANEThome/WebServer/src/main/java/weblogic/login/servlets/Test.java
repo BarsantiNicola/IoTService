@@ -1,15 +1,13 @@
 package weblogic.login.servlets;
 
-import jms.beans.UpdateNotifier;
-import jms.beans.WebUpdateReceiver;
 import jms.interfaces.SenderInterface;
+import utils.jms.WebUpdateReceiver;
 
 import javax.ejb.EJB;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import java.io.IOException;
 import java.util.HashMap;
 import java.util.logging.Logger;
 
@@ -22,8 +20,8 @@ public class Test extends HttpServlet {
     public void service(HttpServletRequest req, HttpServletResponse resp) {
 
         Logger logger = Logger.getLogger(getClass().getName());
-        new WebUpdateReceiver("test0");
-        new WebUpdateReceiver("barsantinicola9@hotmail.it");
+        //new WebUpdateReceiver("test0");
+        //new WebUpdateReceiver("barsantinicola9@hotmail.it");
 
         for (int i = 0; i < 500; i++) {
             HashMap message = new HashMap();

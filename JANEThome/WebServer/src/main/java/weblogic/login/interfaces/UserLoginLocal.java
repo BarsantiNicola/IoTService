@@ -5,8 +5,8 @@ import javax.ejb.Remote;
 @Remote
 public interface UserLoginLocal {
 
-    String getUsername();
-    String getPassword();
-    void setParameters(String username, String password);
+    String getName();
+    String getSurname();
+    void setParameters(String name, String surname);
 
 }

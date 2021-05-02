@@ -9,7 +9,10 @@ import javax.inject.Named;
 import javax.mail.*;
 import javax.mail.internet.*;
 
+import java.util.logging.ConsoleHandler;
+import java.util.logging.Handler;
 import java.util.logging.Logger;
+import java.util.logging.SimpleFormatter;
 
 //  EmailSender
     //
@@ -34,6 +37,10 @@ public class EmailSender implements EmailServiceLocal {
         private boolean sendEmail(String address, String subject, String content){
 
             Logger logger = Logger.getLogger(getClass().getName());
+            Handler consoleHandler = new ConsoleHandler();
+            consoleHandler.setFormatter(new SimpleFormatter());
+            logger.addHandler(consoleHandler);
+
             logger.info("Send email to ["+address+"] for ["+subject+"]");
 
             Message msg = new MimeMessage(mailSession);

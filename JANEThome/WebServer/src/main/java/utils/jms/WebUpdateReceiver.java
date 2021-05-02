@@ -1,5 +1,15 @@
-package jms.beans;
+package utils.jms;
 
+import com.rabbitmq.client.AMQP.BasicProperties;
+import com.rabbitmq.client.Consumer;
+import com.rabbitmq.client.DeliverCallback;
+import com.rabbitmq.client.Envelope;
+import com.rabbitmq.client.ShutdownSignalException;
+import jms.EndPoint;
+import org.apache.commons.lang.SerializationUtils;
+import weblogic.login.websockets.WebappEndpoint;
+
+import javax.websocket.Session;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
@@ -8,16 +18,6 @@ import java.util.logging.ConsoleHandler;
 import java.util.logging.Handler;
 import java.util.logging.Logger;
 import java.util.logging.SimpleFormatter;
-
-import com.rabbitmq.client.DeliverCallback;
-import jms.EndPoint;
-import jms.interfaces.ReceiverInterface;
-import org.apache.commons.lang.SerializationUtils;
-
-import com.rabbitmq.client.AMQP.BasicProperties;
-import com.rabbitmq.client.Consumer;
-import com.rabbitmq.client.Envelope;
-import com.rabbitmq.client.ShutdownSignalException;
 
 
 /**
@@ -28,17 +28,18 @@ import com.rabbitmq.client.ShutdownSignalException;
 public class WebUpdateReceiver extends EndPoint implements Consumer{
 
     private final Logger logger;
+    private Session target;
 
-    public WebUpdateReceiver(String endPointName){
+    public WebUpdateReceiver(String endPointName, Session websocket){
+
         logger = Logger.getLogger(getClass().getName());
         Handler consoleHandler = new ConsoleHandler();
         consoleHandler.setFormatter(new SimpleFormatter());
         logger.addHandler(consoleHandler);
-        DeliverCallback deliverCallback = (consumerTag, delivery) -> {
-            String message = new String(delivery.getBody(), StandardCharsets.UTF_8);
-            System.out.println(" [x] Received '" +
-                    delivery.getEnvelope().getRoutingKey() + "': MY KEY:'" + endPointName  + "'");
-        };
+
+        DeliverCallback deliverCallback = (consumerTag, delivery) ->
+            target.getBasicRemote().sendText(new String(delivery.getBody()));
+
 
         if( channel != null && connection != null ) {
             String queueName;
@@ -53,6 +54,7 @@ public class WebUpdateReceiver extends EndPoint implements Consumer{
                 e.printStackTrace();
 
             }
+            target = websocket;
         }
     }
 

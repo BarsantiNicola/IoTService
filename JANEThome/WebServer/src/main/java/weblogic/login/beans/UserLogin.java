@@ -6,25 +6,25 @@ import javax.ejb.Stateful;
 import javax.inject.Named;
 
 @Stateful
-@Named("userLogin")
+@Named("userInfo")
 public class UserLogin implements UserLoginLocal {
 
-    private String username = null;
-    private String password = null;
+    private String name = null;
+    private String surname = null;
 
     @Override
-    public String getUsername() {
-        return username;
+    public String getName() {
+        return name;
     }
 
     @Override
-    public String getPassword() {
-        return password;
+    public String getSurname() {
+        return surname;
     }
 
     @Override
-    public void setParameters(String username, String password) {
-        this.username = username;
-        this.password = password;
+    public void setParameters(String name, String surname) {
+        this.name = name;
+        this.surname = surname;
     }
 }

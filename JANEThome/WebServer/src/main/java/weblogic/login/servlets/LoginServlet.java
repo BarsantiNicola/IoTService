@@ -2,6 +2,7 @@ package weblogic.login.servlets;
 
 import utils.token.interfaces.TokenManagerRemote;
 import weblogic.login.beans.BasicData;
+import weblogic.login.beans.UserLogin;
 
 import javax.ejb.EJB;
 import javax.enterprise.context.ApplicationScoped;
@@ -56,9 +57,12 @@ public class LoginServlet extends HttpServlet {
                     //  creation of credential cookies to enable auto login and authorize each request from now on
                     logger.info("Login succeded, email: " + parameters.get("email"));
                     BasicData userData = new BasicData();
+                    UserLogin infoData = new UserLogin();
+                    infoData.setParameters("nicola","barsanti");
                     userData.createToken(parameters.get("email"));
                     resp.addCookie(new Cookie("auth", userData.getToken()));
                     req.getSession().setAttribute("authData", userData);
+                    req.getSession().setAttribute("infoData", infoData);
                     resp.setStatus(200);
                 } else
                     resp.setStatus(500);

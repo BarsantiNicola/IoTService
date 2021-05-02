@@ -1,5 +1,10 @@
+<%@ page import="weblogic.login.beans.BasicData" %>
+<%@ page import="weblogic.login.beans.UserLogin" %>
 <%@ page contentType="text/html;charset=UTF-8" %>
-<html lang="en">
+<%
+    UserLogin userData = (UserLogin)session.getAttribute("infoData");
+%>
+    <html lang="en">
     <head>
         <title>JANET home</title>
         <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -93,7 +98,7 @@
                             <div class="statistic_graph">
                                 <div class="statistic_graph">
                                     <div class="graph_loader">
-                                        <img src="resources/pics/stat_loading.gif">
+                                        <img alt="loading" src="resources/pics/stat_loading.gif">
                                     </div>
                                     <div class="graph" id="chart_2">
                                     </div>
@@ -110,8 +115,12 @@
                 <div class="header-webapp">
                     <div class="account-wrapper">
                         <div class="account-info-wrapper">
-                            <p class="account-name">Nome</p>
-                            <p class="account-surname">Cognome</p>
+                            <p class="account-name">
+                                <% out.print(userData.getName()); %>
+                            </p>
+                            <p class="account-surname">
+                                <% out.print(userData.getSurname());%>
+                            </p>
                         </div>
                         <img class="js-tilt" src="resources/pics/logo2.png" alt="logo" data-tilt="">
                         <div class="account-button-wrapper">

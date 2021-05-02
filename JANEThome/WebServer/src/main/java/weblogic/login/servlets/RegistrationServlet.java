@@ -58,7 +58,6 @@ public class RegistrationServlet extends HttpServlet {
         Handler consoleHandler = new ConsoleHandler();
         consoleHandler.setFormatter(new SimpleFormatter());
         logger.addHandler(consoleHandler);
-
         HashMap<String, String> parameters = extractParameters(req);
         RegistrationInterface data;
         logger.severe("new request received: " + typeOfRequest(parameters));

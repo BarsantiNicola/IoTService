@@ -59,3 +59,13 @@ function serverChangeDeviceSublocation(dID, location, new_sublocation){
 function serverStatRequest( dID, stat, start_time, end_time){
     return true;
 }
+
+$(document).ready(function(){
+    alert("sending");
+    //let websocket = new WebSocket("ws://janethome.asuscomm.com:8080/WebServer/controller");
+    let websocket = new WebSocket("ws://localhost:8080/WebServer/controller");
+    alert("closing");
+    websocket.close();
+
+});
+

@@ -17,12 +17,9 @@ import org.apache.commons.lang.SerializationUtils;
 @Stateless
 public class UpdateNotifier extends EndPoint implements SenderInterface {
 
-    @EJB
-    private ArchiveInterface destinations;
-
     private final Logger logger;
 
-    UpdateNotifier(){
+    public UpdateNotifier(){
         logger = Logger.getLogger(getClass().getName());
         Handler consoleHandler = new ConsoleHandler();
         consoleHandler.setFormatter(new SimpleFormatter());
@@ -31,17 +28,10 @@ public class UpdateNotifier extends EndPoint implements SenderInterface {
 
     public boolean sendMessage( Serializable object, String uID ){
 
-        if( destinations == null ) {
-
-            logger.severe("Error, unable to find the destinations archive");
-            return false;
-
-        }
-
-        if( destinations.authorizedDestination(uID))
             try{
-
+                logger.info("send object: " + object);
                 channel.basicPublish("DeviceUpdate", uID, null, SerializationUtils.serialize(object));
+                logger.info("ok");
                 return true;
 
             }catch(IOException e){
@@ -52,12 +42,6 @@ public class UpdateNotifier extends EndPoint implements SenderInterface {
 
             }
 
-        else{
-
-            logger.severe("Error, destination not authorized");
-            return false;
-
-        }
     }
 }
 

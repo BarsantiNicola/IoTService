@@ -1071,6 +1071,9 @@ function refreshStat(node){
     }
     node.className = "fa fa-search search_ok";
 }
+
+
+
 function chartCreation(device_type){
 
     let charts = document.getElementsByClassName("graph_loader");
