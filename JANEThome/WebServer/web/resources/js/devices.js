@@ -52,6 +52,40 @@ function createDevice(type,name) {
     return device;
 }
 
+function updateDevice(dID, action, value){
+
+    switch(action){
+        case "brightness":
+            changeDeviceBrightness(dID, value);
+            break;
+        case "color":
+            changeDeviceColor(dID, value);
+            break;
+        case "speed":
+            changeDeviceSpeed(dID, value);
+            break;
+        case "openClose":
+            openDoor(dID, value);
+            break;
+        case "lockUnlock":
+            lockDoor(dID, value);
+            break;
+        case "temperature":
+            changeTemperature(dID, value);
+            break;
+        case "env_temperature":
+            updateEnvironmentTemperature(dID, value);
+            break;
+        case "onOff":
+            powerDevice(dID, value);
+            break;
+        case "enable":
+            enableDevice(dID, value);
+            break;
+        default:
+    }
+}
+
 //////////// Light DEVICE
 
 function createLight(dID){
@@ -149,10 +183,7 @@ function requestDeviceBrightness(dID,value){
     if( brightness === undefined )
         return;
 
-    if( serverLightBrightnessRequest(dID, value) &&  changeDeviceBrightness(dID, value))
-        return;
-
-    device.getElementsByClassName("brightness_input")[0].value = brightness.value;
+    serverLightBrightnessRequest(dID, value);
 
 }
 
@@ -174,6 +205,7 @@ function changeDeviceBrightness(dID, value){
     bright_value.textContent = value;
     brightness_icon.style.opacity = "" + (parseInt(value) / 100);
     brightness.value = value;
+    device.getElementsByClassName("brightness_input")[0].value = brightness.value;
     return true;
 
 }
@@ -184,11 +216,7 @@ function requestDeviceColor(dID,value){
     if( device === undefined )
         return;
 
-    let color = device.getElementsByClassName("color")[0];
-    if( serverLightColorRequest(dID, value) &&  changeDeviceColor(dID, value))
-        return;
-
-    device.getElementsByClassName("color_input")[0].value = color.value;
+    serverLightColorRequest(dID, value);
 
 }
 
@@ -196,7 +224,7 @@ function changeDeviceColor( dID, color ){
 
     let device = document.getElementById("device_"+dID);
     if( device === undefined )
-        return false;
+        device.getElementsByClassName("color_input")[0].value = device.getElementsByClassName("color")[0].value;
 
     device.getElementsByClassName("light_ball")[0].style.boxShadow = "0 0 60px 40px " + color;
     device.getElementsByClassName("color")[0].value = color;
@@ -281,11 +309,7 @@ function requestDeviceSpeed(dID,value){
     if( device === undefined )
         return;
 
-    let speed = device.getElementsByClassName("speed")[0];
-    if( serverFanSpeedRequest(dID, value) &&  changeDeviceSpeed(dID, value))
-        return;
-
-    device.getElementsByClassName("speed_input")[0].value = speed.value;
+    serverFanSpeedRequest(dID, value);
 
 }
 
@@ -404,8 +428,7 @@ function requestDeviceDoor(dID){
             return;
     }
 
-    if( serverDoorOpenRequest(dID, value))
-        openDoor(dID, value);
+    serverDoorOpenRequest(dID, value);
 
 }
 
@@ -457,8 +480,7 @@ function requestDeviceLock(dID){
             return;
     }
 
-    if( serverDoorLockRequest(dID, value))
-        lockDoor(dID, value);
+    serverDoorLockRequest(dID, value);
 
 }
 
@@ -567,10 +589,7 @@ function requestDeviceTemperature(dID, temperature){
     if( temp === undefined )
         return;
 
-    if( serverThermostatTemperatureRequest(dID, temperature) &&  changeTemperature(dID, temperature))
-        return;
-
-    device.getElementsByClassName("set_temperature")[0].value = temp.value;
+    serverThermostatTemperatureRequest(dID, temperature);
 
 }
 
@@ -809,8 +828,7 @@ function requestPowerDevice( dID ){
             return;
     }
 
-    if( serverDevicePowerRequest(dID, value))
-        powerDevice(dID, value);
+    serverDevicePowerRequest(dID, value);
 
 }
 

@@ -481,9 +481,9 @@ function createSublocationContent(){
     icon1.className = "fa fa-plus-square-o";
     icon1.addEventListener("click",function(){addDevicePopup(this);});
     icon2.className = "fa fa-angle-left left_direction";
-    icon2.addEventListener("click", function(){lclick(this);});
+    icon2.addEventListener("click", function(){lclick(icon2);});
     icon3.className = "fa fa-angle-right right_direction";
-    icon3.addEventListener("click", function(){rclick(this);});
+    icon3.addEventListener("click", function(){rclick(icon3);});
 
     device_wrapper.appendChild(device_scroller);
     wrapper.appendChild(icon1);
@@ -507,7 +507,7 @@ function createLocationButton(name){
     button.href="#";
     button.id = "button_"+name;
     paragraph.className = "location_button";
-    paragraph.addEventListener("click", changePage, false);
+    paragraph.addEventListener("click", function(){changePage(this)});
     span1.className = "bg";
     span2.className = "base";
     span3.className = "text";
@@ -523,27 +523,37 @@ function createLocationButton(name){
 
 ////////  DYNAMIC PAGE ELEMENTS REMOVAL
 
+function deleteLocationReaction(location){
+    let scroller = document.getElementById("scroller");
+    let loc = document.getElementById(location);
+    loc.parentNode.removeChild(loc);
+    scroller.removeChild(document.getElementById("button_"+location));
+}
+
 //  removes a location
 function deleteLocation(elem){
 
     if( elem.getElementsByClassName("bg")[0].getBoundingClientRect().width< elem.getBoundingClientRect().width )
         return;
+
     let location = elem.parentNode.parentNode;
-    let body = location.parentNode;
-    let location_name = location.id;
-    document.getElementById("scroller").removeChild(document.getElementById("button_"+location_name));
-    body.removeChild(location);
+    serverRemoveLocation(location.id);
+
 }
 
+function deleteSublocationReaction(location, sublocation){
+    let subloc = document.getElementById(location+"_"+sublocation);
+    subloc.parentNode.removeChild(subloc);
+}
 //  removes a sublocation
 function deleteSublocation(elem){
 
     if( elem.getElementsByClassName("bg")[0].getBoundingClientRect().width< elem.getBoundingClientRect().width )
         return;
+    let sublocation = elem.parentNode.parentNode;
+    let info = sublocation.id.split("_");
+    serverRemoveSublocation(info[0], info[1]);
 
-    let sub_location = elem.parentNode.parentNode;
-    let container =  sub_location.parentNode;
-    container.removeChild(sub_location);
 }
 
 //////// DYNAMIC PAGE ELEMENT SHOW
@@ -595,10 +605,10 @@ function addDevicePopup(node){
 }
 
 //  shows a sublocation
-function changePage(){
+function changePage(elem){
     if( actual_loc != null )
         actual_loc.style.display ="none";
-    actual_loc = document.getElementById(this.textContent);
+    actual_loc = document.getElementById(elem.textContent);
     actual_loc.style.display = "flex";
     adaptLocationScrolling();
 }
@@ -633,7 +643,7 @@ function renameLocationAct(old_name, new_name){
 }
 
 //  action on rename location popup submit button
-function renameLocationAction(elem){
+function renameLocationAction(elem) {
 
     let form = elem.parentNode.parentNode;
     let button = form.getElementsByTagName("button")[0];
@@ -647,16 +657,31 @@ function renameLocationAction(elem){
     let location = elem.parentNode.parentNode.parentNode.parentNode.parentNode.parentNode.parentNode;
     let old_location = location.id;
 
-    if( renameServerLocation(old_location, input) && renameLocationAct(old_location, input)){
+    renameServerLocation(old_location, input);
+}
 
-        loading.style.display = "none";
-        button.style.display = "inline";
-        return true;
-    }else{
-        loading.style.display = "none";
-        error.style.display = "flex";
-        return false;
-    }
+function renameLocationReaction(old_location, new_location ){
+
+    let form = document.getElementById(old_location+"_Default").getElementsByClassName("rename_location_popup")[0].getElementsByTagName("form")[0];
+    let button = form.getElementsByTagName("button")[0];
+    let loading = form.getElementsByClassName("loading_placeholder")[0];
+    let error = form.getElementsByClassName("error_placeholder")[0];
+
+    if( button.style.display !== "inline")
+        if(renameLocationAct(old_location,new_location)){
+
+            loading.style.display = "none";
+            button.style.display = "inline";
+            return true;
+
+        }else{
+
+            loading.style.display = "none";
+            error.style.display = "flex";
+            return false;
+        }
+    else
+        return renameLocationAct(old_location,new_location);
 
 }
 
@@ -671,7 +696,7 @@ function renameSublocationAct(location_name, old_name, new_name){
 }
 
 //  action on rename sublocation popup submit button
-function renameSublocationAction(elem){
+function renameSublocationAction(elem) {
 
     let button = elem.parentNode.getElementsByTagName("button")[0];
     let loading = elem.parentNode.getElementsByClassName("loading_placeholder")[0];
@@ -682,20 +707,32 @@ function renameSublocationAction(elem){
 
     let sublocation = elem.parentNode.parentNode.parentNode.parentNode.parentNode.parentNode;
     let location = sublocation.parentNode.id;
-    let old_name = sublocation.id.replace(location+"_","");
+    let old_name = sublocation.id.replace(location + "_", "");
     let new_name = elem.parentNode.parentNode;
     new_name = new_name.getElementsByClassName("input")[0].value.toLowerCase();
+    renameServerSublocation(location, old_name, new_name);
 
-    if( renameServerSublocation( location, old_name, new_name) && renameSublocationAct(location, old_name, new_name )){
-        loading.style.display = "none";
-        button.style.display = "flex";
-        return true;
-    }else{
-        loading.style.display = "none";
-        error.style.display = "flex";
-        return false;
-    }
+}
 
+function renameSublocationReaction(location, old_name, new_name){
+
+    let elem = document.getElementById(location+"_"+old_name).getElementsByClassName("rename_sublocation_popup")[0];
+    let button = elem.parentNode.getElementsByTagName("button")[0];
+    let loading = elem.parentNode.getElementsByClassName("loading_placeholder")[0];
+    let error = elem.parentNode.getElementsByClassName("error_placeholder")[0];
+
+    if( button.style.display !== "inline" )
+        if( renameSublocationAct(location, old_name, new_name )){
+            loading.style.display = "none";
+            button.style.display = "inline";
+            return true;
+        }else{
+            loading.style.display = "none";
+            error.style.display = "inline";
+            return false;
+        }
+    else
+        return renameSublocationAct(location, old_name, new_name );
 }
 
 function addSublocationAct(location, sub_location){
@@ -728,10 +765,19 @@ function addSublocation(node){
     loading.style.display = "flex";
 
     let wrapper = node.parentNode.parentNode.parentNode.parentNode.parentNode.parentNode.parentNode;
-    let location = wrapper.id;
     let name = form.getElementsByClassName('input')[0].value.toLowerCase();
+    requestServerSublocation(wrapper.id, name);
 
-    if( requestServerSublocation(wrapper.id, name) && addSublocationAct(location,name)){
+}
+
+function addSublocationReaction(location, sublocation){
+
+    let form = document.getElementById(location+"_Default").getElementsByClassName("add_sublocation_form")[0];
+    let button = form.getElementsByClassName("add_sublocation_btn")[0];
+    let loading = form.getElementsByClassName("loading_placeholder")[0];
+    let error = form.getElementsByClassName("error_placeholder")[0];
+
+    if( addSublocationAct(location,sublocation)){
         form.getElementsByClassName('input')[0].value = "";
         loading.style.display = "none";
         button.style.display = "inline";
@@ -741,9 +787,7 @@ function addSublocation(node){
         error.style.display = "flex";
         return false;
     }
-
 }
-
 //  close of a displayed popup
 function closePopup(node){
     node.parentNode.parentNode.parentNode.parentNode.style.display = "none";
@@ -792,6 +836,7 @@ function lclick(elem){
 function rclick(elem){
     let scroller = elem.parentNode.getElementsByClassName("scroller")[0];
     let position = parseInt(scroller.style.left, 10) -40;
+    if( isNaN(position) ) position = -40;
     if( position < -(scroller.getBoundingClientRect().width) )
         position = -(scroller.getBoundingClientRect().width);
 
@@ -842,12 +887,24 @@ function validateAddress(ipaddress) {
     return /^(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/.test(ipaddress);
 }
 
-function addDevice(element){
+function addDeviceAct(location, sublocation, dID, type){
+
+    let subsection = document.getElementById(location+"_"+sublocation);
+    if( subsection === undefined )
+        return false;
+    subsection.getElementsByClassName("scroller")[0].appendChild(createDevice(type,dID));
+    adaptLocationScrolling();
+    return true;
+}
+
+function addDevice(element) {
 
     let form = element.parentNode.parentNode;
+
     let button = form.getElementsByClassName("simple_sublocation_btn")[0];
     let loading = form.getElementsByClassName("loading_placeholder")[0];
     let error = form.getElementsByClassName("error_placeholder")[0];
+
     let type = form.getElementsByTagName("select")[0].value;
     let name = form.getElementsByClassName("input")[0].value.toLowerCase();
     let sublocation = form.parentNode.parentNode.parentNode.parentNode;
@@ -856,23 +913,32 @@ function addDevice(element){
     button.style.display = "none";
     loading.style.display = "flex";
 
-    if( name.length === 0 ){
+    if (name.length === 0) {
         loading.style.display = "none";
         error.style.display = "flex";
         return;
     }
 
     let devices = document.getElementsByClassName("device");
-    for( let device of devices )
-        if( device.id === "device_"+name ){
+    for (let device of devices)
+        if (device.id === "device_" + name) {
             loading.style.display = "none";
             error.style.display = "flex";
             return;
         }
 
-    let scroller= form.parentNode.parentNode.parentNode.parentNode.getElementsByClassName("scroller")[0];
-    if( addServerDevice(location.id, sublocation.id.replace(location.id+"_",""),name,type)){
-        scroller.appendChild(createDevice(type,name));
+    let info = sublocation.id.split("_");
+    addServerDevice(info[0], info[1], name, type);
+}
+
+function addDeviceReaction(location, sublocation, dID, dType){
+
+    let form = document.getElementById(location+"_"+sublocation).getElementsByClassName("add_device_popup")[0];
+    let button = form.getElementsByClassName("simple_sublocation_btn")[0];
+    let loading = form.getElementsByClassName("loading_placeholder")[0];
+    let error = form.getElementsByClassName("error_placeholder")[0];
+
+    if(addDeviceAct(location,sublocation,dID,dType)){
         loading.style.display = "none";
         button.style.display = "inline";
         adaptLocationScrolling();
@@ -880,26 +946,26 @@ function addDevice(element){
         loading.style.display = "none";
         error.style.display = "flex";
     }
-
 }
 
 function deleteDevice(node){
     let dID = node.parentNode.getElementsByClassName("device_expander_name")[0].textContent;
-    deleteDeviceAct(dID);
-    adaptLocationScrolling();
-    closeExpander();
+    serverDeleteDevice(dID);
+
 }
 
 function deleteDeviceAct(dID){
     let device = document.getElementById("device_" + dID);
-    if( device === null || !serverDeleteDevice(dID))
+    if( device === null)
         return false;
     device.parentNode.removeChild(device);
+    adaptLocationScrolling();
+    closeExpander();
     return true;
 
 }
 
-function renameDevice(node){
+function renameDevice(node) {
 
     let wrapper = node.parentNode.parentNode;
     let old_name = wrapper.getElementsByClassName("device_name")[0].value;
@@ -907,16 +973,25 @@ function renameDevice(node){
     let new_name = input.value;
     let button = wrapper.getElementsByClassName("location-form-button")[0];
     let loading = wrapper.getElementsByClassName("loading_placeholder")[0];
-    let error = wrapper.getElementsByClassName("error_placeholder")[0];
 
     button.style.display = "none";
     loading.style.display = "flex";
 
-    if( serverRenameDevice(old_name, new_name) && renameDeviceAct(old_name,new_name)){
+    renameServerDevice(old_name, new_name);
+}
+
+function renameDeviceReaction( old_name, new_name ){
+
+    let form = document.getElementById("container_expand").getElementsByClassName("expand_device")[0];
+    let button = form.getElementsByClassName("location-form-button")[0];
+    let loading = form.getElementsByClassName("loading_placeholder")[0];
+    let error = form.getElementsByClassName("error_placeholder")[0];
+
+    if( renameDeviceAct(old_name,new_name)){
         loading.style.display = "none";
         button.style.display ="flex";
-        wrapper.parentNode.getElementsByClassName("device_expander_name")[0].textContent = new_name;
-        wrapper.getElementsByClassName("device_name")[0].value = new_name;
+        form.parentNode.getElementsByClassName("device_expander_name")[0].textContent = new_name;
+        form.getElementsByClassName("device_name")[0].value = new_name;
     }else{
         loading.style.display = "none";
         error.style.display = "flex";
@@ -936,7 +1011,7 @@ function renameDeviceAct(oldDID, newDID){
         if( dev.id === new_ID )
             return false;
 
-        device.getElementsByClassName("device_title")[0].textContent = newDID+"["+device.getElementsByClassName("type")[0].value+"]";
+    device.getElementsByClassName("device_title")[0].textContent = newDID+"["+device.getElementsByClassName("type")[0].value+"]";
     device.id= "device_"+newDID;
     return true;
 
@@ -949,29 +1024,29 @@ function changeDeviceSublocation(node){
     let dID = wrapper.getElementsByClassName("device_name")[0].value;
     let sublocation = wrapper.getElementsByClassName("device_sublocation")[0].value;
     let new_sublocation = node.value;
-    if( serverChangeDeviceSublocation(dID, location, new_sublocation) && changeDeviceSublocationAct(dID, location, new_sublocation))
-        wrapper.getElementsByClassName("device_sublocation")[0].value = new_sublocation;
-    else
-        node.value = sublocation;
+    serverChangeDeviceSublocation(dID, location, new_sublocation);
 
 }
 
 function changeDeviceSublocationAct(dID, location, new_sublocation){
 
     let device = document.getElementById("device_"+dID);
+    let value = document.getElementById("container_expand").getElementsByClassName("device_sublocation")[0];
+    let select = document.getElementById("container_expand").getElementsByTagName("select")[0];
     if( device === null )
-        return false;
+        select.value =value.value;
 
     let sublocation = document.getElementById(location+"_"+new_sublocation);
     if( sublocation === null )
-        return false;
+        select.value =value.value;
 
     let wrapper = sublocation.getElementsByClassName("device_scroller")[0];
     device.parentNode.removeChild(device);
     wrapper.appendChild(device);
+    value.value = new_sublocation;
+    select.value = sublocation;
+
     return true;
-
-
 }
 
 function unlockDeviceName(node){
@@ -1020,7 +1095,7 @@ function openExpander(elem){
     for( let date of dates)
         date.valueAsDate = today;
 
-    chartCreation(elem.getElementsByClassName("type")[0].value);
+    chartCreation(dID.value, elem.getElementsByClassName("type")[0].value);
     document.getElementById("limiter").style.display = "none";
     expander.style.display = "flex";
 }
@@ -1043,38 +1118,18 @@ function refreshStat(node){
     cheater.style.display = "none";
     loader.style.display = "block";
     let stat = container.getElementsByClassName("statistic_header")[0].textContent;
-    let graphID = parseInt(container.getElementsByClassName("graph")[0].id.replace("chart_",""));
     node.className = "fa fa-search search_no";
+    serverStatRequest( dID, stat, start_time, end_time);
 
-    if( serverStatRequest( dID, stat, start_time, end_time)){
-
-        let data = [
-            { x: new Date(2012, 6, 15), y: 0 },
-            { x: new Date(2012, 6, 18), y: 2000000 },
-            { x: new Date(2012, 6, 23), y: 6000000 },
-            { x: new Date(2012, 7, 1), y: 10000000 },
-            { x: new Date(2012, 7, 11), y: 21000000 },
-            { x: new Date(2012, 7, 23), y: 50000000 },
-            { x: new Date(2012, 7, 31), y: 75000000 },
-            { x: new Date(2012, 8, 4), y: 100000000 },
-            { x: new Date(2012, 8, 10), y: 125000000 },
-            { x: new Date(2012, 8, 13), y: 150000000 },
-            { x: new Date(2012, 8, 16), y: 175000000 },
-            { x: new Date(2012, 8, 18), y: 200000000 },
-            { x: new Date(2012, 8, 21), y: 225000000 },
-            { x: new Date(2012, 8, 24), y: 250000000 },
-            { x: new Date(2012, 8, 26), y: 275000000 },
-            { x: new Date(2012, 8, 28), y: 302000000 }
-        ];
-        createChart(graphID, stat, data);
-
-    }
-    node.className = "fa fa-search search_ok";
 }
 
+function updateStatistic(device_name, statistic, data){
+    if( document.getElementById("container_expand").getElementsByClassName("device_name").value === device_name)
+        createChart(toGraphID(statistic), statistic, data);
 
+}
 
-function chartCreation(device_type){
+function chartCreation(device_name, device_type){
 
     let charts = document.getElementsByClassName("graph_loader");
     let graphs = document.getElementsByClassName("graph");
@@ -1083,52 +1138,73 @@ function chartCreation(device_type){
     for( let chart of charts )
         chart.style.display = "block";
 
-    //  TODO to be removed
-
-    let data = [
-        { x: new Date(2012, 6, 15), y: 0 },
-        { x: new Date(2012, 6, 18), y: 2000000 },
-        { x: new Date(2012, 6, 23), y: 6000000 },
-        { x: new Date(2012, 7, 1), y: 10000000 },
-        { x: new Date(2012, 7, 11), y: 21000000 },
-        { x: new Date(2012, 7, 23), y: 50000000 },
-        { x: new Date(2012, 7, 31), y: 75000000 },
-        { x: new Date(2012, 8, 4), y: 100000000 },
-        { x: new Date(2012, 8, 10), y: 125000000 },
-        { x: new Date(2012, 8, 13), y: 150000000 },
-        { x: new Date(2012, 8, 16), y: 175000000 },
-        { x: new Date(2012, 8, 18), y: 200000000 },
-        { x: new Date(2012, 8, 21), y: 225000000 },
-        { x: new Date(2012, 8, 24), y: 250000000 },
-        { x: new Date(2012, 8, 26), y: 275000000 },
-        { x: new Date(2012, 8, 28), y: 302000000 }
-    ];
     switch(device_type){
         case "Light":
-            createChart( 1, "Device Usage", data);
-            createChart( 2, "Brightness", data);
+            serverStatRequest( device_name, "Device Usage", new Date(2012, 6, 15), new Date(2012, 8, 28));
+            serverStatRequest( device_name, "Device Usage", new Date(2012, 6, 15), new Date(2012, 8, 28));
             break;
         case "Fan":
-            createChart( 1, "Device Usage", data);
-            createChart( 2, "Fan Speed", data);
+            serverStatRequest( device_name, "Device Usage", new Date(2012, 6, 15), new Date(2012, 8, 28));
+            serverStatRequest( device_name, "Fan Speed", new Date(2012, 6, 15), new Date(2012, 8, 28));
             break;
         case "Door":
-            createChart( 1, "N. door opening", data);
-            createChart( 2, "N. door locking", data);
+            serverStatRequest( device_name, "N. door opening", new Date(2012, 6, 15), new Date(2012, 8, 28));
+            serverStatRequest( device_name, "N. door locking", new Date(2012, 6, 15), new Date(2012, 8, 28));
             break;
         case "Thermostat":
-            createChart( 1, "Device Usage", null);
-            createChart( 2, "Temperature", null);
+            serverStatRequest( device_name, "Device Usage", new Date(2012, 6, 15), new Date(2012, 8, 28));
+            serverStatRequest( device_name, "Temperature", new Date(2012, 6, 15), new Date(2012, 8, 28));
             break;
         case "Conditioner":
-            createChart( 1, "Device Usage", null);
-            createChart( 2, "Temperature", null);
+            serverStatRequest( device_name, "Device Usage", new Date(2012, 6, 15), new Date(2012, 8, 28));
+            serverStatRequest( device_name, "Temperature", new Date(2012, 6, 15), new Date(2012, 8, 28));
             break;
         default:
     }
 
 }
 
+function fromGraphID(graphID, device_type){
+    switch(device_type){
+        case "Light":
+            if( graphID === 1)
+                return "Device Usage";
+            else
+                return "Brightness";
+        case "Fan":
+            if( graphID === 1)
+                return "Device Usage";
+            else
+                return "Fan Speed";
+        case "Door":
+            if( graphID === 1)
+                return "N. door opening";
+            else
+                return "N. door locking";
+        case "Thermostat":
+            if( graphID === 1)
+                return "Device Usage";
+            else
+                return "Temperature";
+        case "Conditioner":
+            if( graphID === 1)
+                return "Device Usage";
+            else
+                return "Temperature";
+        default:
+            return "unknown";
+    }
+}
+
+function toGraphID(statistic){
+    switch(statistic){
+        case "Device Usage":
+        case "N. door opening":
+            return 1;
+        default:
+            return 2;
+    }
+}
 function createChart(id, name, data){
 
     document.getElementsByClassName("statistic_header")[id-1].textContent = name;
@@ -1178,10 +1254,11 @@ function createChart(id, name, data){
     let loader = document.getElementsByClassName("graph_loader")[id-1];
     let graph = document.getElementsByClassName("graph")[id-1];
     let cheater = document.getElementsByClassName("cheater")[id-1];
-
+    let node = document.getElementById("container_expand").getElementsByClassName("fa fa-search")[id-1];
     loader.style.display = "none";
     graph.style.display = "block";
     cheater.style.display = "block";
+    node.className = "fa fa-search search_ok";
 }
 //// STATIC ELEMENTS ACTION HANDLERS
 
@@ -1239,31 +1316,8 @@ $("#add_location_sub").on('click', function(e){
                 return;
             }
         //  TODO SERVER VERIFICATION
-        if( requestServerLocation(location_name, address)){
-            createLocation(location_name);
-            createLocationButton(location_name);
-            form.elements['location'].value="";
-            form.elements['address'].value="";
-            loading.style.display = "none";
-            button.style.display = "flex";
+        requestServerLocation(location_name, address);
 
-            if (button_wrap.getBoundingClientRect().width < scroller.getBoundingClientRect().width){
-
-                left_angle.style.display= "inline";
-                right_angle.style.display= "inline";
-
-            } else {
-
-                left_angle.style.display= "none";
-                right_angle.style.display= "none";
-
-            }
-
-        }else{
-            loading.style.display = "none";
-            error.style.display = "flex";
-            errorFlag = true;
-        }
     }else{
         loading.style.display = "none";
         error.style.display = "flex";
@@ -1271,6 +1325,33 @@ $("#add_location_sub").on('click', function(e){
     }
 
 })
+
+function addLocationReaction(location_name){
+    let form = document.getElementById("add_location_sub");
+    let button = form.getElementsByClassName("location-form-button")[0];
+    let loading = form.getElementsByClassName("loading_placeholder")[0];
+    addLocation(location_name);
+    loading.style.display = "none";
+    button.style.display = "inline";
+}
+
+function addLocation(location_name){
+
+    createLocation(location_name);
+    createLocationButton(location_name);
+
+    if (button_wrap.getBoundingClientRect().width < scroller.getBoundingClientRect().width){
+
+        left_angle.style.display= "inline";
+        right_angle.style.display= "inline";
+
+    } else {
+
+        left_angle.style.display= "none";
+        right_angle.style.display= "none";
+
+    }
+}
 
 //  function to undo add location button error state
 $("#locInput").on('keyup',function(){
