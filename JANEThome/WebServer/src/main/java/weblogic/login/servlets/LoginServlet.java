@@ -63,6 +63,7 @@ public class LoginServlet extends HttpServlet {
                     resp.addCookie(new Cookie("auth", userData.getToken()));
                     req.getSession().setAttribute("authData", userData);
                     req.getSession().setAttribute("infoData", infoData);
+                    logger.info("Session data generated: " + userData.getToken());
                     resp.setStatus(200);
                 } else
                     resp.setStatus(500);

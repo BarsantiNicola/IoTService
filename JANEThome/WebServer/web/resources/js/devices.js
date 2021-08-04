@@ -314,16 +314,21 @@ function requestDeviceSpeed(dID,value){
 }
 
 function changeDeviceSpeed(dID, value){
+
     let device = document.getElementById("device_"+dID);
-    if( device === undefined )
+    if( device == null )
         return false;
 
-    let speed_input = device.getElementsByClassName("speed_input")[0];
-    let speed_value = device.getElementsByClassName("speed_value")[0];
-    let speed = device.getElementsByClassName("speed")[0];
+    let speed_input = device.getElementsByClassName("speed_input");
+    let speed_value = device.getElementsByClassName("speed_value");
+    let speed = device.getElementsByClassName("speed");
 
-    if( speed_value === undefined || speed_input === undefined || speed === undefined )
+    if( speed_value === null || speed_input === null || speed === null )
         return false;
+
+    speed_input = speed_input[0];
+    speed_value = speed_value[0];
+    speed = speed[0];
 
     speed_input.value = value;
     speed_value.textContent = value;

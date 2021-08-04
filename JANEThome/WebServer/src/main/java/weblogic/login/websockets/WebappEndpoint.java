@@ -147,6 +147,11 @@ public class WebappEndpoint {
                     if( true )
                         notifier.sendMessage(message, userData.getUser());
                     break;
+                case LOGOUT:
+                    httpSession.removeAttribute("authData");
+                    httpSession.removeAttribute("infoData");
+                    break;
+
                 default:
             }
         }

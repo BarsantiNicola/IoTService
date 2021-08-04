@@ -124,7 +124,7 @@
                         </div>
                         <img class="js-tilt" src="resources/pics/logo2.png" alt="logo" data-tilt="">
                         <div class="account-button-wrapper">
-                            <a href="login.jsp" class="btn">
+                            <a onclick="logout()" href="login.jsp" class="btn">
                                 <i class="fa fa-sign-out"></i>
                                 <p id="logout_label">Logout</p>
                             </a>

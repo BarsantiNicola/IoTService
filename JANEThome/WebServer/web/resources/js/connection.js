@@ -131,7 +131,7 @@ function serverDeleteDevice(name){
     return true;
 }
 function serverStatRequest( dID, stat, start_time, end_time){
-    alert("send: " + dID);
+
     let request = {
         "type": "STATISTIC",
         "data": {
@@ -142,7 +142,7 @@ function serverStatRequest( dID, stat, start_time, end_time){
         }
     }
     websocket.send(JSON.stringify(request));
-    alert("sent");
+
     return true;
 }
 
@@ -237,6 +237,14 @@ function serverDevicePowerRequest(dID, value){
     return true;
 }
 
+function logout(){
+    let request = {
+        "type": "LOGOUT"
+    }
+    websocket.send(JSON.stringify(request));
+    return true;
+}
+
 let enableUpdate = false;
 function messageManager(update){
 
@@ -274,7 +282,7 @@ function messageManager(update){
         case "REMOVE_LOCATION":
             deleteLocationReaction(update.data.location);
             break;
-        case "REMOVE_SUBLOC":
+        case "REMOVE_SUBLOCATION":
             deleteSublocationReaction(update.data.location,update.data.sublocation);
             break;
         case "REMOVE_DEVICE":
@@ -284,10 +292,10 @@ function messageManager(update){
             let data = JSON.parse(update.data.values);
             for( let a = 0; a<data.length; a++)
                 data[a].x = new Date(Date.parse(data[a].x));
-            updateStatistic( update.data.name, update.data.statistic, data);
+            updateStatistic( update.data.device_name, update.data.statistic, data);
             break;
         case "UPDATE":
-            updateDevice(update.data.name, update.data.action, update.data.value);
+            updateDevice(update.data.device_name, update.data.action, update.data.value);
         default: break;
     }
 }
@@ -300,7 +308,6 @@ $(document).ready(function(){
     websocket.onmessage = function (event) {
         message = event.data.substr(event.data.indexOf("{"))
 
-        alert(message);
         messageManager(JSON.parse(message));
     }
 
@@ -309,7 +316,6 @@ $(document).ready(function(){
 function createSmarthome(smarthomeDefinition){
 
     for( let location of smarthomeDefinition.locations){
-        alert(location.name);
         addLocation(location.name);
         for( let sublocation of location.sublocations) {
             addSublocationAct(location.name, sublocation.name);

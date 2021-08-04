@@ -18,10 +18,9 @@ public abstract class EndPoint{
 
     public EndPoint(){
 
-
-
         ConnectionFactory factory = new ConnectionFactory();
         factory.setHost("localhost");
+        factory.setRequestedHeartbeat(60);
 
         try {
 

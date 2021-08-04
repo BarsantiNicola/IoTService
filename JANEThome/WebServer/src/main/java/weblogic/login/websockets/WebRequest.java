@@ -26,6 +26,7 @@ public class WebRequest implements Serializable {
         REMOVE_DEVICE,
         STATISTIC,
         UPDATE,
+        LOGOUT,
         UNKNOWN
     }
 
@@ -38,7 +39,7 @@ public class WebRequest implements Serializable {
     private HashMap<String,String> data;
 
     public UpdateType requestType(){
-        List<String> values = Arrays.asList("RENAME_LOCATION", "RENAME_SUBLOCATION", "RENAME_DEVICE","ADD_LOCATION","ADD_SUBLOCATION","ADD_DEVICE","CHANGE_SUBLOC","REMOVE_LOCATION","REMOVE_SUBLOC","REMOVE_DEVICE","STATISTIC","UPDATE");
+        List<String> values = Arrays.asList("RENAME_LOCATION", "RENAME_SUBLOCATION", "RENAME_DEVICE","ADD_LOCATION","ADD_SUBLOCATION","ADD_DEVICE","CHANGE_SUBLOC","REMOVE_LOCATION","REMOVE_SUBLOCATION","REMOVE_DEVICE","STATISTIC","UPDATE","LOGOUT");
         int index =  values.indexOf(type);
         return index == -1? UpdateType.values()[values.size()]:UpdateType.values()[index];
     }
