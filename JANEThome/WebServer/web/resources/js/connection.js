@@ -1,7 +1,7 @@
 
 let websocket = null;
 
-function requestServerLocation(location, address){
+function requestServerLocation(location, address, port){
 
     if( websocket == null ) return false;
 
@@ -9,7 +9,8 @@ function requestServerLocation(location, address){
         "type": "ADD_LOCATION",
         "data": {
             "location": location,
-            "address": address
+            "address": address,
+            "port": port
         }
     }
     websocket.send(JSON.stringify(request));
@@ -248,7 +249,7 @@ function logout(){
 let enableUpdate = false;
 function messageManager(update){
 
-    if( update.type === "START_SESSION" && !enableUpdate){
+    if(!enableUpdate){
         createSmarthome(update);
         enableUpdate = true;
         return;
@@ -307,7 +308,6 @@ $(document).ready(function(){
 
     websocket.onmessage = function (event) {
         message = event.data.substr(event.data.indexOf("{"))
-
         messageManager(JSON.parse(message));
     }
 
@@ -316,11 +316,11 @@ $(document).ready(function(){
 function createSmarthome(smarthomeDefinition){
 
     for( let location of smarthomeDefinition.locations){
-        addLocation(location.name);
+        addLocation(location.name.toLowerCase());
         for( let sublocation of location.sublocations) {
-            addSublocationAct(location.name, sublocation.name);
+            addSublocationAct(location.name.toLowerCase(), sublocation.name.toLowerCase());
             for (let device of sublocation.devices)
-                addDeviceAct(location.name, sublocation.name, device.name, device.type);
+                addDeviceAct(location.name.toLowerCase(), sublocation.name.toLowerCase(), device.name.toLowerCase(), device.type);
         }
     }
 

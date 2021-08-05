@@ -3,6 +3,7 @@ package weblogic.login.websockets;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import iot.SmarthomeDefinition;
+import iot.SmarthomeDevice;
 import jms.DeviceUpdate;
 import jms.beans.UpdateNotifier;
 import statistics.Statistics;
@@ -46,15 +47,18 @@ public class WebappEndpoint {
             SmarthomeDefinition smarthome;
             InitialContext context = null;
             try{
+
                 context = new InitialContext();
-                smarthome = (SmarthomeDefinition) context.lookup("test_"+userData.getUser());
+                smarthome = (SmarthomeDefinition) context.lookup("smarthome_"+userData.getUser());
 
             } catch (NamingException e) {
+
                 smarthome = SmarthomeDefinition.createTestingEnvironment(userData.getUser());
                 if( context != null ) {
                     try {
-                        context.bind("test_"+userData.getUser(),smarthome);
+                        context.bind("smarthome_"+userData.getUser(),smarthome);
                     } catch (NamingException namingException) {
+                        logger.info("Error during the save of the smarthome");
                         namingException.printStackTrace();
                     }
                 }
@@ -69,12 +73,14 @@ public class WebappEndpoint {
                 e.printStackTrace();
             }
         }else {
+
             logger.warning("User not authorized to open a websocket");
             try {
                 session.close();
             } catch (IOException e) {
                 e.printStackTrace();
             }
+
         }
 
 
@@ -90,69 +96,310 @@ public class WebappEndpoint {
             BasicData userData = (BasicData) httpSession.getAttribute("authData");
             UpdateNotifier notifier = new UpdateNotifier();
             Gson gson = new GsonBuilder().setDateFormat("yyyy-MM-dd'T'HH:mm:ss").create();
+
+            SmarthomeDefinition smarthome;
+            InitialContext context = null;
+            try {
+                context = new InitialContext();
+                smarthome = (SmarthomeDefinition) context.lookup("smarthome_" + userData.getUser());
+
+            } catch (NamingException e) {
+                logger.info("Error during the generation of the smarthome");
+                smarthome = SmarthomeDefinition.createTestingEnvironment(userData.getUser());  //  TODO TO BE CHANGED WITH REQUEST TO DB
+                if (context != null) {
+                    try {
+                        context.bind("smarthome_" + userData.getUser(), smarthome);
+                    } catch (NamingException namingException) {
+                        namingException.printStackTrace();
+                    }
+                }
+
+            }
+
+            if (smarthome == null) {
+                httpSession.removeAttribute("authData");
+                httpSession.removeAttribute("infoData");
+                try {
+                    session.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+                return;
+            }
+
+            HashMap<String, String> jsonMessage = request.getData();
+            if (jsonMessage != null && jsonMessage.containsKey("data"))
+                jsonMessage = gson.fromJson(jsonMessage.get("data"), HashMap.class);
+
             switch (request.requestType()) {
                 case RENAME_LOCATION:
-                    //  TODO request to database
-                    if( true )
-                        notifier.sendMessage(message, userData.getUser());
+                    if (!jsonMessage.containsKey("old_name") || !jsonMessage.containsKey("new_name"))
+                        return;
+
+                    if (smarthome.changeLocationName(jsonMessage.get("old_name"), jsonMessage.get("new_name"))) {
+                        //  TODO Request to db or just update the db with rabbitMQ(no reply)
+                        try {
+                            session.getBasicRemote().sendText(gson.toJson(request));
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                            try {
+                                session.getBasicRemote().sendText(request.getBadResponse());
+                            } catch (IOException ee) {
+                                ee.printStackTrace();
+                            }
+                        }
+
+                    } else
+                        try {
+                            session.getBasicRemote().sendText(request.getBadResponse());
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
                     break;
+
                 case RENAME_SUBLOCATION:
-                    if( true )
-                        notifier.sendMessage(message, userData.getUser());
+                    if ( !jsonMessage.containsKey("location") ||
+                            !jsonMessage.containsKey("old_name") || !jsonMessage.containsKey("new_name"))
+                        return;
+
+                    if (smarthome.changeSublocationName(jsonMessage.get("location"), jsonMessage.get("old_name"), jsonMessage.get("new_name"))) {
+                        //  TODO Request to db or just update the db with rabbitMQ(no reply)
+                        try {
+                            session.getBasicRemote().sendText(message);
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
+
+                    } else
+                        try {
+                            session.getBasicRemote().sendText(request.getBadResponse());
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
                     break;
+
                 case RENAME_DEVICE:
-                    if( true )
-                        notifier.sendMessage(message, userData.getUser());
+                    if ( !jsonMessage.containsKey("old_name") || !jsonMessage.containsKey("new_name"))
+                        return;
+
+                    if (smarthome.changeDeviceName(jsonMessage.get("old_name"), jsonMessage.get("new_name"))) {
+                        //  TODO Request to db or just update the db with rabbitMQ(no reply)
+                        try {
+                            session.getBasicRemote().sendText(gson.toJson(request));
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                            try {
+                                session.getBasicRemote().sendText(request.getBadResponse());
+                            } catch (IOException ee) {
+                                ee.printStackTrace();
+                            }
+                        }
+
+                    } else
+                        try {
+                            session.getBasicRemote().sendText(request.getBadResponse());
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
                     break;
+
                 case ADD_LOCATION:
-                    if( true )
-                        notifier.sendMessage(message, userData.getUser());
+                    if (jsonMessage == null || !jsonMessage.containsKey("location") || !jsonMessage.containsKey("address") ||
+                            !jsonMessage.containsKey("port"))
+                        return;
+
+                    if (smarthome.addLocation(jsonMessage.get("location"), jsonMessage.get("address"), Integer.parseInt(jsonMessage.get("port")))) {
+                        //  TODO Request to db or just update the db with rabbitMQ(no reply)
+                        try {
+                            session.getBasicRemote().sendText(gson.toJson(request));
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                            try {
+                                session.getBasicRemote().sendText(request.getBadResponse());
+                            } catch (IOException ee) {
+                                ee.printStackTrace();
+                            }
+                        }
+
+                    } else
+                        try {
+                            session.getBasicRemote().sendText(request.getBadResponse());
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
                     break;
+
                 case ADD_SUBLOCATION:
-                    if( true )
-                        notifier.sendMessage(message, userData.getUser());
+                    if (!jsonMessage.containsKey("location") || !jsonMessage.containsKey("sublocation"))
+                        return;
+                    if (smarthome.addSublocation(jsonMessage.get("location"), jsonMessage.get("sublocation"))) {
+                        //  TODO Request to db or just update the db with rabbitMQ(no reply)
+                        try {
+                            session.getBasicRemote().sendText(gson.toJson(request));
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                            try {
+                                session.getBasicRemote().sendText(request.getBadResponse());
+                            } catch (IOException ee) {
+                                ee.printStackTrace();
+                            }
+                        }
+                    } else
+                        try {
+                            session.getBasicRemote().sendText(request.getBadResponse());
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
                     break;
-                case ADD_DEVICE:
-                    if( true )
-                        notifier.sendMessage(message, userData.getUser());
-                    break;
-                case CHANGE_DEVICE_SUBLOCATION:
-                    if( true )
-                        notifier.sendMessage(message, userData.getUser());
-                    break;
+
                 case REMOVE_LOCATION:
-                    if( true )
-                        notifier.sendMessage(message, userData.getUser());
+                    if (jsonMessage == null || !jsonMessage.containsKey("location"))
+                        return;
+
+                    if (smarthome.removeLocation(jsonMessage.get("location"))) {
+                        //  TODO Request to db or just update the db with rabbitMQ(no reply)
+                        try {
+                            session.getBasicRemote().sendText(gson.toJson(request));
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                            try {
+                                session.getBasicRemote().sendText(request.getBadResponse());
+                            } catch (IOException ee) {
+                                ee.printStackTrace();
+                            }
+                        }
+                    } else
+                        try {
+                            session.getBasicRemote().sendText(request.getBadResponse());
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
                     break;
+
                 case REMOVE_SUBLOCATION:
-                    if( true )
-                        notifier.sendMessage(message, userData.getUser());
+                    if (jsonMessage == null || !jsonMessage.containsKey("location") || !jsonMessage.containsKey("sublocation"))
+                        return;
+                    if (smarthome.removeSublocation(jsonMessage.get("location"), jsonMessage.get("sublocation"))) {
+                        //  TODO Request to db or just update the db with rabbitMQ(no reply)
+                        try {
+                            session.getBasicRemote().sendText(gson.toJson(request));
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                            try {
+                                session.getBasicRemote().sendText(request.getBadResponse());
+                            } catch (IOException ee) {
+                                ee.printStackTrace();
+                            }
+                        }
+
+                    } else
+                        try {
+                            session.getBasicRemote().sendText(request.getBadResponse());
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
                     break;
+
+                case ADD_DEVICE:
+                    if (jsonMessage == null || !jsonMessage.containsKey("location") || !jsonMessage.containsKey("sublocation") ||
+                            !jsonMessage.containsKey("name") || !jsonMessage.containsKey("type"))
+                        return;
+
+                    if (smarthome.addDevice(jsonMessage.get("location"), jsonMessage.get("sublocation"), jsonMessage.get("name"), SmarthomeDevice.DeviceType.valueOf(jsonMessage.get("type").toUpperCase()))) {
+                        //  TODO Request to db or just update the db with rabbitMQ(no reply)
+
+                        try {
+                            session.getBasicRemote().sendText(gson.toJson(request));
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
+
+                    } else
+                        try {
+                            session.getBasicRemote().sendText(request.getBadResponse());
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
+                    break;
+
+                case CHANGE_DEVICE_SUBLOCATION:
+                    if (jsonMessage == null || !jsonMessage.containsKey("name") || !jsonMessage.containsKey("location") ||
+                            !jsonMessage.containsKey("sublocation"))
+                        return;
+
+                    if (smarthome.changeDeviceSublocation(jsonMessage.get("location"), jsonMessage.get("sublocation"), jsonMessage.get("name"))) {
+                        //  TODO Request to db or just update the db with rabbitMQ(no reply)
+                        try {
+                            session.getBasicRemote().sendText(gson.toJson(request));
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
+
+                    } else
+                        try {
+                            session.getBasicRemote().sendText(request.getBadResponse());
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
+                    break;
+
                 case REMOVE_DEVICE:
-                    if( true )
-                        notifier.sendMessage(message, userData.getUser());
+                    if (!jsonMessage.containsKey("name"))
+                        return;
+                    if (smarthome.removeDevice(jsonMessage.get("name"))) {
+                        //  TODO Request to db or just update the db with rabbitMQ(no reply)
+                        try {
+                            session.getBasicRemote().sendText(gson.toJson(request));
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
+
+                    } else
+                        try {
+                            session.getBasicRemote().sendText(request.getBadResponse());
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
                     break;
+
                 case STATISTIC:
-                    if( true ){
-                        WebRequest req = gson.fromJson(message,WebRequest.class);
-                        HashMap<String,String> data = new HashMap<>();
-                        data.put("device_name",req.getData().get("device_name"));
-                        data.put("statistic",req.getData().get("statistic"));
-                        data.put("values",gson.toJson(Statistics.buildTestEnvironment()));
-                        WebRequest resp = new WebRequest(req.getStringType(), data);
-                        notifier.sendMessage(gson.toJson(resp), userData.getUser());
-                    }
+                    if (!jsonMessage.containsKey("device_name") || !jsonMessage.containsKey("statistic") ||
+                            !jsonMessage.containsKey("start") || !jsonMessage.containsKey("stop"))
+                        return;
+
+                    if (!smarthome.devicePresent(jsonMessage.get("device_name")))
+                        return;
+
+                    //  TODO Request to the server for statistics
+                    WebRequest req = gson.fromJson(message, WebRequest.class);
+                    HashMap<String, String> data = new HashMap<>();
+                    data.put("device_name", req.getData().get("device_name"));
+                    data.put("statistic", req.getData().get("statistic"));
+                    data.put("values", gson.toJson(Statistics.buildTestEnvironment()));
+                    WebRequest resp = new WebRequest(req.getStringType(), data);
+                    notifier.sendMessage(gson.toJson(resp), userData.getUser());
                     break;
+
                 case UPDATE:
-                    if( true )
+                    if (true)
                         notifier.sendMessage(message, userData.getUser());
                     break;
+
                 case LOGOUT:
                     httpSession.removeAttribute("authData");
                     httpSession.removeAttribute("infoData");
                     break;
 
                 default:
+                    logger.severe("Error, request unknown: " + request.requestType().toString());
+            }
+            try {
+                if( context != null ) {
+                    context.unbind("smarthome_" + userData.getUser());
+                    context.bind("smarthome_" + userData.getUser(), smarthome);
+                }
+            } catch (NamingException e) {
+                e.printStackTrace();
             }
         }
     }

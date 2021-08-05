@@ -31,7 +31,7 @@ function createLocation( name ){
 }
 
 //  creates a new sublocation named as the parameter into a defined location
-function createSublocation(location, name="Default"){
+function createSublocation(location, name="default"){
 
     let container = document.createElement("div");  //  main container for the sublocation
     let splitter = document.createElement("div");   //  separator for the title
@@ -40,7 +40,7 @@ function createSublocation(location, name="Default"){
 
     container.className = "sublocation_wrapper";
     container.id = location+"_"+name;   //  sublocation ids organized as location_sublocation to easy retrieval
-    if( name === "Default")     //  default sublocation, it is mandatory into a location and cannot be removed
+    if( name === "default")     //  default sublocation, it is mandatory into a location and cannot be removed
         container.append(createPopupContainer());
     else     //  sublocation requested by the user/server
         container.append(createPopupContainer(false));  //  with false it adds the remove/change sublocation buttons
@@ -446,7 +446,7 @@ function createAddDevicePopup(){
 }
 
 // creates the header of a sublocation containing all the sublocation buttons( used by createSublocation )
-function createSublocationHeader(sublocation_name = "Default"){
+function createSublocationHeader(sublocation_name = "default"){
 
     let wrapper = document.createElement("div");    //  container of the sublocation
     let header = document.createElement("h1");      //  title of the sublocation
@@ -461,7 +461,7 @@ function createSublocationHeader(sublocation_name = "Default"){
     header.textContent = sublocation_name;
 
     //  dynamic sublocation actions generation
-    if( sublocation_name === "Default") {  //  in case of default sublocation we can add a new sublocation
+    if( sublocation_name === "default") {  //  in case of default sublocation we can add a new sublocation
 
         anchor.className = "add_sublocation_wrapper";
         anchor.href = "#";
@@ -631,7 +631,7 @@ function deleteLocation(elem){
 function deleteLocationReaction(location){
 
     let loc = document.getElementById(location); //  getting the location container
-    if( loc === undefined )
+    if( loc == null )
         return;
 
     loc.parentNode.removeChild(loc);  //  removing the container and all its content
@@ -702,7 +702,7 @@ function renameLocationAct(old_name, new_name){
 
     //  getting the selected location
     let selected_location = document.getElementById(old_name);
-    if( selected_location === undefined )
+    if( selected_location == null )
         return false;
 
     //  verification of location not already present
@@ -732,7 +732,7 @@ function renameLocationAct(old_name, new_name){
 function renameLocationReaction(old_location, new_location ){
 
     //  getting the rename location popup
-    let form = document.getElementById(old_location+"_Default").getElementsByClassName("rename_location_popup")[0].getElementsByTagName("form")[0];
+    let form = document.getElementById(old_location+"_default").getElementsByClassName("rename_location_popup")[0].getElementsByTagName("form")[0];
     //  getting the submit button layers
     let button = form.getElementsByTagName("button")[0];
     let loading = form.getElementsByClassName("loading_placeholder")[0];
@@ -789,9 +789,8 @@ function renameSublocationAct(location_name, old_name, new_name){
 
     //  getting the sub-location
     let sublocation = document.getElementById(location_name+"_"+old_name);
-
     //  verification of parameters, presence of current sublocation and not presence of the renamed sublocation
-    if( sublocation === undefined || new_name.length === 0 || document.getElementById(location_name+"_"+new_name) !== undefined)
+    if( sublocation == null || new_name.length === 0 || document.getElementById(location_name+"_"+new_name) != null)
         return false;
 
     //  change the sub-location name
@@ -813,7 +812,7 @@ function renameSublocationReaction(location, old_name, new_name){
 
     //  if the button is on loading(user request)
     if( button.style.display !== "inline" )
-        if( renameSublocationAct(location, old_name, new_name )){
+        if(renameSublocationAct(location, old_name, new_name )){
             //  in case of success remove the button load
             loading.style.display = "none";
             button.style.display = "inline";
@@ -862,7 +861,7 @@ function addSublocationAct(location, sub_location){
 
     //  getting the location
     let selected_location = document.getElementById(location);
-    if( selected_location === undefined )
+    if( selected_location == null )
         return false;
 
     let id = location+"_"+sub_location;  //  generating the sublocation id
@@ -885,7 +884,7 @@ function addSublocationAct(location, sub_location){
 function addSublocationReaction(location, sublocation){
 
     //  getting the submit button layers
-    let form = document.getElementById(location+"_Default").getElementsByClassName("add_sublocation_form")[0];
+    let form = document.getElementById(location+"_default").getElementsByClassName("add_sublocation_form")[0];
     let button = form.getElementsByClassName("add_sublocation_btn")[0];
     let loading = form.getElementsByClassName("loading_placeholder")[0];
     let error = form.getElementsByClassName("error_placeholder")[0];
@@ -1015,7 +1014,7 @@ function deleteDeviceAct(dID){
 
     //  getting the device(id=device_dID)
     let device = document.getElementById("device_" + dID);
-    if( device === undefined)
+    if( device == null)
         return false;
 
     //  removing the device from the device scroller
@@ -1053,7 +1052,7 @@ function renameDevice(node) {
 function renameDeviceAct(oldDID, newDID){
     //  getting the device
     let device = document.getElementById("device_"+oldDID);
-    if( device === undefined )
+    if( device == null )
         return false;
 
     //  verification device not already present
@@ -1066,6 +1065,10 @@ function renameDeviceAct(oldDID, newDID){
     //  renaming the device
     device.getElementsByClassName("device_title")[0].textContent = newDID+"["+device.getElementsByClassName("type")[0].value+"]";
     device.id= "device_"+newDID;
+
+    let expander = document.getElementsByClassName("device_expander_name")[0];
+    if(expander.textContent === oldDID)
+        expander.textContent = newDID;
     return true;
 
 }
@@ -1154,7 +1157,7 @@ function openSublocation(node){
 
     let location = node.parentNode.parentNode.parentNode.id;  // getting the current location
     //  getting all the popups from the default sublocation(it contains the add sublocation popup)
-    let popup_container = document.getElementById(location+"_Default").getElementsByClassName("container-popups")[0]
+    let popup_container = document.getElementById(location+"_default").getElementsByClassName("container-popups")[0]
     let popups = popup_container.getElementsByClassName('popups');
 
     //  hide all the eventually showed popups
@@ -1174,7 +1177,7 @@ function renameLocation(node){
     let location = loc_elem.id;  //  getting the location name
 
     //  getting all the popups from the default sublocation(it contains the rename location popup)
-    let popup_container = document.getElementById(location + "_Default").getElementsByClassName("container-popups")[0]
+    let popup_container = document.getElementById(location + "_default").getElementsByClassName("container-popups")[0]
     let popups = popup_container.getElementsByClassName('popups');
 
     //  hide all the eventually showed popups
@@ -1615,7 +1618,7 @@ $("#add_location_sub").on('click', function(e){
                 return;
             }
         //  TODO SERVER VERIFICATION
-        requestServerLocation(location_name, address);
+        requestServerLocation(location_name, address, "80");
 
     }else{
         loading.style.display = "none";

@@ -9,7 +9,7 @@ import java.util.Random;
 
 public class SmarthomeDevice implements Serializable {
 
-    enum DeviceType{
+    public enum DeviceType{
         LIGHT,
         FAN,
         DOOR,
@@ -17,8 +17,8 @@ public class SmarthomeDevice implements Serializable {
         CONDITIONER
     }
 
-    private final String name;
-    private final String type;
+    private String name;
+    private String type;
     private final static transient Random random = new SecureRandom();
     //  TODO To be removed
     protected transient static final char[] allAllowed = "abcdefghijklmnopqrstuvwxyzABCDEFGJKLMNPRSTUVWXYZ0123456789".toCharArray();
@@ -47,6 +47,10 @@ public class SmarthomeDevice implements Serializable {
         }
     }
 
+    public void setName(String name){
+        this.name = name;
+    }
+
     public String getName(){ return name; }
 
     public String getType(){ return type; }
@@ -58,7 +62,7 @@ public class SmarthomeDevice implements Serializable {
         for (int i = 0; i < 10; i++)
             token.append(allAllowed[random.nextInt(allAllowed.length)]);
 
-        return token.toString();
+        return token.toString().toLowerCase();
 
     }
 
@@ -74,4 +78,5 @@ public class SmarthomeDevice implements Serializable {
         }
         return devices;
     }
+
 }

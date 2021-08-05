@@ -61,4 +61,15 @@ public class WebRequest implements Serializable {
         logger.info("statistic_request:" + data);
         return gson.fromJson(data.substring(data.indexOf("{")), WebRequest.class);
     }
+
+    public String getBadResponse(){
+
+        Gson gson = new Gson();
+        String app = this.type;
+        this.type = this.type+":ERROR";
+        String response = gson.toJson(this);
+        this.type = app;
+        return response;
+
+    }
 }
