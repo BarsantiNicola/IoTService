@@ -955,7 +955,7 @@ function addDevice(element) {
 }
 
 //  management function to add a device
-function addDeviceAct(location, sublocation, dID, type){
+function addDeviceAct(location, sublocation, name, type){
 
     //  getting the subsection
     let subsection = document.getElementById(location+"_"+sublocation);
@@ -963,7 +963,7 @@ function addDeviceAct(location, sublocation, dID, type){
         return false;
 
     //  adding to the device scroller the new device
-    subsection.getElementsByClassName("scroller")[0].appendChild(createDevice(type,dID));
+    subsection.getElementsByClassName("scroller")[0].appendChild(createDevice(type,name));
     adaptLocationScrolling();  // adapt the scrollbars
     return true;
 
@@ -1443,7 +1443,7 @@ function chartCreation(device_name, device_type){
     switch(device_type){
         case "Light":
             serverStatRequest( device_name, "Device Usage", new Date(2012, 6, 15), new Date(2012, 8, 28));
-            serverStatRequest( device_name, "Device Usage", new Date(2012, 6, 15), new Date(2012, 8, 28));
+            serverStatRequest( device_name, "Brightness", new Date(2012, 6, 15), new Date(2012, 8, 28));
             break;
         case "Fan":
             serverStatRequest( device_name, "Device Usage", new Date(2012, 6, 15), new Date(2012, 8, 28));

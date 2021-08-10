@@ -1,7 +1,10 @@
 package iot;
 
+import com.google.gson.Gson;
+
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
 public class SmarthomeDefinition implements Serializable {
@@ -27,31 +30,28 @@ public class SmarthomeDefinition implements Serializable {
         return true;
     }
 
-    public boolean addSublocation(String location, String sublocation){
-        System.out.println("searching location: " + location);
+    public boolean addSubLocation(String location, String subLocation){
         for( SmarthomeLocation loc: this.locations) {
-            System.out.println("location: " + loc.getName());
-            if (loc.getName().compareTo(location) == 0) {
-                System.out.println("Match found");
-                return loc.addSublocation(sublocation);
+            if (loc.getLocation().compareTo(location) == 0) {
+                return loc.addSublocation(subLocation);
             }
         }
         return false;
     }
 
-    public boolean addDevice(String location, String sublocation, String dID, SmarthomeDevice.DeviceType device_type){
+    public boolean addDevice(String location, String sublocation, String dID, String name, SmarthomeDevice.DeviceType device_type){
         if(devicePresent(dID))
             return false;
 
         for( SmarthomeLocation loc: this.locations)
-            if(loc.getName().compareTo(location) == 0 )
-                return loc.addDevice(sublocation,dID,device_type);
+            if(loc.getLocation().compareTo(location) == 0 )
+                return loc.addDevice(sublocation,dID,name, device_type);
         return false;
     }
 
     public boolean removeLocation(String location){
         for( SmarthomeLocation loc: this.locations)
-            if( loc.getName().compareTo(location)==0) {
+            if( loc.getLocation().compareTo(location)==0) {
                 this.locations.remove(loc);
                 return true;
             }
@@ -60,7 +60,7 @@ public class SmarthomeDefinition implements Serializable {
 
     public boolean removeSublocation(String location, String sublocation){
         for( SmarthomeLocation loc: this.locations)
-            if(loc.getName().compareTo(location)==0)
+            if(loc.getLocation().compareTo(location)==0)
                 return loc.removeSublocation(sublocation);
         return false;
     }
@@ -75,7 +75,7 @@ public class SmarthomeDefinition implements Serializable {
 
     public boolean changeDeviceSublocation(String location, String new_sublocation, String dID){
         for( SmarthomeLocation loc: this.locations)
-            if( loc.getName().compareTo(location) == 0)
+            if( loc.getLocation().compareTo(location) == 0)
                 return loc.changeDeviceSublocation(new_sublocation, dID);
         return false;
     }
@@ -92,8 +92,8 @@ public class SmarthomeDefinition implements Serializable {
             return false;
 
         for(SmarthomeLocation loc: this.locations)
-            if( loc.getName().compareTo(old_name)==0) {
-                loc.setName(new_name);
+            if( loc.getLocation().compareTo(old_name)==0) {
+                loc.setLocation(new_name);
                 return true;
             }
         return false;
@@ -102,7 +102,7 @@ public class SmarthomeDefinition implements Serializable {
 
     public boolean locationPresent(String location){
         for(SmarthomeLocation loc: this.locations)
-            if( loc.getName().compareTo(location)==0)
+            if( loc.getLocation().compareTo(location)==0)
                 return true;
         return false;
     }
@@ -113,7 +113,7 @@ public class SmarthomeDefinition implements Serializable {
             return false;
 
         for(SmarthomeLocation loc: this.locations)
-            if( loc.getName().compareTo(location) == 0)
+            if( loc.getLocation().compareTo(location) == 0)
                 return loc.changeSublocationName(old_name, new_name);
         return false;
 
@@ -142,6 +142,16 @@ public class SmarthomeDefinition implements Serializable {
             if(loc.devicePresent(dID))
                 return true;
         return false;
+    }
+
+    public String buildSmarthomeDefinition(){
+
+        ArrayList<HashMap<String,Object>> response = new ArrayList<>();
+        for(SmarthomeLocation loc: this.locations)
+            response.add(loc.buildSmarthomeLocation());
+        Gson gson = new Gson();
+        return gson.toJson(response);
+
     }
 
     //  TODO To be removed

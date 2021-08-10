@@ -152,7 +152,7 @@ function serverLightBrightnessRequest(dID, value){
         "type": "UPDATE",
         "data": {
             "device_name": dID,
-            "action": "brightness",
+            "action": "action.devices.traits.Brightness",
             "value": value,
         }
     }
@@ -165,7 +165,7 @@ function serverLightColorRequest(dID, value){
         "type": "UPDATE",
         "data": {
             "device_name": dID,
-            "action": "color",
+            "action": "action.devices.traits.ColorSetting",
             "value": value,
         }
     }
@@ -178,7 +178,7 @@ function serverFanSpeedRequest(dID, value){
         "type": "UPDATE",
         "data": {
             "device_name": dID,
-            "action": "speed",
+            "action": "action.devices.traits.FanSpeed",
             "value": value,
         }
     }
@@ -191,7 +191,7 @@ function serverDoorOpenRequest(dID, value){
         "type": "UPDATE",
         "data": {
             "device_name": dID,
-            "action": "openClose",
+            "action": "action.devices.traits.OpenClose",
             "value": value,
         }
     }
@@ -204,7 +204,7 @@ function serverDoorLockRequest(dID, value){
         "type": "UPDATE",
         "data": {
             "device_name": dID,
-            "action": "lockUnlock",
+            "action": "action.devices.traits.LockUnlock",
             "value": value,
         }
     }
@@ -217,7 +217,7 @@ function serverThermostatTemperatureRequest(dID, temperature){
         "type": "UPDATE",
         "data": {
             "device_name": dID,
-            "action": "temperature",
+            "action": "action.devices.traits.TemperatureSetting",
             "value": value,
         }
     }
@@ -230,7 +230,7 @@ function serverDevicePowerRequest(dID, value){
         "type": "UPDATE",
         "data": {
             "device_name": dID,
-            "action": "onOff",
+            "action": "action.devices.traits.OnOff",
             "value": value,
         }
     }
@@ -307,20 +307,19 @@ $(document).ready(function(){
     if( websocket === null || websocket === undefined ) return;
 
     websocket.onmessage = function (event) {
-        message = event.data.substr(event.data.indexOf("{"))
-        messageManager(JSON.parse(message));
+        messageManager(JSON.parse(event.data));
     }
 
 });
 
 function createSmarthome(smarthomeDefinition){
 
-    for( let location of smarthomeDefinition.locations){
-        addLocation(location.name.toLowerCase());
+    for( let location of smarthomeDefinition){
+        addLocation(location.location.toLowerCase());
         for( let sublocation of location.sublocations) {
-            addSublocationAct(location.name.toLowerCase(), sublocation.name.toLowerCase());
+            addSublocationAct(location.location.toLowerCase(), sublocation.sublocation.toLowerCase());
             for (let device of sublocation.devices)
-                addDeviceAct(location.name.toLowerCase(), sublocation.name.toLowerCase(), device.name.toLowerCase(), device.type);
+                addDeviceAct(location.location.toLowerCase(), sublocation.sublocation.toLowerCase(), device.name.toLowerCase(), device.type);
         }
     }
 

@@ -1,5 +1,6 @@
 package utils.jms;
 
+import com.google.gson.Gson;
 import com.rabbitmq.client.AMQP.BasicProperties;
 import com.rabbitmq.client.Consumer;
 import com.rabbitmq.client.DeliverCallback;
@@ -36,9 +37,9 @@ public class WebUpdateReceiver extends EndPoint implements Consumer{
         Handler consoleHandler = new ConsoleHandler();
         consoleHandler.setFormatter(new SimpleFormatter());
         logger.addHandler(consoleHandler);
-
+        Gson gson = new Gson();
         DeliverCallback deliverCallback = (consumerTag, delivery) ->
-            target.getBasicRemote().sendText(new String(delivery.getBody()));
+            target.getBasicRemote().sendText((String)SerializationUtils.deserialize(delivery.getBody()));
 
 
         if( channel != null && connection != null ) {

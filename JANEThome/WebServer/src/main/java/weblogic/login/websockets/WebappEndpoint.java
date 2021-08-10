@@ -65,10 +65,9 @@ public class WebappEndpoint {
 
             }
 
-            Gson gson = new GsonBuilder().setPrettyPrinting().create();
             updater = new WebUpdateReceiver(userData.getUser(),session);
             try {
-                session.getBasicRemote().sendText(gson.toJson(smarthome));
+                session.getBasicRemote().sendText(smarthome.buildSmarthomeDefinition().trim());
             } catch (IOException e) {
                 e.printStackTrace();
             }
@@ -232,7 +231,7 @@ public class WebappEndpoint {
                 case ADD_SUBLOCATION:
                     if (!jsonMessage.containsKey("location") || !jsonMessage.containsKey("sublocation"))
                         return;
-                    if (smarthome.addSublocation(jsonMessage.get("location"), jsonMessage.get("sublocation"))) {
+                    if (smarthome.addSubLocation(jsonMessage.get("location"), jsonMessage.get("sublocation"))) {
                         //  TODO Request to db or just update the db with rabbitMQ(no reply)
                         try {
                             session.getBasicRemote().sendText(gson.toJson(request));
@@ -305,7 +304,9 @@ public class WebappEndpoint {
                             !jsonMessage.containsKey("name") || !jsonMessage.containsKey("type"))
                         return;
 
-                    if (smarthome.addDevice(jsonMessage.get("location"), jsonMessage.get("sublocation"), jsonMessage.get("name"), SmarthomeDevice.DeviceType.valueOf(jsonMessage.get("type").toUpperCase()))) {
+                    //  TODO Request to db for a new DID
+                    String dID = "placeholder";
+                    if (smarthome.addDevice(jsonMessage.get("location"), jsonMessage.get("sublocation"), dID, jsonMessage.get("name"), SmarthomeDevice.DeviceType.valueOf(jsonMessage.get("type").toUpperCase()))) {
                         //  TODO Request to db or just update the db with rabbitMQ(no reply)
 
                         try {

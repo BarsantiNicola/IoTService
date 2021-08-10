@@ -55,31 +55,31 @@ function createDevice(type,name) {
 function updateDevice(dID, action, value){
 
     switch(action){
-        case "brightness":
+        case "action.devices.traits.Brightness":
             changeDeviceBrightness(dID, value);
             break;
-        case "color":
+        case "action.devices.traits.ColorSetting":
             changeDeviceColor(dID, value);
             break;
-        case "speed":
+        case "action.devices.traits.FanSpeed":
             changeDeviceSpeed(dID, value);
             break;
-        case "openClose":
+        case "action.devices.traits.OpenClose":
             openDoor(dID, value);
             break;
-        case "lockUnlock":
+        case "action.devices.traits.LockUnlock":
             lockDoor(dID, value);
             break;
-        case "temperature":
+        case "action.devices.traits.TemperatureSetting":
             changeTemperature(dID, value);
             break;
-        case "env_temperature":
-            updateEnvironmentTemperature(dID, value);
-            break;
-        case "onOff":
+        case "action.devices.traits.OnOff":
             powerDevice(dID, value);
             break;
-        case "enable":
+        case "action.devices.traits.TemperatureSample":
+            updateEnvironmentTemperature(dID, value);
+            break;
+        case "action.devices.traits.Power":
             enableDevice(dID, value);
             break;
         default:
