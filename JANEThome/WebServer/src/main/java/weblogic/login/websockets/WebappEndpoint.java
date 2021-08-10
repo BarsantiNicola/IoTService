@@ -2,9 +2,9 @@ package weblogic.login.websockets;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.google.gson.reflect.TypeToken;
 import iot.SmarthomeDefinition;
 import iot.SmarthomeDevice;
-import jms.DeviceUpdate;
 import jms.beans.UpdateNotifier;
 import statistics.Statistics;
 import utils.configuration.EndpointConfigurator;
@@ -99,6 +99,7 @@ public class WebappEndpoint {
             SmarthomeDefinition smarthome;
             InitialContext context = null;
             try {
+
                 context = new InitialContext();
                 smarthome = (SmarthomeDefinition) context.lookup("smarthome_" + userData.getUser());
 
@@ -128,11 +129,11 @@ public class WebappEndpoint {
 
             HashMap<String, String> jsonMessage = request.getData();
             if (jsonMessage != null && jsonMessage.containsKey("data"))
-                jsonMessage = gson.fromJson(jsonMessage.get("data"), HashMap.class);
+                jsonMessage = gson.fromJson(jsonMessage.get("data"), new TypeToken<HashMap<String, String>>(){}.getType());
 
             switch (request.requestType()) {
                 case RENAME_LOCATION:
-                    if (!jsonMessage.containsKey("old_name") || !jsonMessage.containsKey("new_name"))
+                    if (jsonMessage == null || !jsonMessage.containsKey("old_name") || !jsonMessage.containsKey("new_name"))
                         return;
 
                     if (smarthome.changeLocationName(jsonMessage.get("old_name"), jsonMessage.get("new_name"))) {
@@ -157,7 +158,7 @@ public class WebappEndpoint {
                     break;
 
                 case RENAME_SUBLOCATION:
-                    if ( !jsonMessage.containsKey("location") ||
+                    if (jsonMessage == null || !jsonMessage.containsKey("location") ||
                             !jsonMessage.containsKey("old_name") || !jsonMessage.containsKey("new_name"))
                         return;
 
@@ -178,7 +179,7 @@ public class WebappEndpoint {
                     break;
 
                 case RENAME_DEVICE:
-                    if ( !jsonMessage.containsKey("old_name") || !jsonMessage.containsKey("new_name"))
+                    if (jsonMessage == null || !jsonMessage.containsKey("old_name") || !jsonMessage.containsKey("new_name"))
                         return;
 
                     if (smarthome.changeDeviceName(jsonMessage.get("old_name"), jsonMessage.get("new_name"))) {
@@ -229,7 +230,7 @@ public class WebappEndpoint {
                     break;
 
                 case ADD_SUBLOCATION:
-                    if (!jsonMessage.containsKey("location") || !jsonMessage.containsKey("sublocation"))
+                    if (jsonMessage == null || !jsonMessage.containsKey("location") || !jsonMessage.containsKey("sublocation"))
                         return;
                     if (smarthome.addSubLocation(jsonMessage.get("location"), jsonMessage.get("sublocation"))) {
                         //  TODO Request to db or just update the db with rabbitMQ(no reply)
@@ -345,7 +346,7 @@ public class WebappEndpoint {
                     break;
 
                 case REMOVE_DEVICE:
-                    if (!jsonMessage.containsKey("name"))
+                    if (jsonMessage == null || !jsonMessage.containsKey("name"))
                         return;
                     if (smarthome.removeDevice(jsonMessage.get("name"))) {
                         //  TODO Request to db or just update the db with rabbitMQ(no reply)
@@ -364,7 +365,7 @@ public class WebappEndpoint {
                     break;
 
                 case STATISTIC:
-                    if (!jsonMessage.containsKey("device_name") || !jsonMessage.containsKey("statistic") ||
+                    if (jsonMessage == null || !jsonMessage.containsKey("device_name") || !jsonMessage.containsKey("statistic") ||
                             !jsonMessage.containsKey("start") || !jsonMessage.containsKey("stop"))
                         return;
 
@@ -382,9 +383,13 @@ public class WebappEndpoint {
                     break;
 
                 case UPDATE:
-                    if (true)
-                        notifier.sendMessage(message, userData.getUser());
-                    break;
+
+                    if (jsonMessage == null || !jsonMessage.containsKey("device_name") || !jsonMessage.containsKey("action") ||
+                        !jsonMessage.containsKey("value"))
+                        return;
+
+                    notifier.sendMessage(message, userData.getUser());
+                    return;
 
                 case LOGOUT:
                     httpSession.removeAttribute("authData");
@@ -395,10 +400,9 @@ public class WebappEndpoint {
                     logger.severe("Error, request unknown: " + request.requestType().toString());
             }
             try {
-                if( context != null ) {
-                    context.unbind("smarthome_" + userData.getUser());
-                    context.bind("smarthome_" + userData.getUser(), smarthome);
-                }
+                if( context != null )
+                    context.rebind("smarthome_" + userData.getUser(), smarthome);
+
             } catch (NamingException e) {
                 e.printStackTrace();
             }

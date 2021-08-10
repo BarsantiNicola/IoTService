@@ -9,7 +9,7 @@ public class SmarthomeSublocation implements Serializable {
     private String subLocation;
     private final String location;
 
-    private final List<SmarthomeDevice> devices = new ArrayList<>();
+    private final List<SmarthomeWebDevice> devices = new ArrayList<>();
     private final static transient Random random = new SecureRandom();
     //  TODO To be removed
     protected transient static final char[] allAllowed = "abcdefghijklmnopqrstuvwxyzABCDEFGJKLMNPRSTUVWXYZ0123456789".toCharArray();
@@ -19,7 +19,7 @@ public class SmarthomeSublocation implements Serializable {
         this.subLocation = subLocation;
     }
 
-    SmarthomeSublocation(String location, String subLocation, List<SmarthomeDevice> devices ){
+    SmarthomeSublocation(String location, String subLocation, List<SmarthomeWebDevice> devices ){
         this(location, subLocation);
         this.devices.addAll(devices);
     }
@@ -31,14 +31,14 @@ public class SmarthomeSublocation implements Serializable {
     public void setSubLocation(String subLocation){
 
         this.subLocation = subLocation;
-        for( SmarthomeDevice device: this.devices)
+        for( SmarthomeWebDevice device: this.devices)
             device.setRoomHint(subLocation);
     }
 
-    public List<SmarthomeDevice> getDevices(){ return devices; }
+    public List<SmarthomeWebDevice> getDevices(){ return devices; }
 
     public boolean changeDeviceName(String old_name, String new_name) {
-        for (SmarthomeDevice dev : this.devices)
+        for (SmarthomeWebDevice dev : this.devices)
             if (dev.giveDeviceName().compareTo(old_name) == 0){
                 dev.changeDeviceName(new_name);
                 return true;
@@ -47,7 +47,7 @@ public class SmarthomeSublocation implements Serializable {
     }
 
     public boolean devicePresent(String dID){
-        for(SmarthomeDevice dev: this.devices)
+        for(SmarthomeWebDevice dev: this.devices)
             if(dev.giveDeviceName().compareTo(dID) == 0)
                 return true;
         return false;
@@ -56,26 +56,26 @@ public class SmarthomeSublocation implements Serializable {
     public boolean addDevice(String dID, String name, SmarthomeDevice.DeviceType type){
         if(devicePresent(dID))
             return false;
-        this.devices.add(new SmarthomeDevice(dID, name, location, subLocation, type));
+        this.devices.add(new SmarthomeWebDevice(dID, name, location, subLocation, type));
         return true;
     }
 
-    public boolean addDevice(SmarthomeDevice dev){
+    public boolean addDevice(SmarthomeWebDevice dev){
         if(devicePresent(dev.giveDeviceName()))
             return false;
         this.devices.add(dev);
         return true;
     }
 
-    public SmarthomeDevice getDevice(String dID){
-        for(SmarthomeDevice dev: this.devices)
+    public SmarthomeWebDevice getDevice(String dID){
+        for(SmarthomeWebDevice dev: this.devices)
             if( dev.giveDeviceName().compareTo(dID) == 0 )
                 return dev;
         return null;
     }
 
     public boolean removeDevice(String dID){
-        for( SmarthomeDevice device: this.devices)
+        for( SmarthomeWebDevice device: this.devices)
             if( device.giveDeviceName().compareTo(dID)==0) {
                 this.devices.remove(device);
                 return true;
@@ -83,11 +83,23 @@ public class SmarthomeSublocation implements Serializable {
         return false;
     }
 
+    public boolean performAction(String dID, String action, String value){
+        for(SmarthomeWebDevice dev: this.devices)
+            if( dev.giveDeviceName().compareTo(dID) == 0 ) {
+                HashMap<String,String> param = new HashMap<>();
+                param.put("action", action);
+                param.put("device_name" , dID);
+                param.put( "value" , value);
+                return dev.setParam(param);
+            }
+        return false;
+    }
+
     public HashMap<String,Object> buildSmarthomeSublocation(){
         HashMap<String, Object> result = new HashMap<>();
-        ArrayList<HashMap> devs = new ArrayList<>();
-        for( SmarthomeDevice device: this.devices)
-            devs.add(device.buildSmarthomeDevice());
+        ArrayList<HashMap<String,Object>> devs = new ArrayList<>();
+        for( SmarthomeWebDevice device: this.devices)
+            devs.add(device.buildSmarthomeWebDevice());
         result.put("sublocation" , this.subLocation);
         result.put( "devices" , devs);
         return result;
@@ -111,7 +123,7 @@ public class SmarthomeSublocation implements Serializable {
         int nSublocations = random.nextInt(2)+1;
         for( int a = 0;a<nSublocations; a++) {
             String name = createRandomString();
-            sublocations.add(new SmarthomeSublocation(location, name, SmarthomeDevice.createTestingEnvironment(location, name)));
+            sublocations.add(new SmarthomeSublocation(location, name, SmarthomeWebDevice.createTestingEnvironment(location, name)));
         }
         return sublocations;
     }

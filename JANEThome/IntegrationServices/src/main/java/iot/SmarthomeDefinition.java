@@ -144,6 +144,13 @@ public class SmarthomeDefinition implements Serializable {
         return false;
     }
 
+    public boolean performAction(String dID, String action, String value){
+        for(SmarthomeLocation loc: this.locations)
+            if(loc.performAction(dID, action, value))
+                return true;
+        return false;
+    }
+
     public String buildSmarthomeDefinition(){
 
         ArrayList<HashMap<String,Object>> response = new ArrayList<>();

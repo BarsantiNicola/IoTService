@@ -1,7 +1,6 @@
 package iot;
 
 import java.io.Serializable;
-import java.security.SecureRandom;
 import java.util.*;
 
 //  Class developed to maintain the definition of a smarthome device. The class in compatible with
@@ -23,11 +22,11 @@ public class SmarthomeDevice implements Serializable {
         UNKNOWN
     }
 
-    private String id;      //  ID to uniquely identify a device
-    private String type;    //  type of device according to google home format
+    protected String id;      //  ID to uniquely identify a device
+    protected String type;    //  type of device according to google home format
 
-    private ArrayList<String> traits;          //  set of actions available for the device according to google home format
-    private HashMap<String,String> name;       //  set of names usable for the device
+    protected ArrayList<String> traits;          //  set of actions available for the device according to google home format
+    protected HashMap<String,String> name;       //  set of names usable for the device
     private String roomHint;                   //  name of the location in which the device is deployed
     private String structureHint;              //  name of the sub-location in which the device is deployed
     private HashMap<String,String> deviceInfo; //  set of manufacturer info(name, model, hw and sw version)
@@ -37,12 +36,6 @@ public class SmarthomeDevice implements Serializable {
 
     private Boolean willReportState;     //  specify if the reportStateAndNotification is active
     protected Boolean notificationSupportedByAgent;  //  specify if the service is able to receive notification(for reportStateAndNotification)
-
-    //////  TODO To be removed only for testing purpose
-    private final static transient Random random = new SecureRandom();
-    protected transient static final char[] allAllowed = "abcdefghijklmnopqrstuvwxyzABCDEFGJKLMNPRSTUVWXYZ0123456789".toCharArray();
-    //////
-
 
     //// CONSTRUCTORS
 
@@ -166,38 +159,7 @@ public class SmarthomeDevice implements Serializable {
         }
     }
 
-    public HashMap<String,String> buildSmarthomeDevice(){
-        HashMap<String,String> result = new HashMap<>();
-        result.put("dID" , this.id);
-        if( this.name.containsKey("name"))
-            result.put("name", this.name.get("name"));
-        else
-            result.put("name", this.id);
-        switch(convertType(this.type)){
-            case LIGHT:
-                result.put("type" , "Light");
-                break;
-            case FAN:
-                result.put("type" , "Fan");
-                break;
-            case DOOR:
-                result.put("type" , "Door");
-                break;
-            case THERMOSTAT:
-                result.put("type" , "Thermostat");
-                break;
-            case CONDITIONER:
-                result.put("type" , "Conditioner");
-                break;
-            case UNKNOWN:
-                result.put("type" , "Unknown");
-                break;
-
-        }
-        return result;
-    }
-
-    public DeviceType convertType(String type){
+    public static DeviceType convertType(String type){
         type = type.substring(type.lastIndexOf(".") +1 );
         String[] types = {"LIGHT" , "FAN", "DOOR" , "THERMOSTAT" , "AC_UNIT"};
         for(int a = 0; a<types.length; a++)
@@ -338,29 +300,5 @@ public class SmarthomeDevice implements Serializable {
     }
 
 
-
-    //  TODO To be removed only for testing purpose
-    private static String createRandomString(){
-
-        StringBuilder token = new StringBuilder();
-        for (int i = 0; i < 10; i++)
-            token.append(allAllowed[random.nextInt(allAllowed.length)]);
-
-        return token.toString().toLowerCase();
-
-    }
-
-    //  TODO To be removed onlyt for testing purpose
-    public static List<SmarthomeDevice> createTestingEnvironment(String location, String sub_location){
-
-        List<SmarthomeDevice> devices = new ArrayList<>();
-        int nDevices = random.nextInt(5)+2;
-
-        for( int a = 0;a<nDevices; a++) {
-            String name = createRandomString();
-            devices.add(new SmarthomeDevice(name, name, location, sub_location, DeviceType.values()[new Random().nextInt(DeviceType.values().length-1)]));
-        }
-        return devices;
-    }
 
 }

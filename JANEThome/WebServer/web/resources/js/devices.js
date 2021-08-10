@@ -223,7 +223,7 @@ function requestDeviceColor(dID,value){
 function changeDeviceColor( dID, color ){
 
     let device = document.getElementById("device_"+dID);
-    if( device === undefined )
+    if( device != null )
         device.getElementsByClassName("color_input")[0].value = device.getElementsByClassName("color")[0].value;
 
     device.getElementsByClassName("light_ball")[0].style.boxShadow = "0 0 60px 40px " + color;

@@ -61,7 +61,7 @@ public class SmarthomeLocation implements Serializable {
         this.port = port;
     }
 
-    SmarthomeDevice getDevice(String sublocation, String dID){
+    SmarthomeWebDevice getDevice(String sublocation, String dID){
         for( SmarthomeSublocation subloc: this.sublocations)
             if(subloc.getSubLocation().compareTo(sublocation) == 0)
                 return subloc.getDevice(dID);
@@ -83,7 +83,7 @@ public class SmarthomeLocation implements Serializable {
         return false;
     }
 
-    boolean addDevice(String sublocation, SmarthomeDevice device){
+    boolean addDevice(String sublocation, SmarthomeWebDevice device){
         for(SmarthomeSublocation subloc: this.sublocations)
             if( subloc.getSubLocation().compareTo(sublocation) == 0)
                 return subloc.addDevice(device);
@@ -93,7 +93,7 @@ public class SmarthomeLocation implements Serializable {
     boolean changeDeviceSublocation(String new_sublocation, String dID){
         if(!sublocationPresent(new_sublocation))
             return false;
-        SmarthomeDevice device = null;
+        SmarthomeWebDevice device = null;
         String old_sublocation = null;
         for( SmarthomeSublocation subloc: this.sublocations) {
             old_sublocation = subloc.getSubLocation();
@@ -157,6 +157,13 @@ public class SmarthomeLocation implements Serializable {
     boolean devicePresent(String dID){
         for(SmarthomeSublocation subloc: this.sublocations)
             if( subloc.devicePresent(dID))
+                return true;
+        return false;
+    }
+
+    public boolean performAction(String dID, String action, String value){
+        for(SmarthomeSublocation subLoc: this.sublocations)
+            if( subLoc.performAction(dID, action, value))
                 return true;
         return false;
     }

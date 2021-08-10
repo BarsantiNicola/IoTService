@@ -1,18 +1,20 @@
 package utils.jms;
 
 import com.google.gson.Gson;
+import com.google.gson.internal.LinkedTreeMap;
+import com.google.gson.reflect.TypeToken;
 import com.rabbitmq.client.AMQP.BasicProperties;
 import com.rabbitmq.client.Consumer;
 import com.rabbitmq.client.DeliverCallback;
 import com.rabbitmq.client.Envelope;
 import com.rabbitmq.client.ShutdownSignalException;
+import iot.SmarthomeDefinition;
 import jms.EndPoint;
 import org.apache.commons.lang.SerializationUtils;
-import weblogic.login.websockets.WebappEndpoint;
-
+import javax.naming.InitialContext;
+import javax.naming.NamingException;
 import javax.websocket.Session;
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.logging.ConsoleHandler;
@@ -37,9 +39,43 @@ public class WebUpdateReceiver extends EndPoint implements Consumer{
         Handler consoleHandler = new ConsoleHandler();
         consoleHandler.setFormatter(new SimpleFormatter());
         logger.addHandler(consoleHandler);
-        Gson gson = new Gson();
-        DeliverCallback deliverCallback = (consumerTag, delivery) ->
-            target.getBasicRemote().sendText((String)SerializationUtils.deserialize(delivery.getBody()));
+
+
+
+        DeliverCallback deliverCallback = (consumerTag, delivery) -> {
+            SmarthomeDefinition smarthome;
+            InitialContext context;
+            Gson gson = new Gson();
+
+            try {
+
+                context = new InitialContext();
+                smarthome = (SmarthomeDefinition) context.lookup("smarthome_" + endPointName);
+
+                if( smarthome != null ){
+
+                    HashMap<String, Object> obj = null;
+                    LinkedTreeMap<String, String> data = null;
+                    try {
+
+                        obj = (gson.fromJson(((String) SerializationUtils.deserialize(delivery.getBody())), new TypeToken<HashMap<String, Object>>() {
+                        }.getType()));
+                        data = (LinkedTreeMap<String,String>) obj.get("data");
+                    }catch(Exception e){
+                        e.printStackTrace();
+                    }
+                    assert data != null;
+                    if( smarthome.performAction(data.get("device_name"), data.get("action"), data.get("value")))
+                       target.getBasicRemote().sendText((String) SerializationUtils.deserialize(delivery.getBody()));
+
+                    context.rebind("smarthome_" + endPointName, smarthome);
+                }
+
+            } catch (NamingException e) {
+                logger.info("Error during the retriaval of the smartphone" + e.getExplanation());
+            }
+
+        };
 
 
         if( channel != null && connection != null ) {

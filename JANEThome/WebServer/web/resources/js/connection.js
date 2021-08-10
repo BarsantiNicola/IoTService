@@ -318,8 +318,32 @@ function createSmarthome(smarthomeDefinition){
         addLocation(location.location.toLowerCase());
         for( let sublocation of location.sublocations) {
             addSublocationAct(location.location.toLowerCase(), sublocation.sublocation.toLowerCase());
-            for (let device of sublocation.devices)
+            for (let device of sublocation.devices) {
                 addDeviceAct(location.location.toLowerCase(), sublocation.sublocation.toLowerCase(), device.name.toLowerCase(), device.type);
+                switch(device.type){
+                    case "Light":
+                        updateDevice(device.name.toLowerCase(), "action.devices.traits.OnOff", device.param.OnOff);
+                        updateDevice(device.name.toLowerCase(), "action.devices.traits.ColorSetting", device.param.ColorSetting);
+                        updateDevice(device.name.toLowerCase(), "action.devices.traits.Brightness", device.param.Brightness);
+                        break;
+                    case "Fan":
+                        updateDevice(device.name.toLowerCase(), "action.devices.traits.OnOff", device.param.OnOff);
+                        updateDevice(device.name.toLowerCase(), "action.devices.traits.FanSpeed", device.param.FanSpeed);
+                        break;
+                    case "Door":
+                        updateDevice(device.name.toLowerCase(), "action.devices.traits.OpenClose", device.param.OpenClose);
+                        updateDevice(device.name.toLowerCase(), "action.devices.traits.LockUnlock", device.param.LockUnlock);
+                        break;
+                    case "Conditioner":
+                        updateDevice(device.name.toLowerCase(), "action.devices.traits.OnOff", device.param.OnOff);
+                        updateDevice(device.name.toLowerCase(), "action.devices.traits.TemperatureSetting", device.param.TemperatureSetting);
+                        updateDevice(device.name.toLowerCase(), "action.devices.traits.FanSpeed", device.param.FanSpeed);
+                        break;
+                    case "Thermostat":
+                        updateDevice(device.name.toLowerCase(), "action.devices.traits.TemperatureSetting", device.param.TemperatureSetting);
+                        break;
+                }
+            }
         }
     }
 
