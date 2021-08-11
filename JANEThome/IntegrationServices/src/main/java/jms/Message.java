@@ -4,6 +4,7 @@ import com.google.gson.Gson;
 
 import java.io.Serializable;
 
+@SuppressWarnings("unused")
 public abstract class Message implements Serializable {
 
     private final String destination;

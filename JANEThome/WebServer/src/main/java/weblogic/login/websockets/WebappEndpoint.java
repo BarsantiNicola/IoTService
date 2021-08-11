@@ -3,7 +3,7 @@ package weblogic.login.websockets;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.reflect.TypeToken;
-import iot.SmarthomeDefinition;
+import iot.SmarthomeManager;
 import iot.SmarthomeDevice;
 import jms.beans.UpdateNotifier;
 import statistics.Statistics;
@@ -44,16 +44,16 @@ public class WebappEndpoint {
             BasicData userData =(BasicData)((HttpSession)config.getUserProperties().get("httpsession")).getAttribute("authData");
             logger.info("User authorized to create a websocket: " + userData);
             //  TODO get home data(location/sublocation/devices)
-            SmarthomeDefinition smarthome;
+            SmarthomeManager smarthome;
             InitialContext context = null;
             try{
 
                 context = new InitialContext();
-                smarthome = (SmarthomeDefinition) context.lookup("smarthome_"+userData.getUser());
+                smarthome = (SmarthomeManager) context.lookup("smarthome_"+userData.getUser());
 
             } catch (NamingException e) {
 
-                smarthome = SmarthomeDefinition.createTestingEnvironment(userData.getUser());
+                smarthome = SmarthomeManager.createTestingEnvironment(userData.getUser());
                 if( context != null ) {
                     try {
                         context.bind("smarthome_"+userData.getUser(),smarthome);
@@ -96,16 +96,16 @@ public class WebappEndpoint {
             UpdateNotifier notifier = new UpdateNotifier();
             Gson gson = new GsonBuilder().setDateFormat("yyyy-MM-dd'T'HH:mm:ss").create();
 
-            SmarthomeDefinition smarthome;
+            SmarthomeManager smarthome;
             InitialContext context = null;
             try {
 
                 context = new InitialContext();
-                smarthome = (SmarthomeDefinition) context.lookup("smarthome_" + userData.getUser());
+                smarthome = (SmarthomeManager) context.lookup("smarthome_" + userData.getUser());
 
             } catch (NamingException e) {
                 logger.info("Error during the generation of the smarthome");
-                smarthome = SmarthomeDefinition.createTestingEnvironment(userData.getUser());  //  TODO TO BE CHANGED WITH REQUEST TO DB
+                smarthome = SmarthomeManager.createTestingEnvironment(userData.getUser());  //  TODO TO BE CHANGED WITH REQUEST TO DB
                 if (context != null) {
                     try {
                         context.bind("smarthome_" + userData.getUser(), smarthome);

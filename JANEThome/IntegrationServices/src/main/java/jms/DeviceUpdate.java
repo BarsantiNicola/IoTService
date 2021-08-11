@@ -4,6 +4,7 @@ import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Set;
 
+@SuppressWarnings("unused")
 public class DeviceUpdate implements Serializable{
 
     private final String id;

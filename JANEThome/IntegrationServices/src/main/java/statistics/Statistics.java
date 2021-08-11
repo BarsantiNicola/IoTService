@@ -3,9 +3,10 @@ package statistics;
 import java.io.Serializable;
 import java.util.*;
 
+@SuppressWarnings({"unused", "deprecation"})
 public class Statistics implements Serializable{
 
-    private List<Statistic> statistics;
+    private final List<Statistic> statistics;
 
     public Statistics(){ statistics = new ArrayList<>(); }
 

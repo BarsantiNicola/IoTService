@@ -5,8 +5,8 @@ import java.util.Date;
 
 public class Statistic implements Serializable {
 
-    private Date x;
-    private int y;
+    private final Date x;
+    private final int y;
 
     public Statistic(Date x, int y ){
         this.x = x;

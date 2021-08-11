@@ -159,13 +159,17 @@ public class SmarthomeDevice implements Serializable {
         }
     }
 
+    //  used to quickly make decision with switch case
     public static DeviceType convertType(String type){
+
         type = type.substring(type.lastIndexOf(".") +1 );
         String[] types = {"LIGHT" , "FAN", "DOOR" , "THERMOSTAT" , "AC_UNIT"};
+
         for(int a = 0; a<types.length; a++)
             if( types[a].compareTo(type) == 0 )
                 return DeviceType.values()[a];
         return DeviceType.UNKNOWN;
+
     }
 
     //  changes the user assigned device's name
@@ -298,7 +302,5 @@ public class SmarthomeDevice implements Serializable {
     public ArrayList<String> getOtherDeviceIds(){
         return this.otherDeviceIds;
     }
-
-
 
 }

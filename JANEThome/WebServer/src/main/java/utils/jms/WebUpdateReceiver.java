@@ -8,7 +8,7 @@ import com.rabbitmq.client.Consumer;
 import com.rabbitmq.client.DeliverCallback;
 import com.rabbitmq.client.Envelope;
 import com.rabbitmq.client.ShutdownSignalException;
-import iot.SmarthomeDefinition;
+import iot.SmarthomeManager;
 import jms.EndPoint;
 import org.apache.commons.lang.SerializationUtils;
 import javax.naming.InitialContext;
@@ -43,14 +43,14 @@ public class WebUpdateReceiver extends EndPoint implements Consumer{
 
 
         DeliverCallback deliverCallback = (consumerTag, delivery) -> {
-            SmarthomeDefinition smarthome;
+            SmarthomeManager smarthome;
             InitialContext context;
             Gson gson = new Gson();
 
             try {
 
                 context = new InitialContext();
-                smarthome = (SmarthomeDefinition) context.lookup("smarthome_" + endPointName);
+                smarthome = (SmarthomeManager) context.lookup("smarthome_" + endPointName);
 
                 if( smarthome != null ){
 
