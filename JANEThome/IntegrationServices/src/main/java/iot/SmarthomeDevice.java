@@ -303,4 +303,13 @@ public class SmarthomeDevice implements Serializable {
         return this.otherDeviceIds;
     }
 
+    //  gives the subLocation where the device is deployed
+    public String getRoomHint(){
+        return this.roomHint;
+    }
+
+    //  gives the location where the device is deployed
+    public String getStructureHint(){
+        return this.structureHint;
+    }
 }

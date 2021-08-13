@@ -65,8 +65,10 @@ public class WebUpdateReceiver extends EndPoint implements Consumer{
                         e.printStackTrace();
                     }
                     assert data != null;
-                    if( smarthome.performAction(data.get("device_name"), data.get("action"), data.get("value")))
-                       target.getBasicRemote().sendText((String) SerializationUtils.deserialize(delivery.getBody()));
+                    System.out.println("PERFORM ACTION " );
+                    if( data.containsKey("device_name") && data.containsKey("action") && data.containsKey( "value"))
+                        if( smarthome.performAction(data.get("device_name"), data.get("action"), data.get("value")))
+                            target.getBasicRemote().sendText((String) SerializationUtils.deserialize(delivery.getBody()));
 
                     context.rebind("smarthome_" + endPointName, smarthome);
                 }

@@ -13,7 +13,7 @@ import java.util.logging.SimpleFormatter;
 public class SmarthomeWebDevice extends SmarthomeDevice {
 
     private final HashMap<String,String> param;    //  set of states associated to the device
-    private final transient Logger logger;
+    private transient Logger logger;
 
     //////  TODO To be removed only for testing purpose
     private final static transient Random random = new SecureRandom();
@@ -101,20 +101,22 @@ public class SmarthomeWebDevice extends SmarthomeDevice {
 
     //////
 
-
     // Constructor
     public SmarthomeWebDevice(String id, String name, String location, String sub_location, DeviceType type) {
         super(id, name, location, sub_location, type);
-        param = new HashMap<>();
-        logger = initializeLogger();
+        this.param = new HashMap<>();
+        this.initializeLogger();
     }
 
     ////// UTILITY FUNCTIONS
 
     //  Singleton function to obtain a logger preventing the usage of more than one logger handler.
-    private Logger initializeLogger(){
+    private void initializeLogger(){
 
-        Logger logger = Logger.getLogger(getClass().getName());
+        if( this.logger != null )
+            return;
+
+        this.logger = Logger.getLogger(getClass().getName());
 
         //  verification of the number of instantiated handlers
         if( logger.getHandlers().length == 0 ){ //  first time the logger is created we generate its handler
@@ -125,7 +127,6 @@ public class SmarthomeWebDevice extends SmarthomeDevice {
 
         }
 
-        return logger;
     }
 
     ////// PUBLIC FUNCTIONS
@@ -139,6 +140,7 @@ public class SmarthomeWebDevice extends SmarthomeDevice {
     //  an hashmap as a parameter is made to deploy the mechanism in the most general way as possible
     public boolean setParam(HashMap<String,String> param){
 
+        this.initializeLogger();
         //  verification that the mandatory parameters are present
         if( !param.containsKey("action") || !param.containsKey("device_name") || !param.containsKey("value")) {
             logger.severe(
@@ -146,9 +148,6 @@ public class SmarthomeWebDevice extends SmarthomeDevice {
             "][action:" + param.containsKey("action") + "][value:" + param.containsKey("value") + "]" );
             return false;
         }
-
-        logger.entering("setParam", "Request to perform an action [DeviceName: " + param.get("device_name") + "][Action: " +
-                param.get("action") + "][Value: " + param.get("value") + "]");
 
         //  verification that this is the correct device
         if( param.get("device_name").compareTo(this.giveDeviceName()) != 0 || !this.getTraits().contains(param.get("action"))){
@@ -179,7 +178,7 @@ public class SmarthomeWebDevice extends SmarthomeDevice {
         else
             this.param.put(value, param.get("value"));
 
-        logger.exiting("setParam", "Request to perform an action correctly done [DeviceName: " + param.get("device_name") + "][Action: " +
+        logger.info( "Request to perform an action correctly done [DeviceName: " + param.get("device_name") + "][Action: " +
                 param.get("action") + "][Value: " + param.get("value") + "]");
         return true;
 
@@ -194,8 +193,6 @@ public class SmarthomeWebDevice extends SmarthomeDevice {
     //  as a parameter for the given action, otherwise if the value is not accepted or the action isn't recognized it
     //  returns false
     private boolean validateValue(String action, String value){
-
-        logger.entering("validateValue" , "Request to validate the value " + value + " for action " + action);
 
         //  we search the action from the supported ones. If found we verify the value using their rules
 

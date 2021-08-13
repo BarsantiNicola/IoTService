@@ -54,6 +54,7 @@ public class WebappEndpoint {
             } catch (NamingException e) {
 
                 smarthome = SmarthomeManager.createTestingEnvironment(userData.getUser());
+
                 if( context != null ) {
                     try {
                         context.bind("smarthome_"+userData.getUser(),smarthome);
@@ -329,7 +330,7 @@ public class WebappEndpoint {
                             !jsonMessage.containsKey("sublocation"))
                         return;
 
-                    if (smarthome.changeDeviceSublocation(jsonMessage.get("location"), jsonMessage.get("sublocation"), jsonMessage.get("name"))) {
+                    if (smarthome.changeDeviceSubLocation(jsonMessage.get("location"), jsonMessage.get("sublocation"), jsonMessage.get("name"))) {
                         //  TODO Request to db or just update the db with rabbitMQ(no reply)
                         try {
                             session.getBasicRemote().sendText(gson.toJson(request));
