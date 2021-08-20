@@ -26,7 +26,9 @@ public class SmarthomeManager implements Serializable {
     ////////  TODO To be removed, only for testing purpose
 
     public static SmarthomeManager createTestingEnvironment(String username){
+
         return new SmarthomeManager(username, SmarthomeLocation.createTestingEnvironment());
+
     }
 
     ////////
@@ -58,13 +60,13 @@ public class SmarthomeManager implements Serializable {
     //  Singleton function to obtain a logger preventing the usage of more than one logger handler.
     private void initializeLogger(){
 
-        if( logger != null )
+        if( this.logger != null )
             return;
 
         this.logger = Logger.getLogger(getClass().getName());
 
         //  verification of the number of instantiated handlers
-        if( logger.getHandlers().length == 0 ){ //  first time the logger is created we generate its handler
+        if( this.logger.getHandlers().length == 0 ){ //  first time the logger is created we generate its handler
 
             Handler consoleHandler = new ConsoleHandler();
             consoleHandler.setFormatter(new SimpleFormatter());
@@ -103,7 +105,7 @@ public class SmarthomeManager implements Serializable {
     //// LOCATIONS
 
     //  adds a new location into the smarthome. Return false in case the location is already present
-    public boolean addLocation( String location, String address, int port ){
+    public boolean addLocation( String location, String address, int port , boolean trial ){
 
         initializeLogger();
 
@@ -116,8 +118,10 @@ public class SmarthomeManager implements Serializable {
         //  if the location is not already present we add it
         if( !this.locations.containsKey( location ) ) {
 
-            this.locations.put( location, new SmarthomeLocation( location, address, port ));
-            this.logger.info( "New location " + location + " added [" + address + "][" + port + "]" );
+            if( !trial ) {
+                this.locations.put(location, new SmarthomeLocation(location, address, port));
+                this.logger.info("New location " + location + " added [" + address + "][" + port + "]");
+            }
             result = true;
 
         }
@@ -128,7 +132,7 @@ public class SmarthomeManager implements Serializable {
     }
 
     //  removes a location from the smarthome specified by its name. Returns true in case of success
-    public boolean removeLocation( String location ){
+    public boolean removeLocation( String location, boolean trial ){
 
         initializeLogger();
 
@@ -141,16 +145,20 @@ public class SmarthomeManager implements Serializable {
         //  verification of location presence
         if( this.locations.containsKey( location )) {
 
-            //  getting all the devices from the location(must be removed from the devices array too)
-            Collection<SmarthomeWebDevice> devs = this.locations.get( location ).getDevices();
+            if( !trial ) {
+                //  getting all the devices from the location(must be removed from the devices array too)
+                Collection<SmarthomeWebDevice> devs = this.locations.get(location).getDevices();
 
-            result = this.locations.remove( location ) != null;
-            if( result ) {  //  in case of success of location removal we drop all the device from the devices list
+                result = this.locations.remove(location) != null;
+                if (result) {  //  in case of success of location removal we drop all the device from the devices list
 
-                devs.forEach( device -> this.devices.remove( device.giveDeviceName() ));
-                this.logger.info( "Location " + location + " removed. Consequently removed " + devs.size() + " devices" );
+                    devs.forEach(device -> this.devices.remove(device.giveDeviceName()));
+                    this.logger.info("Location " + location + " removed. Consequently removed " + devs.size() + " devices");
 
-            }
+                }
+            }else
+                result = true;
+
         }
 
         this.releaseSmarthomeMutex(); //  release of mutual exclusion
@@ -159,7 +167,7 @@ public class SmarthomeManager implements Serializable {
     }
 
     //  changes the location name. Returns true in case of success
-    public boolean changeLocationName(String old_name, String new_name){
+    public boolean changeLocationName(String old_name, String new_name, boolean trial ){
 
         initializeLogger();
 
@@ -172,18 +180,18 @@ public class SmarthomeManager implements Serializable {
         //  verification of the old location presence and that the new name is not already assigned
         if( this.locations.containsKey(old_name) && !this.locations.containsKey(new_name) ){
 
-            //  getting all the devices to update their information
-            SmarthomeLocation location = this.locations.remove(old_name);
-            Collection<SmarthomeWebDevice> devs = location.getDevices();
-            location.setLocation(new_name);
-            this.locations.put(new_name, location);
-            //  updating the location name for the devices stored into the location
-            devs.forEach(device -> device.setStructureHint(new_name));
-            this.logger.info("Location name correctly changed from " + old_name + " to " + new_name +
+            if( !trial ) {
+                //  getting all the devices to update their information
+                SmarthomeLocation location = this.locations.remove(old_name);
+                Collection<SmarthomeWebDevice> devs = location.getDevices();
+                location.setLocation(new_name);
+                this.locations.put(new_name, location);
+                //  updating the location name for the devices stored into the location
+                devs.forEach(device -> device.setStructureHint(new_name));
+                this.logger.info("Location name correctly changed from " + old_name + " to " + new_name +
                         ". Device information updated: " + devs.size());
+            }
             result = true;
-
-
         }
 
         this.releaseSmarthomeMutex();
@@ -194,7 +202,7 @@ public class SmarthomeManager implements Serializable {
     //// SUB-LOCATIONS
 
     //  adds a new sublocation into a defined location. Returns true in case of success
-    public boolean addSubLocation( String location, String subLocation ){
+    public boolean addSubLocation( String location, String subLocation, boolean trial ){
 
         //  mutual exclusion on the interactions with the data structure
         if( this.getSmartHomeMutex() )
@@ -204,14 +212,14 @@ public class SmarthomeManager implements Serializable {
 
         // if the specified location is present we forward to it the request
         if( this.locations.containsKey( location ))
-            result = this.locations.get( location ).addSublocation( subLocation );
+            result = this.locations.get( location ).addSublocation( subLocation, trial );
 
         this.releaseSmarthomeMutex();  //  release of mutual exclusion
         return result;
     }
 
     //  removes a subLocation from the specified location. Returns true in case of success
-    public boolean removeSublocation( String location, String subLocation ){
+    public boolean removeSublocation( String location, String subLocation, boolean trial ){
 
         initializeLogger();
 
@@ -227,8 +235,8 @@ public class SmarthomeManager implements Serializable {
             //  getting all the devices from the subLocation(must be removed from the devices array too)
             Collection<SmarthomeWebDevice> devs = this.locations.get( location ).getDevices( subLocation );
 
-            result = this.locations.get(location).removeSublocation(subLocation);
-            if (result) { //  in case of success of subLocation removal we drop all the device from the devices list
+            result = this.locations.get(location).removeSublocation( subLocation, trial );
+            if ( result && !trial ) { //  in case of success of subLocation removal we drop all the device from the devices list
 
                 devs.forEach(device -> this.devices.remove(device.giveDeviceName()));
                 this.logger.info("Sublocation " + subLocation + " of location " + location + " removed. " +
@@ -242,7 +250,7 @@ public class SmarthomeManager implements Serializable {
     }
 
     //  changes the sub-location name. Returns true in case of success
-    public boolean changeSublocationName( String location, String old_name, String new_name ){
+    public boolean changeSublocationName( String location, String old_name, String new_name, boolean trial ){
 
         initializeLogger();
 
@@ -255,9 +263,10 @@ public class SmarthomeManager implements Serializable {
         //  verification of subLocation presence
         if( this.locations.containsKey( location )) {
 
-            result = this.locations.get(location).changeSublocationName( old_name, new_name );
+            result = this.locations.get(location).changeSublocationName( old_name, new_name, trial );
             //  we don't need to update the device information(done by the SmarthomeLocation.changeSublocationName)
-            this.logger.info( "Device sub-location name correctly updated from " + old_name + " to " + new_name );
+            if( !trial )
+                this.logger.info( "Device sub-location name correctly updated from " + old_name + " to " + new_name );
 
         }
 
@@ -269,7 +278,7 @@ public class SmarthomeManager implements Serializable {
     //// DEVICES
 
     //  adds a new device info the specified location-sublocation. Returns true in case of success
-    public boolean addDevice(String location, String sublocation, String dID, String name, SmarthomeDevice.DeviceType device_type){
+    public boolean addDevice(String location, String sublocation, String dID, String name, SmarthomeDevice.DeviceType device_type, boolean trial ){
 
         initializeLogger();
 
@@ -286,8 +295,8 @@ public class SmarthomeManager implements Serializable {
             SmarthomeWebDevice device = new SmarthomeWebDevice( dID, name, location, sublocation, device_type );
 
             // adding the device to the smartHome structure
-            result = this.locations.get(location).addDevice(sublocation, device);
-            if(result) {  //  in case of success we add the device on the devices array for fast retrieval
+            result = this.locations.get(location).addDevice( sublocation, device, trial );
+            if(result && !trial ) {  //  in case of success we add the device on the devices array for fast retrieval
                 this.devices.put(name, device);
                 this.logger.info( "New device " + name + " added to " + location + ":" + sublocation);
             }
@@ -299,7 +308,7 @@ public class SmarthomeManager implements Serializable {
     }
 
     //  removes a device specified by its user assigned name. Return true in case of success
-    public boolean removeDevice( String name ){
+    public boolean removeDevice( String name, boolean trial ){
 
         initializeLogger();
 
@@ -309,17 +318,19 @@ public class SmarthomeManager implements Serializable {
 
         boolean result = false;
 
+        System.out.println("REMOVING");
         //  if the device is present
         if( this.devices.containsKey(name)){
-
+            System.out.println("PRESENT");
             //  getting the device to infer its location/sub-location
             SmarthomeWebDevice device = this.devices.get(name);
 
             //  verification of location presence and removal of device from smartHome structure
             if( this.locations.containsKey(device.getStructureHint())){
-
-                result =  this.locations.get(device.getStructureHint()).removeDevice( device.getRoomHint(), name);
-                if( result ) {
+                System.out.println("LOCATION PRESENT");
+                result =  this.locations.get(device.getStructureHint()).removeDevice( device.getRoomHint(), name, trial);
+                System.out.println("REMOVAL: " + result );
+                if( result && !trial ) {
 
                     this.devices.remove(name);
                     this.logger.info("Device " + name + " correctly removed from subLocation " + device.getRoomHint() +
@@ -336,7 +347,7 @@ public class SmarthomeManager implements Serializable {
     }
 
     //  changes the sublocation in which the device is deployed. Returns true in case of success
-    public boolean changeDeviceSubLocation( String location, String new_sublocation, String name ){
+    public boolean changeDeviceSubLocation( String location, String new_sublocation, String name, boolean trial ){
 
         //  mutual exclusion on the interactions with the data structure
         if( this.getSmartHomeMutex() )
@@ -351,7 +362,7 @@ public class SmarthomeManager implements Serializable {
             SmarthomeWebDevice device = this.devices.get( name );
 
             //  forward to the sub location the execution of the command
-            result = this.locations.get( location ).changeDeviceSubLocation( device.getRoomHint(), new_sublocation, name );
+            result = this.locations.get( location ).changeDeviceSubLocation( device.getRoomHint(), new_sublocation, name, trial );
             //  we don't need to update the device information(done by the SmarthomeLocation.changeDeviceSubLocation)
         }
 
@@ -360,7 +371,7 @@ public class SmarthomeManager implements Serializable {
     }
 
     // changes the device name. Returns true in case of success
-    public boolean changeDeviceName(String old_name, String new_name){
+    public boolean changeDeviceName(String old_name, String new_name, boolean trial ){
 
         //  mutual exclusion on the interactions with the data structure
         if( this.getSmartHomeMutex() )
@@ -371,9 +382,12 @@ public class SmarthomeManager implements Serializable {
         //  verification that the device is present and don't exist a device with the new name assigned
         if( this.devices.containsKey( old_name ) && !this.devices.containsKey( new_name )){
 
-            SmarthomeWebDevice device = this.devices.remove( old_name );
-            device.changeDeviceName( new_name );
-            this.devices.put( new_name, device );
+            if( !trial ) {
+
+                SmarthomeWebDevice device = this.devices.remove(old_name);
+                device.changeDeviceName(new_name);
+                this.devices.put(new_name, device);
+            }
             result = true;
 
         }
@@ -384,29 +398,28 @@ public class SmarthomeManager implements Serializable {
     }
 
     //  executes a command on the specified device. In case of success the command is valid and executable
-    public boolean performAction( String name, String action, String value ){
+    public boolean performAction( String name, String action, String value, boolean trial ){
 
         //  mutual exclusion on the interactions with the data structure
         if( this.getSmartHomeMutex() )
             return false;
 
         boolean result = false;
-        System.out.println("OK I'M HERE name: " + name + " action " + action + " value " + value );
-        System.out.println("RESULT " + this.devices.containsKey( name ));
+
         if( this.devices.containsKey( name )) {
             HashMap<String,String> param = new HashMap<>();
             param.put( "device_name", name );
             param.put( "action", action );
             param.put( "value", value );
-            System.out.println("APPLYING");
+
             try {
-                result = this.devices.get(name).setParam(param);
+                result = this.devices.get(name).setParam( param, trial );
             }catch(Exception e){
                 System.out.println(e.getMessage());
                 e.printStackTrace();
             }
         }
-        System.out.println("ok " + result);
+
         this.releaseSmarthomeMutex();  //  release of mutual exclusion
         return result;
 
@@ -451,4 +464,49 @@ public class SmarthomeManager implements Serializable {
         return this.locations.values();
     }
 
+    public String getDeviceNetwork( String name ){
+
+        if( this.devices.containsKey(name)) {
+            String location = this.devices.get(name).getStructureHint();
+            if (this.locations.containsKey(location)) {
+                SmarthomeLocation loc = this.locations.get(location);
+                return loc.getIpAddress() + ":" + loc.getPort();
+            }
+        }
+        return null;
+
+    }
+
+    public String getLocationNetwork( String location ){
+
+        if (this.locations.containsKey(location)) {
+            SmarthomeLocation loc = this.locations.get(location);
+            return loc.getIpAddress() + ":" + loc.getPort();
+        }
+        return null;
+
+    }
+
+    public String getDeviceIdByName( String name ){
+
+        if( this.devices.containsKey( name ))
+            return this.devices.get( name ).getId();
+        return "";
+    }
+
+    public String getDeviceNameById( String dID ){
+
+        for( SmarthomeWebDevice device: this.devices.values() )
+            if( device.getId().compareTo( dID ) == 0 )
+                return device.giveDeviceName();
+
+        return "";
+    }
+
+    public String getDeviceSubLocation( String name ){
+
+        if( this.devices.containsKey( name ))
+            return this.devices.get( name ).getRoomHint();
+        return null;
+    }
 }

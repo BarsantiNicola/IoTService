@@ -49,42 +49,42 @@ public class SmarthomeWebDevice extends SmarthomeDevice {
                 param.put("action", "action.devices.traits.OnOff");
                 param.put("device_name" , device.giveDeviceName());
                 param.put( "value" , "0");
-                device.setParam(param);
+                device.setParam(param, false );
                 param.replace("action" , "action.devices.traits.Brightness");
-                device.setParam(param);
+                device.setParam(param, false );
                 param.replace("action", "action.devices.traits.ColorSetting");
                 param.replace("value" , "#ECFF00" );
-                device.setParam(param);
+                device.setParam(param, false );
                 break;
 
             case FAN:
                 param.put("action", "action.devices.traits.OnOff");
                 param.put("device_name" , device.giveDeviceName());
                 param.put( "value" , "0");
-                device.setParam(param);
+                device.setParam( param, false );
                 param.replace("action" , "action.devices.traits.FanSpeed");
-                device.setParam(param);
+                device.setParam( param, false );
                 break;
 
             case DOOR:
                 param.put("action", "action.devices.traits.LockUnlock");
                 param.put("device_name" , device.giveDeviceName());
                 param.put( "value" , "0");
-                device.setParam(param);
+                device.setParam( param, false );
                 param.replace("action" , "action.devices.traits.OpenClose");
-                device.setParam(param);
+                device.setParam( param, false );
                 break;
 
             case CONDITIONER:
                 param.put("action", "action.devices.traits.OnOff");
                 param.put("device_name" , device.giveDeviceName());
                 param.put( "value" , "0");
-                device.setParam(param);
+                device.setParam( param, false );
                 param.replace("action" , "action.devices.traits.FanSpeed");
-                device.setParam(param);
+                device.setParam( param, false );
                 param.replace("action", "action.devices.traits.TemperatureSetting");
                 param.replace("value" , "6.0" );
-                device.setParam(param);
+                device.setParam( param, false );
                 break;
 
             case THERMOSTAT:
@@ -116,14 +116,14 @@ public class SmarthomeWebDevice extends SmarthomeDevice {
         if( this.logger != null )
             return;
 
-        this.logger = Logger.getLogger(getClass().getName());
+        this.logger = Logger.getLogger( getClass().getName() );
 
         //  verification of the number of instantiated handlers
         if( logger.getHandlers().length == 0 ){ //  first time the logger is created we generate its handler
 
             Handler consoleHandler = new ConsoleHandler();
-            consoleHandler.setFormatter(new SimpleFormatter());
-            logger.addHandler(consoleHandler);
+            consoleHandler.setFormatter( new SimpleFormatter() );
+            logger.addHandler( consoleHandler );
 
         }
 
@@ -138,7 +138,7 @@ public class SmarthomeWebDevice extends SmarthomeDevice {
     //
     //  The function will return true if the operation is correctly executed, false otherwise. The usage of
     //  an hashmap as a parameter is made to deploy the mechanism in the most general way as possible
-    public boolean setParam(HashMap<String,String> param){
+    public boolean setParam( HashMap<String,String> param, boolean trial ){
 
         this.initializeLogger();
         //  verification that the mandatory parameters are present
@@ -171,6 +171,9 @@ public class SmarthomeWebDevice extends SmarthomeDevice {
             return false;
 
         }
+
+        if( trial )
+            return true;
 
         //  applying the action to the data structure
         if( this.param.containsKey(value))

@@ -1,6 +1,7 @@
 package weblogic.login.websockets;
 
 import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 
 import java.io.Serializable;
 import java.util.Arrays;
@@ -52,14 +53,27 @@ public class WebRequest implements Serializable {
         return data;
     }
 
+    public String getData(String key){
+        return this.data.get( key );
+    }
+
     public static WebRequest buildRequest(String data){
+
         Logger logger = Logger.getLogger(WebRequest.class.getName());
         Handler consoleHandler = new ConsoleHandler();
         consoleHandler.setFormatter(new SimpleFormatter());
         logger.addHandler(consoleHandler);
-        Gson gson = new Gson();
-        logger.info("statistic_request:" + data);
-        return gson.fromJson(data.substring(data.indexOf("{")), WebRequest.class);
+        Gson gson = new GsonBuilder().setDateFormat( "yyyy-MM-dd'T'HH:mm:ss" ).create();
+
+        return gson.fromJson( data, WebRequest.class );
+    }
+
+    public boolean areSet( String...keys ){
+        for( String key: keys )
+            if( !this.data.containsKey( key ))
+                return false;
+        return true;
+
     }
 
     public String getBadResponse(){

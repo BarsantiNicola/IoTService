@@ -89,7 +89,10 @@ public class SmarthomeSublocation implements Serializable {
     }
 
     //  adds a new device to the sublocation. It returns false if a device with the given name is already present
-    public boolean addDevice(SmarthomeWebDevice dev){
+    public boolean addDevice(SmarthomeWebDevice dev, boolean trial ){
+
+        if( trial )
+            return !this.devices.containsKey( dev.giveDeviceName() );
         initializeLogger();
         if(!this.devices.containsKey(dev.giveDeviceName())) {
             this.devices.put(dev.giveDeviceName(), dev);
@@ -101,7 +104,11 @@ public class SmarthomeSublocation implements Serializable {
     }
 
     //  removes a new device from the sublocation
-    public boolean removeDevice(String name){
+    public boolean removeDevice( String name, boolean trial ){
+
+        if( trial )
+            return this.devices.containsKey( name );
+
         return this.devices.remove(name) != null;
     }
 

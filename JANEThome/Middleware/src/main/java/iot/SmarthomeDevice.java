@@ -19,7 +19,39 @@ public class SmarthomeDevice implements Serializable {
         DOOR,             //  https://developers.google.com/assistant/smarthome/guides/door
         THERMOSTAT,       //  https://developers.google.com/assistant/smarthome/guides/thermostat
         CONDITIONER,      //  https://developers.google.com/assistant/smarthome/guides/acunit
-        UNKNOWN
+        UNKNOWN;
+
+        public static String typeToString(DeviceType type){
+
+            switch( type ){
+                case LIGHT:
+                    return "Light";
+
+                case FAN:
+                    return "Fan";
+
+                case DOOR:
+                    return "Door";
+
+                case THERMOSTAT:
+                    return "Thermostat";
+
+                case CONDITIONER:
+                    return "Conditioner";
+
+                default:
+                    return "Unknown";
+            }
+        }
+
+        public static DeviceType StringToType(String value){
+            String[] values = { "Light", "Fan", "Door", "Thermostat", "Conditioner" };
+            for( int a = 0; a< values.length; a++)
+                if( values[a].compareToIgnoreCase(value) == 0)
+                    return DeviceType.values()[a];
+            return DeviceType.UNKNOWN;
+        }
+
     }
 
     protected String id;      //  ID to uniquely identify a device

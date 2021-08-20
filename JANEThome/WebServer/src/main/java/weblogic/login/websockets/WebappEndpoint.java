@@ -2,17 +2,15 @@ package weblogic.login.websockets;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import com.google.gson.reflect.TypeToken;
 import iot.SmarthomeManager;
 import iot.SmarthomeDevice;
-import jms.beans.UpdateNotifier;
+import rest.out.interfaces.RESTinterface;
 import statistics.Statistics;
 import utils.configuration.EndpointConfigurator;
 import utils.jms.WebUpdateReceiver;
 import weblogic.login.beans.BasicData;
 
-import javax.naming.InitialContext;
-import javax.naming.NamingException;
+import javax.ejb.EJB;
 import javax.servlet.http.HttpSession;
 import javax.websocket.*;
 import javax.websocket.server.ServerEndpoint;
@@ -23,62 +21,69 @@ import java.util.logging.Handler;
 import java.util.logging.Logger;
 import java.util.logging.SimpleFormatter;
 
-@ServerEndpoint(value="/controller", configurator = EndpointConfigurator.class)
+@ServerEndpoint( value="/controller", configurator = EndpointConfigurator.class )
 public class WebappEndpoint {
 
     private Logger logger;
-    private WebUpdateReceiver updater;
     private EndpointConfig config;
+    private SmarthomeManager smarthome;
+    private String username;
+
+    @SuppressWarnings("unused")
+    private WebUpdateReceiver updater;
+
+    @EJB
+    private RESTinterface restInterface;
 
     @OnOpen
-    public void onOpen(Session session, EndpointConfig config){
+    public void onOpen( Session session, EndpointConfig config ){
 
-        logger = Logger.getLogger(getClass().getName());
-        Handler consoleHandler = new ConsoleHandler();
-        consoleHandler.setFormatter(new SimpleFormatter());
-        logger.addHandler(consoleHandler);
         this.config = config;
+        this.logger = Logger.getLogger(getClass().getName());
 
-        if( verification(config)) {
+        //  verification of the number of instantiated handlers
+        if( this.logger.getHandlers().length == 0 ){ //  only the first time the logger is created we generate its handler
 
-            BasicData userData =(BasicData)((HttpSession)config.getUserProperties().get("httpsession")).getAttribute("authData");
-            logger.info("User authorized to create a websocket: " + userData);
-            //  TODO get home data(location/sublocation/devices)
-            SmarthomeManager smarthome;
-            InitialContext context = null;
-            try{
+            Handler consoleHandler = new ConsoleHandler();
+            consoleHandler.setFormatter( new SimpleFormatter() );
+            this.logger.addHandler( consoleHandler );
 
-                context = new InitialContext();
-                smarthome = (SmarthomeManager) context.lookup("smarthome_"+userData.getUser());
+        }
 
-            } catch (NamingException e) {
+        //  verification of the presence of the authData and httpsession objects and the validity of the authentication
+        if( verification()) {
 
-                smarthome = SmarthomeManager.createTestingEnvironment(userData.getUser());
+            BasicData userData  = (BasicData)((HttpSession) config.getUserProperties().get( "httpsession" )).getAttribute( "authData" );
+            this.username = userData.getUser();
 
-                if( context != null ) {
-                    try {
-                        context.bind("smarthome_"+userData.getUser(),smarthome);
-                    } catch (NamingException namingException) {
-                        logger.info("Error during the save of the smarthome");
-                        namingException.printStackTrace();
-                    }
-                }
+            //  getting the stored smarthome definition from the database
+            if( !this.getSmarthome( this.username ))  //  if the user hasn't already a smarthome we create a default one
+                this.smarthome = new SmarthomeManager( this.username );
 
-            }
+            //  Generation of callback channel for web client update notification
+            this.updater = new WebUpdateReceiver( this.username , session, this.smarthome );
 
-            updater = new WebUpdateReceiver(userData.getUser(),session);
+            //  Sending the definition of the smartHome as first message to the web client
             try {
-                session.getBasicRemote().sendText(smarthome.buildSmarthomeDefinition().trim());
+
+                session.getBasicRemote().sendText(this.smarthome.buildSmarthomeDefinition().trim());
+
             } catch (IOException e) {
-                e.printStackTrace();
-            }
-        }else {
 
-            logger.warning("User not authorized to open a websocket");
+                e.printStackTrace();
+
+            }
+
+        }else{
+
             try {
+
                 session.close();
+
             } catch (IOException e) {
+
                 e.printStackTrace();
+
             }
 
         }
@@ -87,326 +92,309 @@ public class WebappEndpoint {
     }
 
     @OnMessage
-    public void onMessage(String message, Session session) {
+    public void onMessage( String message, Session session ) {
 
-        logger.info("Message received. Session id: "+ session.getId() +" Message: message" + " Protocol: ");
-        WebRequest request = WebRequest.buildRequest(message);
-        if( verification(config)) {
-            HttpSession httpSession = (HttpSession) config.getUserProperties().get("httpsession");
-            BasicData userData = (BasicData) httpSession.getAttribute("authData");
-            UpdateNotifier notifier = new UpdateNotifier();
-            Gson gson = new GsonBuilder().setDateFormat("yyyy-MM-dd'T'HH:mm:ss").create();
+        this.logger.info("Message received with SessionID: " + session.getId() + " of user " + this.username );
 
-            SmarthomeManager smarthome;
-            InitialContext context = null;
-            try {
+        //  verification of the presence of the authData and httpsession objects and the validity of the authentication
+        if( verification()) {
 
-                context = new InitialContext();
-                smarthome = (SmarthomeManager) context.lookup("smarthome_" + userData.getUser());
+            WebRequest request = WebRequest.buildRequest( message );  //  conversion of the message into an object
+            HttpSession httpSession = (HttpSession) config.getUserProperties().get( "httpsession" );
 
-            } catch (NamingException e) {
-                logger.info("Error during the generation of the smarthome");
-                smarthome = SmarthomeManager.createTestingEnvironment(userData.getUser());  //  TODO TO BE CHANGED WITH REQUEST TO DB
-                if (context != null) {
-                    try {
-                        context.bind("smarthome_" + userData.getUser(), smarthome);
-                    } catch (NamingException namingException) {
-                        namingException.printStackTrace();
-                    }
-                }
+            //  needed to convert the dates given by the web pages
+            Gson gson = new GsonBuilder().setDateFormat( "yyyy-MM-dd'T'HH:mm:ss" ).create();
 
-            }
+            if ( smarthome == null ) {
 
-            if (smarthome == null) {
-                httpSession.removeAttribute("authData");
-                httpSession.removeAttribute("infoData");
+                logger.severe( "Error a user is trying to use a session in which the smartHome definition is not initialized" );
+                httpSession.removeAttribute( "authData" );
+                httpSession.removeAttribute( "infoData" );
+
                 try {
+
                     session.close();
+
                 } catch (IOException e) {
+
                     e.printStackTrace();
+
                 }
                 return;
+
             }
 
-            HashMap<String, String> jsonMessage = request.getData();
-            if (jsonMessage != null && jsonMessage.containsKey("data"))
-                jsonMessage = gson.fromJson(jsonMessage.get("data"), new TypeToken<HashMap<String, String>>(){}.getType());
+            logger.info( "Management of request: " + request.requestType().toString() + " of sessionID: " + session.getId());
 
-            switch (request.requestType()) {
+            switch( request.requestType() ) {
+
                 case RENAME_LOCATION:
-                    if (jsonMessage == null || !jsonMessage.containsKey("old_name") || !jsonMessage.containsKey("new_name"))
+                    if( !request.areSet( "old_name", "new_name" ) )
                         return;
 
-                    if (smarthome.changeLocationName(jsonMessage.get("old_name"), jsonMessage.get("new_name"))) {
-                        //  TODO Request to db or just update the db with rabbitMQ(no reply)
-                        try {
-                            session.getBasicRemote().sendText(gson.toJson(request));
-                        } catch (IOException e) {
-                            e.printStackTrace();
-                            try {
-                                session.getBasicRemote().sendText(request.getBadResponse());
-                            } catch (IOException ee) {
-                                ee.printStackTrace();
-                            }
-                        }
+                    if( this.smarthome.changeLocationName(request.getData( "old_name" ), request.getData( "new_name" ), true )){
 
-                    } else
-                        try {
-                            session.getBasicRemote().sendText(request.getBadResponse());
-                        } catch (IOException e) {
-                            e.printStackTrace();
+                        String network = this.smarthome.getLocationNetwork( request.getData( "old_name" ));
+                        if( network != null ) {
+                            String[] netInfo = network.split( ":" );
+                            this.restInterface.changeLocationName(
+                                    this.username,
+                                    request.getData( "old_name" ),
+                                    request.getData( "new_name" ),
+                                    netInfo[0], Integer.parseInt( netInfo[1] ));
                         }
+                    }
                     break;
 
                 case RENAME_SUBLOCATION:
-                    if (jsonMessage == null || !jsonMessage.containsKey("location") ||
-                            !jsonMessage.containsKey("old_name") || !jsonMessage.containsKey("new_name"))
+
+                    if ( !request.areSet("location", "old_name", "new_name" ))
                         return;
 
-                    if (smarthome.changeSublocationName(jsonMessage.get("location"), jsonMessage.get("old_name"), jsonMessage.get("new_name"))) {
-                        //  TODO Request to db or just update the db with rabbitMQ(no reply)
-                        try {
-                            session.getBasicRemote().sendText(message);
-                        } catch (IOException e) {
-                            e.printStackTrace();
-                        }
+                    if (smarthome.changeSublocationName(request.getData("location"), request.getData("old_name"), request.getData("new_name"), true )){
 
-                    } else
-                        try {
-                            session.getBasicRemote().sendText(request.getBadResponse());
-                        } catch (IOException e) {
-                            e.printStackTrace();
+                        String network = this.smarthome.getLocationNetwork( request.getData( "location" ));
+                        if( network != null ) {
+                            String[] netInfo = network.split( ":" );
+                            this.restInterface.changeSubLocationName(
+                                    this.username,
+                                    request.getData( "location" ),
+                                    request.getData("old_name"),
+                                    request.getData("new_name"),
+                                    netInfo[0], Integer.parseInt(netInfo[1]));
                         }
+                    }
+
                     break;
 
                 case RENAME_DEVICE:
-                    if (jsonMessage == null || !jsonMessage.containsKey("old_name") || !jsonMessage.containsKey("new_name"))
+
+                    if ( !request.areSet("old_name", "new_name"))
                         return;
 
-                    if (smarthome.changeDeviceName(jsonMessage.get("old_name"), jsonMessage.get("new_name"))) {
-                        //  TODO Request to db or just update the db with rabbitMQ(no reply)
-                        try {
-                            session.getBasicRemote().sendText(gson.toJson(request));
-                        } catch (IOException e) {
-                            e.printStackTrace();
-                            try {
-                                session.getBasicRemote().sendText(request.getBadResponse());
-                            } catch (IOException ee) {
-                                ee.printStackTrace();
-                            }
-                        }
+                    if ( smarthome.changeDeviceName( request.getData( "old_name" ), request.getData( "new_name" ), true )){
 
-                    } else
-                        try {
-                            session.getBasicRemote().sendText(request.getBadResponse());
-                        } catch (IOException e) {
-                            e.printStackTrace();
+                        String network = this.smarthome.getDeviceNetwork( request.getData( "old_name" ));
+                        String dID = this.smarthome.getDeviceIdByName( request.getData( "old_name") );
+                        if( network != null && dID.length() > 0 ) {
+                            String[] netInfo = network.split( ":" );
+                            this.restInterface.changeDeviceName(
+                                    this.username,
+                                    dID,
+                                    request.getData( "old_name" ),
+                                    request.getData( "new_name" ),
+                                    netInfo[0], Integer.parseInt( netInfo[1] ));
                         }
+                    }
                     break;
 
                 case ADD_LOCATION:
-                    if (jsonMessage == null || !jsonMessage.containsKey("location") || !jsonMessage.containsKey("address") ||
-                            !jsonMessage.containsKey("port"))
+
+                    if ( !request.areSet("location", "address", "port"))
                         return;
 
-                    if (smarthome.addLocation(jsonMessage.get("location"), jsonMessage.get("address"), Integer.parseInt(jsonMessage.get("port")))) {
-                        //  TODO Request to db or just update the db with rabbitMQ(no reply)
-                        try {
-                            session.getBasicRemote().sendText(gson.toJson(request));
-                        } catch (IOException e) {
-                            e.printStackTrace();
-                            try {
-                                session.getBasicRemote().sendText(request.getBadResponse());
-                            } catch (IOException ee) {
-                                ee.printStackTrace();
-                            }
-                        }
+                    if (smarthome.addLocation(request.getData("location"), request.getData("address"), Integer.parseInt(request.getData("port")), true )){
 
-                    } else
-                        try {
-                            session.getBasicRemote().sendText(request.getBadResponse());
-                        } catch (IOException e) {
-                            e.printStackTrace();
+                        String network = this.smarthome.getLocationNetwork( request.getData( "location" ));
+                        if( network != null ) {
+                            String[] netInfo = network.split( ":" );
+                            this.restInterface.addLocation(
+                                this.username,
+                                request.getData( "location" ),
+                                request.getData( "address" ), Integer.parseInt( netInfo[1] ));
                         }
+                    }
                     break;
 
                 case ADD_SUBLOCATION:
-                    if (jsonMessage == null || !jsonMessage.containsKey("location") || !jsonMessage.containsKey("sublocation"))
+
+                    if ( !request.areSet("location", "sublocation" ))
                         return;
-                    if (smarthome.addSubLocation(jsonMessage.get("location"), jsonMessage.get("sublocation"))) {
-                        //  TODO Request to db or just update the db with rabbitMQ(no reply)
-                        try {
-                            session.getBasicRemote().sendText(gson.toJson(request));
-                        } catch (IOException e) {
-                            e.printStackTrace();
-                            try {
-                                session.getBasicRemote().sendText(request.getBadResponse());
-                            } catch (IOException ee) {
-                                ee.printStackTrace();
-                            }
+
+                    if (smarthome.addSubLocation(request.getData("location"), request.getData("sublocation"), true )){
+
+                        String network = this.smarthome.getLocationNetwork( request.getData( "location" ));
+                        if( network != null ) {
+                            String[] netInfo = network.split( ":" );
+                            this.restInterface.addSubLocation(
+                                    this.username,
+                                    request.getData( "location" ),
+                                    request.getData( "sublocation" ),
+                                    netInfo[0], Integer.parseInt( netInfo[1] ));
                         }
-                    } else
-                        try {
-                            session.getBasicRemote().sendText(request.getBadResponse());
-                        } catch (IOException e) {
-                            e.printStackTrace();
-                        }
+                    }
                     break;
 
                 case REMOVE_LOCATION:
-                    if (jsonMessage == null || !jsonMessage.containsKey("location"))
+
+                    if ( !request.areSet( "location" ))
                         return;
 
-                    if (smarthome.removeLocation(jsonMessage.get("location"))) {
-                        //  TODO Request to db or just update the db with rabbitMQ(no reply)
-                        try {
-                            session.getBasicRemote().sendText(gson.toJson(request));
-                        } catch (IOException e) {
-                            e.printStackTrace();
-                            try {
-                                session.getBasicRemote().sendText(request.getBadResponse());
-                            } catch (IOException ee) {
-                                ee.printStackTrace();
-                            }
+                    if (smarthome.removeLocation(request.getData("location"), true )){
+
+                        String network = this.smarthome.getLocationNetwork( request.getData( "location" ));
+                        if( network != null ) {
+                            String[] netInfo = network.split( ":" );
+                            this.restInterface.removeLocation(
+                                    this.username,
+                                    request.getData( "location" ),
+                                    netInfo[0], Integer.parseInt( netInfo[1] ));
                         }
-                    } else
-                        try {
-                            session.getBasicRemote().sendText(request.getBadResponse());
-                        } catch (IOException e) {
-                            e.printStackTrace();
-                        }
+                    }
                     break;
 
                 case REMOVE_SUBLOCATION:
-                    if (jsonMessage == null || !jsonMessage.containsKey("location") || !jsonMessage.containsKey("sublocation"))
-                        return;
-                    if (smarthome.removeSublocation(jsonMessage.get("location"), jsonMessage.get("sublocation"))) {
-                        //  TODO Request to db or just update the db with rabbitMQ(no reply)
-                        try {
-                            session.getBasicRemote().sendText(gson.toJson(request));
-                        } catch (IOException e) {
-                            e.printStackTrace();
-                            try {
-                                session.getBasicRemote().sendText(request.getBadResponse());
-                            } catch (IOException ee) {
-                                ee.printStackTrace();
-                            }
-                        }
 
-                    } else
-                        try {
-                            session.getBasicRemote().sendText(request.getBadResponse());
-                        } catch (IOException e) {
-                            e.printStackTrace();
+                    if ( !request.areSet( "location", "sublocation" ))
+                        return;
+
+                    if (smarthome.removeSublocation(request.getData("location"), request.getData("sublocation"), true )){
+
+                        String network = this.smarthome.getLocationNetwork( request.getData( "location" ));
+                        if( network != null ) {
+                            String[] netInfo = network.split( ":" );
+                            this.restInterface.removeSubLocation(
+                                    this.username,
+                                    request.getData( "location" ),
+                                    request.getData( "sublocation" ),
+                                    netInfo[0], Integer.parseInt( netInfo[1] ));
                         }
+                    }
                     break;
 
                 case ADD_DEVICE:
-                    if (jsonMessage == null || !jsonMessage.containsKey("location") || !jsonMessage.containsKey("sublocation") ||
-                            !jsonMessage.containsKey("name") || !jsonMessage.containsKey("type"))
+
+                    if ( !request.areSet( "location", "sublocation", "name", "type"  ))
                         return;
 
-                    //  TODO Request to db for a new DID
-                    String dID = "placeholder";
-                    if (smarthome.addDevice(jsonMessage.get("location"), jsonMessage.get("sublocation"), dID, jsonMessage.get("name"), SmarthomeDevice.DeviceType.valueOf(jsonMessage.get("type").toUpperCase()))) {
-                        //  TODO Request to db or just update the db with rabbitMQ(no reply)
+                    //  TODO request to the db to obtain a new ID to be assigned to the device
+                    String dID = request.getData( "name" );  //  PLACEHOLDER
+                    if( dID.length()>0 && smarthome.addDevice(request.getData("location"),
+                                                                request.getData("sublocation"),
+                                                                dID,
+                                                                request.getData("name"),
+                                                                SmarthomeDevice.DeviceType.StringToType(request.getData("type")), true )){
 
-                        try {
-                            session.getBasicRemote().sendText(gson.toJson(request));
-                        } catch (IOException e) {
-                            e.printStackTrace();
+                        String network = this.smarthome.getLocationNetwork( request.getData( "location" ));
+                        if( network != null ) {
+                            String[] netInfo = network.split( ":" );
+                            this.restInterface.addDevice(
+                                    this.username,
+                                    dID,
+                                    request.getData( "name" ),
+                                    request.getData( "location" ),
+                                    request.getData( "sublocation" ),
+                                    SmarthomeDevice.DeviceType.StringToType(request.getData("type")),
+                                    netInfo[0], Integer.parseInt( netInfo[1] ));
                         }
-
-                    } else
-                        try {
-                            session.getBasicRemote().sendText(request.getBadResponse());
-                        } catch (IOException e) {
-                            e.printStackTrace();
-                        }
+                    }
                     break;
 
                 case CHANGE_DEVICE_SUBLOCATION:
-                    if (jsonMessage == null || !jsonMessage.containsKey("name") || !jsonMessage.containsKey("location") ||
-                            !jsonMessage.containsKey("sublocation"))
+
+                    if ( !request.areSet( "location", "sublocation", "name" ))
                         return;
 
-                    if (smarthome.changeDeviceSubLocation(jsonMessage.get("location"), jsonMessage.get("sublocation"), jsonMessage.get("name"))) {
-                        //  TODO Request to db or just update the db with rabbitMQ(no reply)
-                        try {
-                            session.getBasicRemote().sendText(gson.toJson(request));
-                        } catch (IOException e) {
-                            e.printStackTrace();
+                    System.out.println("APPROVED");
+                    if (smarthome.changeDeviceSubLocation(request.getData("location"), request.getData("sublocation"), request.getData("name"), true )) {
+                        System.out.println("EXECUTING");
+                        String network = this.smarthome.getDeviceNetwork( request.getData( "name" ));
+                        dID = this.smarthome.getDeviceIdByName( request.getData( "name" ));
+                        String subLoc = this.smarthome.getDeviceSubLocation( request.getData( "name" ));
+                        if( network != null && dID != null && subLoc != null ) {
+                            System.out.println("SENDING");
+                            String[] netInfo = network.split( ":" );
+                            this.restInterface.changeDeviceSublocation(
+                                    this.username,
+                                    dID,
+                                    request.getData( "name" ),
+                                    request.getData( "location" ),
+                                    subLoc,
+                                    request.getData( "sublocation" ),
+                                    netInfo[0], Integer.parseInt( netInfo[1] ));
                         }
-
-                    } else
-                        try {
-                            session.getBasicRemote().sendText(request.getBadResponse());
-                        } catch (IOException e) {
-                            e.printStackTrace();
-                        }
+                    }
                     break;
 
                 case REMOVE_DEVICE:
-                    if (jsonMessage == null || !jsonMessage.containsKey("name"))
+                    logger.info( "REQUEST ARRIVED");
+                    if( !request.areSet( "name" ))
                         return;
-                    if (smarthome.removeDevice(jsonMessage.get("name"))) {
-                        //  TODO Request to db or just update the db with rabbitMQ(no reply)
-                        try {
-                            session.getBasicRemote().sendText(gson.toJson(request));
-                        } catch (IOException e) {
-                            e.printStackTrace();
+                    logger.info( "REQUEST Approved");
+                    if(smarthome.removeDevice(request.getData("name"), true )) {
+                        logger.info( "REQUEST TESTED");
+                        String network = this.smarthome.getDeviceNetwork( request.getData( "name" ));
+                        dID = this.smarthome.getDeviceIdByName( request.getData( "name" ));
+                        if( network != null && dID != null ) {
+                            String[] netInfo = network.split( ":" );
+                            this.restInterface.removeDevice(
+                                    this.username,
+                                    dID,
+                                    request.getData( "name" ),
+                                    netInfo[0], Integer.parseInt( netInfo[1] ));
                         }
-
-                    } else
-                        try {
-                            session.getBasicRemote().sendText(request.getBadResponse());
-                        } catch (IOException e) {
-                            e.printStackTrace();
-                        }
+                    }
                     break;
 
                 case STATISTIC:
-                    if (jsonMessage == null || !jsonMessage.containsKey("device_name") || !jsonMessage.containsKey("statistic") ||
-                            !jsonMessage.containsKey("start") || !jsonMessage.containsKey("stop"))
+
+                    if ( !request.areSet( "device_name", "statistic", "start", "stop" ))
                         return;
 
-                    if (!smarthome.devicePresent(jsonMessage.get("device_name")))
+                    if (!smarthome.devicePresent(request.getData("device_name")))
                         return;
 
                     //  TODO Request to the server for statistics
                     WebRequest req = gson.fromJson(message, WebRequest.class);
-                    HashMap<String, String> data = new HashMap<>();
-                    data.put("device_name", req.getData().get("device_name"));
-                    data.put("statistic", req.getData().get("statistic"));
-                    data.put("values", gson.toJson(Statistics.buildTestEnvironment()));
-                    WebRequest resp = new WebRequest(req.getStringType(), data);
-                    notifier.sendMessage(gson.toJson(resp), userData.getUser());
+                    HashMap<String, String> data2 = new HashMap<>();
+                    data2.put("device_name", req.getData().get("device_name"));
+                    data2.put("statistic", req.getData().get("statistic"));
+                    data2.put("values", gson.toJson(Statistics.buildTestEnvironment()));
+                    WebRequest resp = new WebRequest(req.getStringType(), request.getData());
+                    try {
+                        session.getBasicRemote().sendText(gson.toJson(resp));
+                    }catch( IOException e){
+                        e.printStackTrace();
+                    }
                     break;
 
                 case UPDATE:
 
-                    if (jsonMessage == null || !jsonMessage.containsKey("device_name") || !jsonMessage.containsKey("action") ||
-                        !jsonMessage.containsKey("value"))
+                    if( !request.areSet( "device_name", "action", "value"))
                         return;
 
-                    notifier.sendMessage(message, userData.getUser());
-                    return;
+                    if( smarthome.performAction(request.getData("device_name"), request.getData( "action"), request.getData( "value"), true )) {
+
+                        String network = this.smarthome.getDeviceNetwork( request.getData( "device_name" ));
+                        dID = this.smarthome.getDeviceIdByName( request.getData( "device_name" ));
+                        if( network != null && dID != null ) {
+                            String[] netInfo = network.split( ":" );
+                            this.restInterface.execCommand(
+                                    this.username,
+                                    dID,
+                                    request.getData( "device_name" ),
+                                    request.getData( "action" ),
+                                    request.getData( "value" ),
+                                    netInfo[0], Integer.parseInt( netInfo[1] ));
+                        }
+                    }
+                    break;
 
                 case LOGOUT:
                     httpSession.removeAttribute("authData");
                     httpSession.removeAttribute("infoData");
+
+                    try{
+                        session.close();
+                    }catch( Exception e ){
+                        e.printStackTrace();
+                    }
                     break;
 
                 default:
                     logger.severe("Error, request unknown: " + request.requestType().toString());
             }
-            try {
-                if( context != null )
-                    context.rebind("smarthome_" + userData.getUser(), smarthome);
 
-            } catch (NamingException e) {
-                e.printStackTrace();
-            }
         }
     }
 
@@ -422,23 +410,66 @@ public class WebappEndpoint {
         updater = null;
     }
 
-    private boolean verification(EndpointConfig config){
-        HttpSession session = (HttpSession)config.getUserProperties().get("httpsession");
-        String authCookie = (String)config.getUserProperties().get("cookie");
-        logger.severe("authcookie: "+authCookie);
-        if( authCookie == null || authCookie.length() == 0 )
+    //// UTILITY FUNCTIONS
+
+    //  verifies the validity of the user information and if it is authorized to perform a request.
+    //  the authentication is based on the replica of the same data, one is stored inside the user session
+    //  and the other is given by the user with a cookie. If the code inside both the object is the same then
+    //  the user is authorized to perform the request
+    private boolean verification(){
+
+        logger.info( "Starting verification of information" );
+        HttpSession session = (HttpSession) this.config.getUserProperties().get("httpsession");
+        String authCookie = (String) this.config.getUserProperties().get("cookie");
+
+        //  verification of object presence
+        if( session == null ){
+
+            logger.severe( "Error missing the session information. Verification failed" );
             return false;
+
+        }
+
+        if( authCookie == null || authCookie.length() == 0 ){
+
+            logger.severe( "Error missing the authentication cookie. Verification failed" );
+            return false;
+
+        }
 
         BasicData userData = (BasicData)session.getAttribute("authData");
-        if( userData == null )
+        if( userData == null ) {
+
+            logger.severe( "Error missing the user authentication information. Verification failed" );
             return false;
 
-        return userData.isValid(authCookie);
+        }
+
+        //  verification of authentication code
+        if( userData.isValid( authCookie )){
+
+            logger.info("User authorized to create a websocket: " + userData.getUser() );
+            return true;
+
+        }
+
+        logger.warning( "Warning, user not authorized to open a websocket" );
+        return false;
 
     }
 
-    private void createSession(EndpointConfig config){
-        //  TODO Request to database for smarthome description
+    //  connector with the db, request the stored smarthome definition formatted has a SmarthomeManager to the database
+    private boolean getSmarthome( String username ){
+
+        //  try to get a copy from the user http session
+        this.smarthome = (SmarthomeManager)((HttpSession) config.getUserProperties().get( "httpsession" )).getAttribute( "smarthome" );
+        //  TODO to be changed with a request to the db to obtain the stored smarthome definition
+        if( this.smarthome == null ) {
+            this.smarthome = SmarthomeManager.createTestingEnvironment(username);
+            ((HttpSession) config.getUserProperties().get( "httpsession" )).setAttribute( "smarthome", this.smarthome );
+        }
+        return true;
+
     }
 
 

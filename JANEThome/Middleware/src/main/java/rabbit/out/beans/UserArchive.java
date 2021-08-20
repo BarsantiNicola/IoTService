@@ -1,6 +1,6 @@
-package jms.beans;
+package rabbit.out.beans;
 
-import jms.interfaces.ArchiveInterface;
+import rabbit.out.interfaces.ArchiveInterface;
 
 import javax.ejb.Lock;
 import javax.ejb.LockType;

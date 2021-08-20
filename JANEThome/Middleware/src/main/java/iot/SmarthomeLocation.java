@@ -87,7 +87,7 @@ public class SmarthomeLocation implements Serializable {
     //// SUB-LOCATIONS
 
     //  adds a new sublocation into the location. It returns false if a sublocation with the given name is already present
-    boolean addSublocation( String sublocation ){
+    boolean addSublocation( String sublocation, boolean trial ){
 
         initializeLogger();
 
@@ -95,26 +95,36 @@ public class SmarthomeLocation implements Serializable {
         if( this.sublocations.containsKey( sublocation ))
             return false;
 
-        this.sublocations.put( sublocation, new SmarthomeSublocation( sublocation ));
-        logger.info( "New Sublocation " + sublocation + " correctly added to " + this.location );
+        if( !trial ) {
+            this.sublocations.put(sublocation, new SmarthomeSublocation(sublocation));
+            logger.info("New Sublocation " + sublocation + " correctly added to " + this.location);
+        }
+
         return true;
 
     }
 
     //  if present it removes the sublocation from the location
-    boolean removeSublocation( String subLocation ){
+    boolean removeSublocation( String subLocation, boolean trial ){
+
+        if( trial )
+            return this.sublocations.containsKey( subLocation );
+
         return this.sublocations.remove( subLocation ) != null;
     }
 
     //  changed the name of the subLocation. Returns true in case of success
-    boolean changeSublocationName( String old_name, String new_name ){
+    boolean changeSublocationName( String old_name, String new_name, boolean trial ){
 
         if( !this.sublocations.containsKey( old_name ) || this.sublocations.containsKey( new_name ))
             return false;
 
-        SmarthomeSublocation subloc = this.sublocations.remove(old_name);
-        subloc.setSubLocation( new_name );
-        this.sublocations.put( new_name, subloc );
+        if( !trial ) {
+
+            SmarthomeSublocation subloc = this.sublocations.remove(old_name);
+            subloc.setSubLocation(new_name);
+            this.sublocations.put(new_name, subloc);
+        }
         return true;
 
     }
@@ -122,29 +132,29 @@ public class SmarthomeLocation implements Serializable {
     //// DEVICES
 
     //  add a new device into the given subLocation(if present). Returns true in case of success
-    boolean addDevice( String sublocation, SmarthomeWebDevice device ){
+    boolean addDevice( String sublocation, SmarthomeWebDevice device, boolean trial ){
 
         //  verification of the presence of the subLocation
         if( this.sublocations.containsKey( sublocation ))
-            return this.sublocations.get( sublocation ).addDevice( device );
+            return this.sublocations.get( sublocation ).addDevice( device, trial );
 
         return false;
 
     }
 
     //  removes the device from the given subLocation. Returns true in case of success
-    boolean removeDevice( String sublocation, String name ){
+    boolean removeDevice( String sublocation, String name, boolean trial ){
 
         //  verification of subLocation presence
         if( this.sublocations.containsKey( sublocation ))
-            return this.sublocations.get( sublocation ).removeDevice( name );
+            return this.sublocations.get( sublocation ).removeDevice( name, trial );
 
         return false;
     }
 
     //  changes the sublocation associated with the device. A device cannot be moved outside a location
     //  so if the location contains the old sublocation it can move the device to the new requested sublocation
-    boolean changeDeviceSubLocation( String old_sublocation, String new_sublocation, String name ){
+    boolean changeDeviceSubLocation( String old_sublocation, String new_sublocation, String name, boolean trial ){
 
         initializeLogger();
 
@@ -156,14 +166,17 @@ public class SmarthomeLocation implements Serializable {
         SmarthomeWebDevice device = this.sublocations.get( old_sublocation ).getDevice( name );
 
         //  removing the device from the old sub-location
-        if( this.sublocations.get( old_sublocation ).removeDevice( name )){
+        if( this.sublocations.get( old_sublocation ).removeDevice( name, trial )){
+
+            if( trial )
+                return true;
 
             //  changing the device information to update the subLocation
             //  the update will also affect the devices array into the SmarthomeManager
             device.setRoomHint( new_sublocation );
 
             //  putting the device into the new subLocation
-            this.sublocations.get( new_sublocation ).addDevice( device );
+            this.sublocations.get( new_sublocation ).addDevice( device, false );
             logger.info( "Device " + name + "'s sublocation correctly changed from " + old_sublocation + " to " + new_sublocation );
             return true;
         }

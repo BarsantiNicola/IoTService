@@ -1,6 +1,6 @@
 package weblogic.login.servlets;
 
-import jms.interfaces.ArchiveInterface;
+import rabbit.out.interfaces.ArchiveInterface;
 import utils.device.DeviceContainer;
 import utils.mail.interfaces.EmailServiceLocal;
 import weblogic.login.beans.UserData;

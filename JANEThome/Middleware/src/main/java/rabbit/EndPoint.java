@@ -1,4 +1,4 @@
-package jms;
+package rabbit;
 
 import java.io.IOException;
 import com.rabbitmq.client.Channel;

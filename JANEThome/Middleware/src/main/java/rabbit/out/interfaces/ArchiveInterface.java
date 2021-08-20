@@ -1,4 +1,4 @@
-package jms.interfaces;
+package rabbit.out.interfaces;
 
 import javax.ejb.Remote;
 
