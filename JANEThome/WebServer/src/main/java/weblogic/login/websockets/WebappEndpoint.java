@@ -58,7 +58,7 @@ public class WebappEndpoint {
 
             //  getting the stored smarthome definition from the database
             if( !this.getSmarthome( this.username ))  //  if the user hasn't already a smarthome we create a default one
-                this.smarthome = new SmarthomeManager( this.username );
+                this.smarthome = new SmarthomeManager( this.username , true );
 
             //  Generation of callback channel for web client update notification
             this.updater = new WebUpdateReceiver( this.username , session, this.smarthome );
@@ -465,7 +465,7 @@ public class WebappEndpoint {
         this.smarthome = (SmarthomeManager)((HttpSession) config.getUserProperties().get( "httpsession" )).getAttribute( "smarthome" );
         //  TODO to be changed with a request to the db to obtain the stored smarthome definition
         if( this.smarthome == null ) {
-            this.smarthome = SmarthomeManager.createTestingEnvironment(username);
+            this.smarthome = SmarthomeManager.createTestingEnvironment(username, true );
             ((HttpSession) config.getUserProperties().get( "httpsession" )).setAttribute( "smarthome", this.smarthome );
         }
         return true;

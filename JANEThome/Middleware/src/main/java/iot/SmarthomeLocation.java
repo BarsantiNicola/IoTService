@@ -229,6 +229,9 @@ public class SmarthomeLocation implements Serializable {
         return location;
     }
 
+    boolean isPresent( String subLocation ){
+        return this.sublocations.containsKey(subLocation);
+    }
     /////// SETTERS
 
     //  changes the location name

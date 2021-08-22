@@ -1,14 +1,10 @@
 package rabbit.out.beans;
 
 import com.google.gson.Gson;
-import iot.SmarthomeDevice;
-import iot.SmarthomeManager;
 import rabbit.EndPoint;
 import java.io.IOException;
 import java.io.Serializable;
 import javax.ejb.Stateless;
-import javax.naming.InitialContext;
-import javax.naming.NamingException;
 import java.util.List;
 import java.util.logging.ConsoleHandler;
 import java.util.logging.Handler;
@@ -133,107 +129,5 @@ public class UpdateSender extends EndPoint implements SenderInterface {
             }
     }
 
-    //  private function to update the smarthome definition used by the web server sessions
-    private boolean updateSmartHome( DeviceUpdate message, String username ){
-
-        SmarthomeManager smarthome;
-        InitialContext context = null;
-        try{
-
-            context = new InitialContext();
-            smarthome = (SmarthomeManager) context.lookup("smarthome_" + username);
-            if( smarthome == null ){
-
-                //  TODO To be removed and substitute with request to the db to build the smarthome
-                smarthome = SmarthomeManager.createTestingEnvironment( username );
-                context.bind("smarthome_" + username, smarthome);
-            }
-
-        } catch (NamingException e) {
-
-            //  TODO To be removed and substitute with request to the db to build the smarthome
-            smarthome = SmarthomeManager.createTestingEnvironment( username );
-
-            if( context != null ) {
-
-                try {
-
-                    context.bind("smarthome_" + username, smarthome);
-
-                } catch (NamingException namingException) {
-
-                    logger.info("Error during the save of the smarthome");
-                    namingException.printStackTrace();
-
-                }
-            }
-
-        }
-
-        switch( message.getUpdateType() ){
-            case ADD_LOCATION:
-                return smarthome.addLocation(
-                        message.getData("location"),
-                        message.getData("address"),
-                        Integer.parseInt(message.getData("port")), false);
-
-            case ADD_SUB_LOCATION:
-                return smarthome.addSubLocation(
-                        message.getData( "location" ),
-                        message.getData( "sublocation"), false );
-
-            case ADD_DEVICE:
-                return smarthome.addDevice(
-                        message.getData( "location" ),
-                        message.getData("sublocation"),
-                        message.getData("dID"),
-                        message.getData("name"),
-                        SmarthomeDevice.DeviceType.StringToType(message.getData("type")), false );
-
-            case RENAME_LOCATION:
-                return smarthome.changeLocationName(
-                        message.getData("old_name"),
-                        message.getData( "new_name"), false );
-
-            case RENAME_SUB_LOCATION:
-                return smarthome.changeSublocationName(
-                        message.getData( "location" ),
-                        message.getData("old_name"),
-                        message.getData( "new_name"), false );
-
-            case RENAME_DEVICE:
-                return smarthome.changeDeviceName(
-                        message.getData("old_name"),
-                        message.getData( "new_name"), false );
-
-            case REMOVE_LOCATION:
-                return smarthome.removeLocation(
-                        message.getData( "location" ), false );
-
-            case REMOVE_SUB_LOCATION:
-                return smarthome.removeSublocation(
-                        message.getData( "location" ),
-                        message.getData("sublocation" ), false );
-
-            case REMOVE_DEVICE:
-                return smarthome.removeDevice(
-                        message.getData("name"), false );
-
-            case CHANGE_DEVICE_SUB_LOCATION:
-                return smarthome.changeDeviceSubLocation(
-                        message.getData("location"),
-                        message.getData( "sublocation" ),
-                        message.getData("name"), false );
-
-            case UPDATE:
-                return smarthome.performAction(
-                        message.getData( "name" ),
-                        message.getData( "action" ),
-                        message.getData( "value" ) , false );
-
-            default:
-                return false;
-        }
-    }
 }
 
