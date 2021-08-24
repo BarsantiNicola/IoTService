@@ -11,8 +11,8 @@ import java.util.logging.Handler;
 import java.util.logging.Logger;
 import java.util.logging.SimpleFormatter;
 
-import rabbit.out.DeviceUpdate;
-import rabbit.out.DeviceUpdateMessage;
+import rabbit.msg.DeviceUpdate;
+import rabbit.msg.DeviceUpdateMessage;
 import rabbit.out.interfaces.SenderInterface;
 import org.apache.commons.lang.SerializationUtils;
 
@@ -68,6 +68,7 @@ public class UpdateSender extends EndPoint implements SenderInterface {
             else
                 this.logger.severe( "The current update will not been sent" );
 
+        logger.info( "Sent " + sentCount + " updates of " + updates.size());
         return sentCount;
     }
 
@@ -75,7 +76,6 @@ public class UpdateSender extends EndPoint implements SenderInterface {
     private boolean verifyUpdate( DeviceUpdate update ){
 
         Gson gson = new Gson();
-        System.out.println(" UPDATE " + gson.toJson(update));
         switch( update.getUpdateType() ){
             case ADD_LOCATION:
                 return update.areSet("location", "address", "port" );
@@ -108,25 +108,26 @@ public class UpdateSender extends EndPoint implements SenderInterface {
                 return update.areSet( "dID" , "device_name", "action", "value" );
 
         }
-        this.logger.severe( "ERROR UNMATCHED TYPE" );
+        this.logger.severe( "Error during message verification. Unmatched update type" );
         return false;
     }
 
     //  private function to send a message via rabbitMQ. It returns true in case of success
     private boolean sendMessage( Serializable object, String uID ){
 
-            try{
-                logger.info("Sending message: " + object );
-                channel.basicPublish("DeviceUpdate", uID, null, SerializationUtils.serialize(object));
-                return true;
+        try{
 
-            }catch(IOException e){
+            logger.info("Sending a new message to " + uID );
+            channel.basicPublish("DeviceUpdate", uID, null, SerializationUtils.serialize(object));
+            return true;
 
-                logger.severe("Error, unable to send the message");
-                e.printStackTrace();
-                return false;
+        }catch(IOException e){
 
-            }
+            logger.severe("Error, unable to send the message");
+            e.printStackTrace();
+            return false;
+
+        }
     }
 
 }

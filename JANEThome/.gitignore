@@ -28,3 +28,4 @@ WebServer/target/
 WebServer/src/main/webapp
 PasswordRequestHandler.java
 /out/
+jms/

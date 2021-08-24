@@ -1,6 +1,5 @@
 package weblogic.login.servlets;
 
-import rabbit.out.interfaces.ArchiveInterface;
 import utils.device.DeviceContainer;
 import utils.mail.interfaces.EmailServiceLocal;
 import weblogic.login.beans.UserData;
@@ -36,9 +35,6 @@ public class RegistrationServlet extends HttpServlet {
 
     @EJB
     private EmailServiceLocal mailService;  // STATELESS EJB FOR EMAIL MANAGEMENT
-
-    @EJB
-    private ArchiveInterface authorizedUser;
 
     enum RequestType{  //  TYPE OF REQUEST HANDLED BY THE SERVLET
         REGISTRATION,
@@ -104,7 +100,6 @@ public class RegistrationServlet extends HttpServlet {
                     //  TODO use data information to register an account
                     try{
                         context.bind("ejb:module/data_container_"+data.getEmail(), new DeviceContainer(data.getEmail()));
-                        authorizedUser.addDestination(data.getEmail());
 
                     }catch( NamingException err){
                         logger.severe("Error, user container already present");

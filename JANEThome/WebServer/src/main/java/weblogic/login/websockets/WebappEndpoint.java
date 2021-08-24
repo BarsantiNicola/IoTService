@@ -7,7 +7,7 @@ import iot.SmarthomeDevice;
 import rest.out.interfaces.RESTinterface;
 import statistics.Statistics;
 import utils.configuration.EndpointConfigurator;
-import utils.jms.WebUpdateReceiver;
+import utils.rabbit.in.WebUpdateReceiver;
 import weblogic.login.beans.BasicData;
 
 import javax.ejb.EJB;
@@ -350,7 +350,7 @@ public class WebappEndpoint {
                     data2.put("device_name", req.getData().get("device_name"));
                     data2.put("statistic", req.getData().get("statistic"));
                     data2.put("values", gson.toJson(Statistics.buildTestEnvironment()));
-                    WebRequest resp = new WebRequest(req.getStringType(), request.getData());
+                    WebRequest resp = new WebRequest(req.getStringType(), data2 );
                     try {
                         session.getBasicRemote().sendText(gson.toJson(resp));
                     }catch( IOException e){

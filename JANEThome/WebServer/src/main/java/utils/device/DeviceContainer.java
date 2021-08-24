@@ -1,6 +1,6 @@
 package utils.device;
 
-import rabbit.out.DeviceUpdate;
+import rabbit.msg.DeviceUpdate;
 
 import java.util.ArrayList;
 import java.util.List;

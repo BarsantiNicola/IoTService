@@ -1,4 +1,4 @@
-package utils.jms;
+package utils.rabbit.in;
 
 import com.google.gson.Gson;
 import com.rabbitmq.client.AMQP.BasicProperties;
@@ -10,7 +10,7 @@ import iot.SmarthomeDevice;
 import iot.SmarthomeManager;
 import rabbit.EndPoint;
 import org.apache.commons.lang.SerializationUtils;
-import rabbit.out.DeviceUpdate;
+import rabbit.msg.DeviceUpdate;
 import javax.websocket.Session;
 import java.io.IOException;
 import java.util.HashMap;
@@ -243,6 +243,7 @@ public class WebUpdateReceiver extends EndPoint implements Consumer{
     }
 
    //  called when a new message is delivered
+    @SuppressWarnings( "all" )
     public void handleDelivery(String consumerTag, Envelope env,
                                BasicProperties props, byte[] body){
         Map map = (Map)SerializationUtils.deserialize(body);

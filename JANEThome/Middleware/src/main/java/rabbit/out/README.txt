@@ -1,20 +1,5 @@
 //////////////////////////////////////   README.txt    /////////////////////////////////////////
 
-The package maitains all the components needed for sending messages between the system nodes using
-a rabbitMQ message broker. The usable classes are:
-
-   - DeviceUpdate: structure of a single update to notify a change into the user smarthome. It contains all the fields
-                   expected to manage the update from the front-end components. More details on the parameters that must be
-                   present is described in the next section
-
-   - DeviceUpdateMessage: message that can be sent to notify updates to a user. A message can contains several DeviceUpdate
-                          instances but all the instances must be referred to the same user
-
-   - UpdateNotifier: class that extends Endpoint to implement a rabbitMQ client to send updates to all the involved elements.
-                     The class gives an API to send messages without having to handle the rabbitMQ message exchange. It also
-                     manage in a transparent way the smarthome of the user, validating the commands before sending them to the users
-                     and updating the information available between all the user session instances
-
    DEVICE UPDATE MESSAGES:
 
         ADD LOCATION:

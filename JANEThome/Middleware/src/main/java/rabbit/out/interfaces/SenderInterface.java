@@ -1,6 +1,6 @@
 package rabbit.out.interfaces;
 
-import rabbit.out.DeviceUpdateMessage;
+import rabbit.msg.DeviceUpdateMessage;
 import javax.ejb.Remote;
 
 @Remote
