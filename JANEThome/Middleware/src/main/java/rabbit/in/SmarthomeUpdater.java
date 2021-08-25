@@ -5,6 +5,7 @@ import com.rabbitmq.client.Consumer;
 import com.rabbitmq.client.DeliverCallback;
 import com.rabbitmq.client.Envelope;
 import com.rabbitmq.client.ShutdownSignalException;
+import config.interfaces.ConfigurationInterface;
 import iot.SmarthomeDevice;
 import iot.SmarthomeManager;
 import org.apache.commons.lang.SerializationUtils;
@@ -26,8 +27,9 @@ public class SmarthomeUpdater extends EndPoint implements Consumer{
     private final Logger logger;
     private final SmarthomeManager smarthome;   //  reference to the smarthome to update
 
-    public SmarthomeUpdater(String endPointName, SmarthomeManager smarthome ){
+    public SmarthomeUpdater(String endPointName, SmarthomeManager smarthome, ConfigurationInterface configuration ){
 
+        super.inizialize(configuration);
         this.logger = Logger.getLogger(getClass().getName());
 
         //  verification of the number of instantiated handlers

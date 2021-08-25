@@ -1,6 +1,8 @@
 package iot;
 
 import com.google.gson.Gson;
+import config.beans.Configuration;
+import config.interfaces.ConfigurationInterface;
 import rabbit.in.SmarthomeUpdater;
 
 import java.io.Serializable;
@@ -27,9 +29,9 @@ public class SmarthomeManager implements Serializable {
     private SmarthomeUpdater updater;
     ////////  TODO To be removed, only for testing purpose
 
-    public static SmarthomeManager createTestingEnvironment(String username, boolean connected ){
+    public static SmarthomeManager createTestingEnvironment(String username, boolean connected, ConfigurationInterface configuration ){
 
-        return new SmarthomeManager(username, connected, SmarthomeLocation.createTestingEnvironment());
+        return new SmarthomeManager(username, connected, configuration, SmarthomeLocation.createTestingEnvironment());
 
     }
 
@@ -37,7 +39,7 @@ public class SmarthomeManager implements Serializable {
 
     /////// CONSTRUCTORS
 
-    public SmarthomeManager( String username, boolean connected ){
+    public SmarthomeManager(String username, boolean connected, ConfigurationInterface configuration ){
 
         this.username = username;
         this.locations = new HashMap<>();
@@ -45,13 +47,13 @@ public class SmarthomeManager implements Serializable {
         this.smartHomeMutex = new Semaphore( 1 );
         initializeLogger();
         if( connected )
-            this.updater = new SmarthomeUpdater( username, this );
+            this.updater = new SmarthomeUpdater( username, this, configuration );
 
     }
 
-    public SmarthomeManager(String username, boolean connected, List<SmarthomeLocation> locs){
+    public SmarthomeManager(String username, boolean connected, ConfigurationInterface configuration, List<SmarthomeLocation> locs){
 
-        this(username, connected);
+        this( username, connected, configuration );
         locs.forEach( location -> {
             this.locations.put(location.getLocation(), location);
             location.getDevices().forEach( device -> this.devices.put( device.giveDeviceName(), device));

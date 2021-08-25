@@ -1,10 +1,16 @@
 package rabbit.out.beans;
 
 import com.google.gson.Gson;
+import config.beans.Configuration;
+import config.interfaces.ConfigurationInterface;
 import rabbit.EndPoint;
 import java.io.IOException;
 import java.io.Serializable;
+import javax.annotation.PostConstruct;
+import javax.ejb.EJB;
 import javax.ejb.Stateless;
+import javax.inject.Inject;
+import java.lang.annotation.ElementType;
 import java.util.List;
 import java.util.logging.ConsoleHandler;
 import java.util.logging.Handler;
@@ -25,6 +31,9 @@ public class UpdateSender extends EndPoint implements SenderInterface {
 
     private final Logger logger;
 
+    @EJB
+    ConfigurationInterface configuration;
+
     public UpdateSender(){
 
         this.logger = Logger.getLogger( getClass().getName() );
@@ -39,13 +48,17 @@ public class UpdateSender extends EndPoint implements SenderInterface {
         }
     }
 
+    @PostConstruct
+    private void init(){
+        super.inizialize( configuration );
+    }
+
     //  split the sending of the message in several distinct message exchange(one per DeviceUpdate).
     //  The function automatically verifies the correctness of the updates and only if they are correct they will be sent.
     //  Returns the number of message sent
     public int sendMessage( DeviceUpdateMessage message ){
 
         int sentCount = 0;
-
         //  verification that the destination is present
         String destination = message.getDestination();
         if( destination == null || destination.length() == 0 ) {

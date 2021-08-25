@@ -2,11 +2,12 @@ package weblogic.login.websockets;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import config.interfaces.ConfigurationInterface;
 import iot.SmarthomeManager;
 import iot.SmarthomeDevice;
 import rest.out.interfaces.RESTinterface;
 import statistics.Statistics;
-import utils.configuration.EndpointConfigurator;
+import weblogic.login.EndpointConfigurator;
 import utils.rabbit.in.WebUpdateReceiver;
 import weblogic.login.beans.BasicData;
 
@@ -31,6 +32,9 @@ public class WebappEndpoint {
 
     @SuppressWarnings("unused")
     private WebUpdateReceiver updater;
+
+    @EJB
+    ConfigurationInterface configuration;
 
     @EJB
     private RESTinterface restInterface;
@@ -58,10 +62,10 @@ public class WebappEndpoint {
 
             //  getting the stored smarthome definition from the database
             if( !this.getSmarthome( this.username ))  //  if the user hasn't already a smarthome we create a default one
-                this.smarthome = new SmarthomeManager( this.username , true );
+                this.smarthome = new SmarthomeManager( this.username , true, configuration );
 
             //  Generation of callback channel for web client update notification
-            this.updater = new WebUpdateReceiver( this.username , session, this.smarthome );
+            this.updater = new WebUpdateReceiver( this.username , session, this.smarthome, configuration );
 
             //  Sending the definition of the smartHome as first message to the web client
             try {
@@ -194,15 +198,12 @@ public class WebappEndpoint {
                         return;
 
                     if (smarthome.addLocation(request.getData("location"), request.getData("address"), Integer.parseInt(request.getData("port")), true )){
-
-                        String network = this.smarthome.getLocationNetwork( request.getData( "location" ));
-                        if( network != null ) {
-                            String[] netInfo = network.split( ":" );
-                            this.restInterface.addLocation(
+                        this.restInterface.addLocation(
                                 this.username,
                                 request.getData( "location" ),
-                                request.getData( "address" ), Integer.parseInt( netInfo[1] ));
-                        }
+                                request.getData( "address" ),
+                                Integer.parseInt( request.getData( "port" ) ));
+
                     }
                     break;
 
@@ -465,7 +466,7 @@ public class WebappEndpoint {
         this.smarthome = (SmarthomeManager)((HttpSession) config.getUserProperties().get( "httpsession" )).getAttribute( "smarthome" );
         //  TODO to be changed with a request to the db to obtain the stored smarthome definition
         if( this.smarthome == null ) {
-            this.smarthome = SmarthomeManager.createTestingEnvironment(username, true );
+            this.smarthome = SmarthomeManager.createTestingEnvironment(username, true, configuration );
             ((HttpSession) config.getUserProperties().get( "httpsession" )).setAttribute( "smarthome", this.smarthome );
         }
         return true;

@@ -5,19 +5,20 @@ import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.Connection;
 import java.util.concurrent.TimeoutException;
 import com.rabbitmq.client.ConnectionFactory;
+import config.beans.Configuration;
+import config.interfaces.ConfigurationInterface;
 
 ///// EndPoint
 //
 //  Description: class designed as a base class to generate endpoints to
 //               the rabbitMQ message exchanger
 
-public abstract class EndPoint{
+public class EndPoint{
 
     protected Channel channel;
     protected Connection connection;
 
-    public EndPoint(){
-
+    protected void inizialize( ConfigurationInterface configuration ){
         ConnectionFactory factory = new ConnectionFactory();
         factory.setHost("localhost");
         factory.setRequestedHeartbeat(60);
@@ -35,7 +36,6 @@ public abstract class EndPoint{
             channel = null;
 
         }
-
     }
 
     // Close channel and connection. Not necessary as it happens implicitly any way.

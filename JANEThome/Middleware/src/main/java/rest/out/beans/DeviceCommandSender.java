@@ -1,5 +1,6 @@
 package rest.out.beans;
 
+import config.interfaces.ConfigurationInterface;
 import iot.SmarthomeDevice;
 import rabbit.msg.DeviceUpdate;
 import rabbit.msg.DeviceUpdateMessage;
@@ -15,7 +16,10 @@ import javax.ejb.Stateless;
 public class DeviceCommandSender implements RESTinterface {
 
     @EJB
-    SenderInterface notifier;
+    SenderInterface notifier;     //  TODO to be removed, only for testing purpose
+
+    @EJB
+    ConfigurationInterface configuration;   //  gives the configuration for the rest interface
 
     //  sends a command to the device REST server
     private boolean sendCommand(){
@@ -27,7 +31,6 @@ public class DeviceCommandSender implements RESTinterface {
     public boolean addLocation( String username, String location, String ipAddr, int port ) {
 
         try {
-
             DeviceUpdateMessage message = new DeviceUpdateMessage( username );
             message.addUpdates(DeviceUpdate.buildAddLocation( location, ipAddr, port ));
             return notifier.sendMessage( message ) > 0;

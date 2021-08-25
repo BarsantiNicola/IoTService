@@ -1,18 +1,16 @@
 package weblogic.login.servlets;
 
-import utils.token.interfaces.TokenManagerRemote;
+import config.interfaces.ConfigurationInterface;
 import weblogic.login.beans.BasicData;
 import weblogic.login.beans.UserLogin;
 
 import javax.ejb.EJB;
-import javax.enterprise.context.ApplicationScoped;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
-import java.io.PrintWriter;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Optional;
@@ -32,6 +30,9 @@ import java.util.logging.SimpleFormatter;
 @WebServlet(name="Login", urlPatterns={"/login"})
 public class LoginServlet extends HttpServlet {
 
+    @EJB
+    ConfigurationInterface configuration;
+
     enum RequestType{  //  TYPE OF REQUEST HANDLED BY THE SERVLET
         LOGIN_REQ,
         AUTOLOGIN_REQ,
@@ -46,6 +47,12 @@ public class LoginServlet extends HttpServlet {
         logger.addHandler(consoleHandler);
 
         HashMap<String,String> parameters = extractParameters(req);
+
+        System.out.println("OK I'M HERE");
+        if( configuration == null )
+            System.out.println("NULL CONF");
+        else
+            System.out.println("CONF: " + configuration.getParameter("rabbit", "username"));
 
         switch(typeOfRequest(parameters)) {
 

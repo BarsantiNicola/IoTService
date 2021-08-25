@@ -6,11 +6,16 @@ import com.rabbitmq.client.Consumer;
 import com.rabbitmq.client.DeliverCallback;
 import com.rabbitmq.client.Envelope;
 import com.rabbitmq.client.ShutdownSignalException;
+import config.beans.Configuration;
+import config.interfaces.ConfigurationInterface;
 import iot.SmarthomeDevice;
 import iot.SmarthomeManager;
 import rabbit.EndPoint;
 import org.apache.commons.lang.SerializationUtils;
 import rabbit.msg.DeviceUpdate;
+
+import javax.annotation.PostConstruct;
+import javax.ejb.EJB;
 import javax.websocket.Session;
 import java.io.IOException;
 import java.util.HashMap;
@@ -27,21 +32,24 @@ public class WebUpdateReceiver extends EndPoint implements Consumer{
     private final Logger logger;
     private Session target;
     private final SmarthomeManager smarthome;
+    private String endPointName;
 
-    public WebUpdateReceiver( String endPointName, Session websocket, SmarthomeManager smarthome ){
+    public WebUpdateReceiver( String endPointName, Session websocket, SmarthomeManager smarthome, ConfigurationInterface configuration ) {
 
+        super.inizialize(configuration);
         this.logger = Logger.getLogger(getClass().getName());
 
         //  verification of the number of instantiated handlers
-        if( this.logger.getHandlers().length == 0 ){ //  first time the logger is created we generate its handler
+        if (this.logger.getHandlers().length == 0) { //  first time the logger is created we generate its handler
 
             Handler consoleHandler = new ConsoleHandler();
             consoleHandler.setFormatter(new SimpleFormatter());
             logger.addHandler(consoleHandler);
 
         }
-
         this.smarthome = smarthome;
+        this.endPointName = endPointName;
+        this.target = websocket;
 
         DeliverCallback deliverCallback = (consumerTag, delivery) -> {
 
@@ -219,8 +227,9 @@ public class WebUpdateReceiver extends EndPoint implements Consumer{
             }
 
         };
-
+        System.out.println("ENDING CONFIGURATION");
         if( channel != null && connection != null ) {
+            System.out.println("ENDING2");
             String queueName;
             try {
 
@@ -233,7 +242,6 @@ public class WebUpdateReceiver extends EndPoint implements Consumer{
                 e.printStackTrace();
 
             }
-            target = websocket;
         }
     }
 

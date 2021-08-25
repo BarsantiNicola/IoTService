@@ -1,4 +1,4 @@
-package utils.configuration;
+package weblogic.login;
 
 import javax.servlet.http.Cookie;
 import javax.websocket.HandshakeResponse;

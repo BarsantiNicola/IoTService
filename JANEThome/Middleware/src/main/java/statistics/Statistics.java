@@ -14,6 +14,8 @@ public class Statistics implements Serializable{
         this.statistics = statistics;
     }
 
+    //  function to add iteratively statistics. It is not important the order in which statistic instances
+    //  will be added to the class, they will always be showed ordered by their date parameter
     public void addStatistic(Statistic statistic){
         for( Statistic s: statistics )
             if( s.getX().after(statistic.getX())) {
@@ -22,8 +24,10 @@ public class Statistics implements Serializable{
             }
     }
 
+    //  gives back all the stored statistic instances
     public List<Statistic> getStatistics(){ return statistics; }
 
+    //  TODO to be removed only for testing purpouse
     public static List<Statistic> buildTestEnvironment(){
         return new Statistics( Arrays.asList(
                 new Statistic( new Date(2012, Calendar.JULY, 15), 0 ),
