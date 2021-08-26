@@ -1,7 +1,5 @@
 package rabbit.out.beans;
 
-import com.google.gson.Gson;
-import config.beans.Configuration;
 import config.interfaces.ConfigurationInterface;
 import rabbit.EndPoint;
 import java.io.IOException;
@@ -9,8 +7,6 @@ import java.io.Serializable;
 import javax.annotation.PostConstruct;
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
-import javax.inject.Inject;
-import java.lang.annotation.ElementType;
 import java.util.List;
 import java.util.logging.ConsoleHandler;
 import java.util.logging.Handler;
@@ -42,15 +38,21 @@ public class UpdateSender extends EndPoint implements SenderInterface {
         if( logger.getHandlers().length == 0 ){ //  first time the logger is created we generate its handler
 
             Handler consoleHandler = new ConsoleHandler();
-            consoleHandler.setFormatter(new SimpleFormatter());
-            logger.addHandler(consoleHandler);
+            consoleHandler.setFormatter( new SimpleFormatter() );
+            logger.addHandler( consoleHandler );
 
         }
     }
 
     @PostConstruct
+    //  needed to inizialize the parent class out of the constructor(ConfigurationInterface not available into constructor)
     private void init(){
-        super.inizialize( configuration );
+
+        if( super.inizialize( configuration ))
+            logger.info( "RabbitMQ client ready to send messages" );
+        else
+            logger.severe( "An error has occurred during the client initialization" );
+
     }
 
     //  split the sending of the message in several distinct message exchange(one per DeviceUpdate).
@@ -62,14 +64,18 @@ public class UpdateSender extends EndPoint implements SenderInterface {
         //  verification that the destination is present
         String destination = message.getDestination();
         if( destination == null || destination.length() == 0 ) {
-            this.logger.severe("Error, a message must contain a destination field");
+
+            this.logger.severe( "Error, a message must contain a destination field" );
             return sentCount;
+
         }
 
         //  verificationi that the destination is valid
         if( destination.indexOf( '@' ) == -1 && destination.compareTo( "db" ) != 0 ) {
-            this.logger.severe("Error, invalid destination. A destination can consist of a user email or the keyword 'db'");
+
+            this.logger.severe( "Error, invalid destination. A destination can consist of a user email or the keyword 'db'" );
             return sentCount;
+
         }
 
         List<DeviceUpdate> updates = message.getAllDeviceUpdate();
@@ -88,7 +94,6 @@ public class UpdateSender extends EndPoint implements SenderInterface {
     //  message verification. For each message type verifies that all the mandatory fields are present
     private boolean verifyUpdate( DeviceUpdate update ){
 
-        Gson gson = new Gson();
         switch( update.getUpdateType() ){
             case ADD_LOCATION:
                 return update.areSet("location", "address", "port" );

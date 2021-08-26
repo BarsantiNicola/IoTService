@@ -4,12 +4,13 @@ import weblogic.login.interfaces.RegistrationInterface;
 
 import javax.ejb.StatefulTimeout;
 
-///// UserData
-//
-//  Description: class designed for user registration cache. It mantains the information about
-//               an account registration request
+//////////////////////////////////////////////////[ UserData ]///////////////////////////////////////////////////////
+//                                                                                                                 //
+//  class designed for user registration cache. It mantains the information about an account registration request  //
+//                                                                                                                 //
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-@StatefulTimeout(60)
+@StatefulTimeout(60)  //  information will be removed after 60m
 public class UserData extends BasicData implements RegistrationInterface{
 
     private String firstName;
@@ -17,7 +18,7 @@ public class UserData extends BasicData implements RegistrationInterface{
     private String email;
     private String password;
 
-    public void setInformations(String firstName, String lastName, String email, String password ){
+    public void setInformations( String firstName, String lastName, String email, String password ){
 
         this.firstName = firstName;
         this.lastName = lastName;

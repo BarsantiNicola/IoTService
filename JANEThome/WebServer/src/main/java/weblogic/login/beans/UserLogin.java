@@ -5,6 +5,12 @@ import weblogic.login.interfaces.UserLoginLocal;
 import javax.ejb.Stateful;
 import javax.inject.Named;
 
+//////////////////////////////////////////////////[ UserLogin ]//////////////////////////////////////////////////////
+//                                                                                                                 //
+//  class designed for user information cache. It is used by the webpage to print the user information             //
+//                                                                                                                 //
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
 @Stateful
 @Named("userInfo")
 public class UserLogin implements UserLoginLocal {
@@ -23,7 +29,7 @@ public class UserLogin implements UserLoginLocal {
     }
 
     @Override
-    public void setParameters(String name, String surname) {
+    public void setParameters( String name, String surname ) {
         this.name = name;
         this.surname = surname;
     }

@@ -6,16 +6,12 @@ import com.rabbitmq.client.Consumer;
 import com.rabbitmq.client.DeliverCallback;
 import com.rabbitmq.client.Envelope;
 import com.rabbitmq.client.ShutdownSignalException;
-import config.beans.Configuration;
 import config.interfaces.ConfigurationInterface;
 import iot.SmarthomeDevice;
 import iot.SmarthomeManager;
 import rabbit.EndPoint;
 import org.apache.commons.lang.SerializationUtils;
 import rabbit.msg.DeviceUpdate;
-
-import javax.annotation.PostConstruct;
-import javax.ejb.EJB;
 import javax.websocket.Session;
 import java.io.IOException;
 import java.util.HashMap;
@@ -30,9 +26,8 @@ import java.util.logging.SimpleFormatter;
 public class WebUpdateReceiver extends EndPoint implements Consumer{
 
     private final Logger logger;
-    private Session target;
+    private final Session target;
     private final SmarthomeManager smarthome;
-    private String endPointName;
 
     public WebUpdateReceiver( String endPointName, Session websocket, SmarthomeManager smarthome, ConfigurationInterface configuration ) {
 
@@ -48,7 +43,6 @@ public class WebUpdateReceiver extends EndPoint implements Consumer{
 
         }
         this.smarthome = smarthome;
-        this.endPointName = endPointName;
         this.target = websocket;
 
         DeliverCallback deliverCallback = (consumerTag, delivery) -> {
@@ -227,9 +221,9 @@ public class WebUpdateReceiver extends EndPoint implements Consumer{
             }
 
         };
-        System.out.println("ENDING CONFIGURATION");
+
         if( channel != null && connection != null ) {
-            System.out.println("ENDING2");
+
             String queueName;
             try {
 
@@ -245,22 +239,39 @@ public class WebUpdateReceiver extends EndPoint implements Consumer{
         }
     }
 
-    //  called when consumer is registered
-    public void handleConsumeOk(String consumerTag) {
-        logger.info("Consumer "+consumerTag +" registered");
+    //  called when a new message is received and correctly processed
+    public void handleConsumeOk( String consumerTag ){
+
+        this.logger.info( "Message " + consumerTag + " processed" );
+
     }
 
-   //  called when a new message is delivered
+    //  called when a new message is delivered
     @SuppressWarnings( "all" )
     public void handleDelivery(String consumerTag, Envelope env,
                                BasicProperties props, byte[] body){
         Map map = (Map)SerializationUtils.deserialize(body);
-        logger.info("Message Number "+ map.get("message number") + " received.");
+        this.logger.info("Message Number "+ map.get( "message number" ) + " received but not managed" );
 
     }
 
-    public void handleCancel( String consumerTag ) {}
-    public void handleCancelOk( String consumerTag ) {}
-    public void handleRecoverOk( String consumerTag ) {}
-    public void handleShutdownSignal( String consumerTag, ShutdownSignalException arg1 ) {}
+    //  called when a new message is not managed and leaved into the queue
+    public void handleCancel( String consumerTag ) {
+        this.logger.info( "Message received unhandled. Starting management" );
+    }
+
+    //  called when a new message is correctly removed from the queue without a management
+    public void handleCancelOk( String consumerTag ) {
+        this.logger.info( "Message received unhandled. Operation correctly aborted" );
+    }
+
+    //  called when a previously unmanaged message is recovered
+    public void handleRecoverOk( String consumerTag ) {
+        this.logger.info( "Recovery of previously unhandled message. Operation correctly done" );
+    }
+
+    //  called when the rabbitMQ client receive a request to be terminated
+    public void handleShutdownSignal( String consumerTag, ShutdownSignalException arg1 ) {
+        this.logger.info( "Request to close the rabbitMQ client received" );
+    }
 }

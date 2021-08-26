@@ -10,16 +10,36 @@ import rest.out.interfaces.RESTinterface;
 
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
+import java.util.logging.ConsoleHandler;
+import java.util.logging.Handler;
+import java.util.logging.Logger;
+import java.util.logging.SimpleFormatter;
 
 @Stateless
 @SuppressWarnings( "unused" )
 public class DeviceCommandSender implements RESTinterface {
 
     @EJB
-    SenderInterface notifier;     //  TODO to be removed, only for testing purpose
+    private SenderInterface notifier;     //  TODO to be removed, only for testing purpose
 
     @EJB
-    ConfigurationInterface configuration;   //  gives the configuration for the rest interface
+    private ConfigurationInterface configuration;   //  gives the configuration for the rest interface
+
+    private Logger initializeLogger(){
+
+        Logger logger = Logger.getLogger( getClass().getName() );
+
+        //  verification of the number of instantiated handlers
+        if( logger.getHandlers().length == 0 ){ //  first time the logger is created we generate its handler
+
+            Handler consoleHandler = new ConsoleHandler();
+            consoleHandler.setFormatter(new SimpleFormatter());
+            logger.addHandler(consoleHandler);
+
+        }
+
+        return logger;
+    }
 
     //  sends a command to the device REST server
     private boolean sendCommand(){
@@ -30,10 +50,12 @@ public class DeviceCommandSender implements RESTinterface {
     //  adds a new location to the user's smartHome
     public boolean addLocation( String username, String location, String ipAddr, int port ) {
 
+        Logger logger = this.initializeLogger();
+
         try {
             DeviceUpdateMessage message = new DeviceUpdateMessage( username );
             message.addUpdates(DeviceUpdate.buildAddLocation( location, ipAddr, port ));
-            return notifier.sendMessage( message ) > 0;
+            return this.notifier.sendMessage( message ) > 0;
 
         }catch( InvalidMessageException e ){
 
@@ -51,7 +73,7 @@ public class DeviceCommandSender implements RESTinterface {
 
             DeviceUpdateMessage message = new DeviceUpdateMessage( username );
             message.addUpdates( DeviceUpdate.buildRenameLocation( name, newName ));
-            return notifier.sendMessage( message ) > 0;
+            return this.notifier.sendMessage( message ) > 0;
 
         }catch( InvalidMessageException e ){
 
@@ -69,7 +91,7 @@ public class DeviceCommandSender implements RESTinterface {
 
             DeviceUpdateMessage message = new DeviceUpdateMessage( username );
             message.addUpdates( DeviceUpdate.buildRemoveLocation( name ));
-            return notifier.sendMessage( message ) > 0;
+            return this.notifier.sendMessage( message ) > 0;
 
         }catch( InvalidMessageException e ){
 
@@ -87,7 +109,7 @@ public class DeviceCommandSender implements RESTinterface {
 
             DeviceUpdateMessage message = new DeviceUpdateMessage( username );
             message.addUpdates( DeviceUpdate.buildAddSubLocation( location, sublocation ));
-            return notifier.sendMessage( message ) > 0;
+            return this.notifier.sendMessage( message ) > 0;
 
         }catch( InvalidMessageException e ){
 
@@ -105,7 +127,7 @@ public class DeviceCommandSender implements RESTinterface {
 
             DeviceUpdateMessage message = new DeviceUpdateMessage( username );
             message.addUpdates( DeviceUpdate.buildRenameSubLocation( location, name, newName ));
-            return notifier.sendMessage( message ) > 0;
+            return this.notifier.sendMessage( message ) > 0;
 
         }catch( InvalidMessageException e ){
 
@@ -123,7 +145,7 @@ public class DeviceCommandSender implements RESTinterface {
 
             DeviceUpdateMessage message = new DeviceUpdateMessage( username );
             message.addUpdates(DeviceUpdate.buildRemoveSubLocation( location, sublocation ));
-            return notifier.sendMessage( message ) > 0;
+            return this.notifier.sendMessage( message ) > 0;
 
         }catch( InvalidMessageException e ){
 
@@ -141,7 +163,7 @@ public class DeviceCommandSender implements RESTinterface {
 
             DeviceUpdateMessage message = new DeviceUpdateMessage( username );
             message.addUpdates(DeviceUpdate.buildAddDevice( location, sublocation, dID, name, type ));
-            return notifier.sendMessage( message ) > 0;
+            return this.notifier.sendMessage( message ) > 0;
 
         }catch( InvalidMessageException e ){
 
@@ -159,7 +181,7 @@ public class DeviceCommandSender implements RESTinterface {
 
             DeviceUpdateMessage message = new DeviceUpdateMessage( username );
             message.addUpdates(DeviceUpdate.buildChangeDeviceSubLocation( location, dID, name, newSubLocation ));
-            return notifier.sendMessage( message ) > 0;
+            return this.notifier.sendMessage( message ) > 0;
 
         }catch( InvalidMessageException e ){
 
@@ -177,7 +199,7 @@ public class DeviceCommandSender implements RESTinterface {
 
             DeviceUpdateMessage message = new DeviceUpdateMessage( username );
             message.addUpdates(DeviceUpdate.buildRenameDevice( dID, old_name, new_name ));
-            return notifier.sendMessage( message ) > 0;
+            return this.notifier.sendMessage( message ) > 0;
 
         }catch( InvalidMessageException e ){
 
@@ -195,7 +217,7 @@ public class DeviceCommandSender implements RESTinterface {
 
             DeviceUpdateMessage message = new DeviceUpdateMessage( username );
             message.addUpdates( DeviceUpdate.buildRemoveDevice( dID, name ));
-            return notifier.sendMessage( message ) > 0;
+            return this.notifier.sendMessage( message ) > 0;
 
         }catch( InvalidMessageException e ){
 
@@ -213,7 +235,7 @@ public class DeviceCommandSender implements RESTinterface {
 
             DeviceUpdateMessage message = new DeviceUpdateMessage( username );
             message.addUpdates( DeviceUpdate.buildDeviceUpdate( dID, name, action, value ));
-            return notifier.sendMessage( message ) > 0;
+            return this.notifier.sendMessage( message ) > 0;
 
         }catch( InvalidMessageException e ){
 

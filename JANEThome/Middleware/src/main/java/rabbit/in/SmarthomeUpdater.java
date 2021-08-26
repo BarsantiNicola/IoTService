@@ -29,7 +29,6 @@ public class SmarthomeUpdater extends EndPoint implements Consumer{
 
     public SmarthomeUpdater(String endPointName, SmarthomeManager smarthome, ConfigurationInterface configuration ){
 
-        super.inizialize(configuration);
         this.logger = Logger.getLogger(getClass().getName());
 
         //  verification of the number of instantiated handlers
@@ -43,14 +42,19 @@ public class SmarthomeUpdater extends EndPoint implements Consumer{
 
         this.smarthome = smarthome;
 
-        DeliverCallback deliverCallback = (consumerTag, delivery) -> {
+        //  initialization of parent class, cannot be performed into constructor
+        //  (EJBs and in particular ConfigurationInterface is not available into constructors)
+        if( super.inizialize( configuration )){
+            this.logger.info( "Connection with rabbitMQ message exchange correctly executed" );
 
-            DeviceUpdate message;
+            DeliverCallback deliverCallback = (consumerTag, delivery) -> {
 
-            try {
+                DeviceUpdate message;
 
-                message = (DeviceUpdate) SerializationUtils.deserialize( delivery.getBody() );
-                switch( message.getUpdateType() ) {
+                try {
+
+                    message = (DeviceUpdate) SerializationUtils.deserialize( delivery.getBody() );
+                    switch( message.getUpdateType() ) {
 
                         case ADD_LOCATION:
 
@@ -123,34 +127,35 @@ public class SmarthomeUpdater extends EndPoint implements Consumer{
                         default:
                     }
 
-            }catch( Exception e ) {
+                }catch( Exception e ) {
 
-                e.printStackTrace();
+                    e.printStackTrace();
 
-            }
+                }
 
-        };
+            };
 
-        if( channel != null && connection != null ) {
-            String queueName;
             try {
 
-                queueName = channel.queueDeclare().getQueue();
+                String queueName = channel.queueDeclare().getQueue();
                 channel.queueBind( queueName, "DeviceUpdate", endPointName);
                 channel.basicConsume( queueName, true, deliverCallback, consumerTag -> {});
+                this.logger.info( "Configuration of rabbitMQ client correctly executed. Client ready to exchange messages" );
 
             } catch (IOException e) {
 
                 e.printStackTrace();
-
+                this.logger.info( "An error has occurred during the rabbitMQ client configuration" );
             }
-        }
+
+        }else
+            logger.severe( "Error, connection with the rabbitMQ message exchange failed" );
     }
 
     //  called when a new message is received and correctly processed
     public void handleConsumeOk( String consumerTag ){
 
-        logger.info( "Message " + consumerTag + " processed" );
+        this.logger.info( "Message " + consumerTag + " processed" );
 
     }
 
@@ -159,27 +164,28 @@ public class SmarthomeUpdater extends EndPoint implements Consumer{
     public void handleDelivery(String consumerTag, Envelope env,
                                BasicProperties props, byte[] body){
         Map map = (Map)SerializationUtils.deserialize(body);
-        logger.info("Message Number "+ map.get( "message number" ) + " received but not managed" );
+        this.logger.info("Message Number "+ map.get( "message number" ) + " received but not managed" );
 
     }
 
     //  called when a new message is not managed and leaved into the queue
     public void handleCancel( String consumerTag ) {
-        logger.info( "Message received unhandled. Starting management" );
+        this.logger.info( "Message received unhandled. Starting management" );
     }
 
     //  called when a new message is correctly removed from the queue without a management
     public void handleCancelOk( String consumerTag ) {
-        logger.info( "Message received unhandled. Operation correctly aborted" );
+        this.logger.info( "Message received unhandled. Operation correctly aborted" );
     }
 
     //  called when a previously unmanaged message is recovered
     public void handleRecoverOk( String consumerTag ) {
-        logger.info( "Recovery of previously unhandled message. Operation correctly done" );
+        this.logger.info( "Recovery of previously unhandled message. Operation correctly done" );
     }
 
     //  called when the rabbitMQ client receive a request to be terminated
     public void handleShutdownSignal( String consumerTag, ShutdownSignalException arg1 ) {
-        logger.info( "Request to close the rabbitMQ client received" );
+        this.logger.info( "Request to close the rabbitMQ client received" );
     }
+
 }

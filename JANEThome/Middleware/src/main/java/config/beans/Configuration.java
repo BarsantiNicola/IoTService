@@ -40,4 +40,10 @@ public class Configuration implements ConfigurationInterface {
         return null;
     }
 
+    public HashMap<String,String> getConfiguration(String conf_file){
+        if( this.conf.containsKey(conf_file))
+            return this.conf.get(conf_file);
+        return null;
+    }
+
 }

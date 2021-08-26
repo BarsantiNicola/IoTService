@@ -1,12 +1,14 @@
 package rabbit;
 
+import java.util.HashMap;
 import java.io.IOException;
 import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.Connection;
 import java.util.concurrent.TimeoutException;
 import com.rabbitmq.client.ConnectionFactory;
-import config.beans.Configuration;
 import config.interfaces.ConfigurationInterface;
+
+import javax.annotation.PreDestroy;
 
 ///// EndPoint
 //
@@ -18,28 +20,58 @@ public class EndPoint{
     protected Channel channel;
     protected Connection connection;
 
-    protected void inizialize( ConfigurationInterface configuration ){
+    //  inizialization of EndPoint class, cannot be performed during the constructor because it's incompatible with
+    //  other extended classes(EJB object, in particular ConfigurationInterface isn't available into constructors)
+    protected boolean inizialize( ConfigurationInterface configuration ){
+
+        HashMap<String,String> rabbitConf = configuration.getConfiguration("rabbit");
         ConnectionFactory factory = new ConnectionFactory();
-        factory.setHost("localhost");
+
+        //  rabbitMQ will automatically close the clients which not receive messages for some times, inserting an heartbeat
+        //  will prevent this behaviour maintaining active all the clients that are still reachable by the message exchange
         factory.setRequestedHeartbeat(60);
+
+        //  without any configuration the parameters will assume as default values the following parameters:
+        //  - username: guest
+        //  - password: guest
+        //  - hostname: localhost
+        //  - port: 5672
+        if( rabbitConf != null ){
+
+            if( rabbitConf.containsKey("username"))
+                factory.setUsername( rabbitConf.get( "username" ));
+
+            if( rabbitConf.containsKey("password"))
+                factory.setPassword( rabbitConf.get( "password" ));
+
+            if( rabbitConf.containsKey("hostname"))
+                factory.setHost( rabbitConf.get( "hostname" ));
+
+            if( rabbitConf.containsKey("port"))
+                factory.setPort( Integer.parseInt(rabbitConf.get( "port" )));
+        }
 
         try {
 
             connection = factory.newConnection();
             channel = connection.createChannel();
             channel.exchangeDeclare("DeviceUpdate","topic");
+            return true;
 
         } catch (TimeoutException | IOException e) {
 
             e.printStackTrace();
             connection = null;
             channel = null;
+            return false;
 
         }
     }
 
     // Close channel and connection. Not necessary as it happens implicitly any way.
+    @PreDestroy
     public void close(){
+
         if( channel != null )
             try{
 
@@ -62,5 +94,4 @@ public class EndPoint{
 
             }
     }
-
 }

@@ -22,22 +22,29 @@ import java.util.logging.Handler;
 import java.util.logging.Logger;
 import java.util.logging.SimpleFormatter;
 
+///////////////////////////////////////////////[ WebappEndpoint ]////////////////////////////////////////////////////
+//                                                                                                                 //
+//   Websocket for communication between the server and the webclients into an async way. It is used by the webapp //
+//   to send request and the responses.                                                                            //
+//                                                                                                                 //
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
 @ServerEndpoint( value="/controller", configurator = EndpointConfigurator.class )
 public class WebappEndpoint {
 
     private Logger logger;
-    private EndpointConfig config;
-    private SmarthomeManager smarthome;
-    private String username;
+    private EndpointConfig config;       //  used to retrieve the communication channel outside the functions
+    private SmarthomeManager smarthome;  //  used to retrieve easily the smarthome information directly
+    private String username;             //  used to retrieve the name of the user associated with the web page
 
     @SuppressWarnings("unused")
-    private WebUpdateReceiver updater;
+    private WebUpdateReceiver updater;   //  used to receive messages from the middleware
 
     @EJB
-    ConfigurationInterface configuration;
+    private ConfigurationInterface configuration; //  configuration of the service
 
     @EJB
-    private RESTinterface restInterface;
+    private RESTinterface restInterface;  //  interface to send commands to the devices
 
     @OnOpen
     public void onOpen( Session session, EndpointConfig config ){
