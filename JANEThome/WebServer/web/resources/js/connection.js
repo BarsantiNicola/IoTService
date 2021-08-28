@@ -297,13 +297,15 @@ function messageManager(update){
             break;
         case "UPDATE":
             updateDevice(update.data.device_name, update.data.action, update.data.value);
-        default: break;
+            break;
+        default:
+            break;
     }
 }
 
 $(document).ready(function(){
-    //let websocket = new WebSocket("ws://janethome.asuscomm.com:8080/WebServer/controller");
-    websocket = new WebSocket("ws://localhost:8080/WebServer/controller");
+
+    websocket = new WebSocket(((window.location.protocol === "https:") ? "wss://" : "ws://") + window.location.host + "/WebServer/controller");
     if( websocket === null || websocket === undefined ) return;
 
     websocket.onmessage = function (event) {
