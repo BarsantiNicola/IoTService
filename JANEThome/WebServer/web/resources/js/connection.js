@@ -153,7 +153,7 @@ function serverLightBrightnessRequest(dID, value){
         "data": {
             "device_name": dID,
             "action": "action.devices.traits.Brightness",
-            "value": value,
+            "value": value
         }
     }
     websocket.send(JSON.stringify(request));
@@ -166,7 +166,7 @@ function serverLightColorRequest(dID, value){
         "data": {
             "device_name": dID,
             "action": "action.devices.traits.ColorSetting",
-            "value": value,
+            "value": value
         }
     }
     websocket.send(JSON.stringify(request));
@@ -179,7 +179,7 @@ function serverFanSpeedRequest(dID, value){
         "data": {
             "device_name": dID,
             "action": "action.devices.traits.FanSpeed",
-            "value": value,
+            "value": value
         }
     }
     websocket.send(JSON.stringify(request));
@@ -192,7 +192,7 @@ function serverDoorOpenRequest(dID, value){
         "data": {
             "device_name": dID,
             "action": "action.devices.traits.OpenClose",
-            "value": value,
+            "value": value
         }
     }
     websocket.send(JSON.stringify(request));
@@ -205,7 +205,7 @@ function serverDoorLockRequest(dID, value){
         "data": {
             "device_name": dID,
             "action": "action.devices.traits.LockUnlock",
-            "value": value,
+            "value": value
         }
     }
     websocket.send(JSON.stringify(request));
@@ -218,7 +218,7 @@ function serverThermostatTemperatureRequest(dID, temperature){
         "data": {
             "device_name": dID,
             "action": "action.devices.traits.TemperatureSetting",
-            "value": value,
+            "value": temperature
         }
     }
     websocket.send(JSON.stringify(request));
@@ -231,7 +231,7 @@ function serverDevicePowerRequest(dID, value){
         "data": {
             "device_name": dID,
             "action": "action.devices.traits.OnOff",
-            "value": value,
+            "value": value
         }
     }
     websocket.send(JSON.stringify(request));

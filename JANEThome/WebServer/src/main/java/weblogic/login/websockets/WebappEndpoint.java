@@ -415,7 +415,7 @@ public class WebappEndpoint {
     @OnClose
     public void onClose(Session session) {
         logger.exiting("Session closed with id: %s%n", session.getId());
-        //updater.close();
+        updater.close();
         updater = null;
     }
 

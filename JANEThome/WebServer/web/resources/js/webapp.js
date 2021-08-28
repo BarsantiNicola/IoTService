@@ -676,14 +676,23 @@ function renameLocationAction(elem) {
     //  getting from the submit button the loading label
     let button = form.getElementsByTagName("button")[0];
     let loading = form.getElementsByClassName("loading_placeholder")[0];
+    let error = form.getElementsByClassName("error_placeholder")[0];
+
+    //  getting the new location name
+    let input = form.getElementsByClassName("input")[0].value.toLowerCase();
+    let locations = document.getElementsByClassName("location");
+
+    //  verification the location is not already used
+    for( let location of locations )
+        if(location.id === input ){
+            button.style.display = "none";
+            error.style.display = "flex";
+            return;
+        }
 
     //  setting the button into loading behavior
     button.style.display = "none";
     loading.style.display = "flex";
-
-    //  getting the new location name
-    let input = form.getElementsByClassName("input")[0].value.toLowerCase();
-
     //  getting the current location name
     let location = elem.parentNode.parentNode.parentNode.parentNode.parentNode.parentNode.parentNode;
     let old_location = location.id;
@@ -764,9 +773,9 @@ function renameSublocationAction(elem) {
 
     let button = elem.parentNode.getElementsByTagName("button")[0];
     let loading = elem.parentNode.getElementsByClassName("loading_placeholder")[0];
+    let error = elem.parentNode.getElementsByClassName( "error_placeholder")[0];
 
-    button.style.display = "none";
-    loading.style.display = "flex";
+
 
     //  getting the sublocation container
     let sublocation = elem.parentNode.parentNode.parentNode.parentNode.parentNode.parentNode;
@@ -777,7 +786,20 @@ function renameSublocationAction(elem) {
     let old_name = sublocation.id.replace(location + "_", "");
     //  getting the new sub-location name
     let new_name = elem.parentNode.parentNode;
+
+    let sub_locations = document.getElementsByClassName("sublocation_wrapper");
     new_name = new_name.getElementsByClassName("input")[0].value.toLowerCase();
+
+    //  verification the location is not already used
+    for( let sub_location of sub_locations )
+        if(sub_location.id.substr(sub_location.id.indexOf("_")+1) === new_name ){
+            button.style.display = "none";
+            error.style.display = "flex";
+            return;
+        }
+
+    button.style.display = "none";
+    loading.style.display = "flex";
 
     //  request to the server to change the sub-location name
     renameServerSublocation(location, old_name, new_name);
@@ -837,16 +859,25 @@ function addSublocation(node){
     let form = node.parentNode.parentNode;
     let button = form.getElementsByClassName("add_sublocation_btn")[0];
     let loading = form.getElementsByClassName("loading_placeholder")[0];
-
-    //  setting the button on load
-    button.style.display = "none";
-    loading.style.display = "flex";
+    let error = form.getElementsByClassName("error_placeholder")[0];
 
     //  getting the location container
     let wrapper = node.parentNode.parentNode.parentNode.parentNode.parentNode.parentNode.parentNode;
     //  getting the sublocation name
     let name = form.getElementsByClassName('input')[0].value.toLowerCase();
+    let sub_locations = document.getElementsByClassName("sublocation_wrapper");
 
+    //  verification the location is not already used
+    for( let sub_location of sub_locations )
+        if(sub_location.id.substr(sub_location.id.indexOf("_")+1) === name ){
+            button.style.display = "none";
+            error.style.display = "flex";
+            return;
+        }
+
+    //  setting the button on load
+    button.style.display = "none";
+    loading.style.display = "flex";
     //  request to the server to add the sublocation into the location
     requestServerSublocation(wrapper.id, name);
 
@@ -1038,6 +1069,17 @@ function renameDevice(node) {
     let new_name = input.value;
     let button = wrapper.getElementsByClassName("location-form-button")[0]; //  getting the submit button layers
     let loading = wrapper.getElementsByClassName("loading_placeholder")[0];
+    let error = wrapper.getElementsByClassName("error_placeholder")[0];
+
+    //  verification of double device presence, devices names must be unique in all the locations
+    let devices = document.getElementsByClassName("device");  //  getting al the devices not considering locations/sublocations
+    for (let device of devices)
+        if (device.id === "device_" + new_name) {  //  device already present
+            //  setting error button
+            button.style.display = "none";
+            error.style.display = "flex";
+            return;
+        }
 
     //  setting the button to load
     button.style.display = "none";
@@ -1062,9 +1104,13 @@ function renameDeviceAct(oldDID, newDID){
         if( dev.id === new_ID )
             return false;
 
+    let parent = device.parentNode;
+    parent.removeChild( device );
     //  renaming the device
     device.getElementsByClassName("device_title")[0].textContent = newDID+"["+device.getElementsByClassName("type")[0].value+"]";
-    device.id= "device_"+newDID;
+    device.id = new_ID;
+
+    parent.appendChild( device );
 
     let expander = document.getElementsByClassName("device_expander_name")[0];
     if(expander.textContent === oldDID)

@@ -32,19 +32,19 @@ function createDevice(type,name) {
     expand_icon.addEventListener("click", function(){openExpander(this.parentNode.parentNode);});
     switch (type) {
         case "Light":
-            device.appendChild(createLight(name));
+            device.appendChild(createLight());
             break;
         case "Fan":
-            device.appendChild(createFan(name));
+            device.appendChild(createFan());
             break;
         case "Door":
-            device.appendChild(createDoor(name));
+            device.appendChild(createDoor());
             break;
         case "Thermostat":
-            device.appendChild(createThermostat(name));
+            device.appendChild(createThermostat());
             break;
         case "Conditioner":
-            device.appendChild(createConditioner(name));
+            device.appendChild(createConditioner());
             break;
         default:
 
@@ -88,7 +88,7 @@ function updateDevice(dID, action, value){
 
 //////////// Light DEVICE
 
-function createLight(dID){
+function createLight(){
 
     let wrapper = document.createElement("div");
     let buttons_container = document.createElement("div");
@@ -119,7 +119,7 @@ function createLight(dID){
     pic_container.appendChild(pic);
     pic_container.appendChild(light_ball);
     pic_container.addEventListener("click", function () {
-        requestPowerDevice(dID);
+        requestPowerDevice(this.parentNode.parentNode.id.replace("device_", ""));
     })
 
     brightness_title.textContent = "Brightness:";
@@ -129,7 +129,7 @@ function createLight(dID){
     bright_input.max = "100";
     bright_input.value = "0";
     bright_input.addEventListener("change", function () {
-        requestDeviceBrightness(dID, this.value);
+        requestDeviceBrightness(this.parentNode.parentNode.parentNode.parentNode.id.replace("device_", ""), this.value);
     });
 
     bright_value.className = "brightness_value";
@@ -145,7 +145,7 @@ function createLight(dID){
     color_input.value = "#ECFF00";
 
     color_input.addEventListener("change", function () {
-        requestDeviceColor(dID, this.value);
+        requestDeviceColor(this.parentNode.parentNode.parentNode.id.replace("device_", ""), this.value);
     })
 
     on_off.type = "hidden";
@@ -224,7 +224,7 @@ function changeDeviceColor( dID, color ){
 
     let device = document.getElementById("device_"+dID);
     if( device != null )
-        device.getElementsByClassName("color_input")[0].value = device.getElementsByClassName("color")[0].value;
+        device.getElementsByClassName("color_input")[0].value = color;
 
     device.getElementsByClassName("light_ball")[0].style.boxShadow = "0 0 60px 40px " + color;
     device.getElementsByClassName("color")[0].value = color;
@@ -235,7 +235,7 @@ function changeDeviceColor( dID, color ){
 //////////// Fan DEVICE
 
 
-function createFan(dID){
+function createFan(){
 
     let wrapper = document.createElement("div");
     let buttons_container = document.createElement("div");
@@ -262,7 +262,7 @@ function createFan(dID){
 
     pic_container.appendChild(pic);
     pic_container.addEventListener("click", function () {
-        requestPowerDevice(dID);
+        requestPowerDevice(this.parentNode.parentNode.id.replace("device_", ""));
     })
 
 
@@ -273,7 +273,7 @@ function createFan(dID){
     speed_input.max = "100";
     speed_input.value = "0";
     speed_input.addEventListener("change", function () {
-        requestDeviceSpeed(dID, this.value);
+        requestDeviceSpeed(this.parentNode.parentNode.parentNode.parentNode.id.replace("device_", ""), this.value);
     });
 
     speed_value.className = "speed_value";
@@ -363,7 +363,7 @@ function fanRotate(device){
 //////////// Door DEVICE
 
 
-function createDoor( dID ){
+function createDoor(){
 
     let wrapper = document.createElement("div");
     let buttons_container = document.createElement("div");
@@ -387,13 +387,13 @@ function createDoor( dID ){
 
     pic_container.appendChild(pic);
     pic_container.addEventListener("click", function () {
-        requestDeviceDoor(dID);
+        requestDeviceDoor(this.parentNode.parentNode.id.replace("device_", ""));
     })
 
     lock_title.textContent = "Lock:";
     lock_input.className = "fa fa-unlock lock_icon";
     lock_input.addEventListener("click", function () {
-        requestDeviceLock(dID);
+        requestDeviceLock(this.parentNode.parentNode.parentNode.id.replace("device_", ""));
     });
 
     open_close.type = "hidden";
@@ -418,7 +418,7 @@ function createDoor( dID ){
 function requestDeviceDoor(dID){
 
     let device = document.getElementById("device_"+dID);
-    if( device === undefined )
+    if( device === null )
         return;
 
     let value;
@@ -522,7 +522,7 @@ function lockDoor(dID, lock){
 //////////// Thermostat DEVICE
 
 
-function createThermostat( dID ){
+function createThermostat(){
 
     let wrapper = document.createElement("div");
     let buttons_container = document.createElement("div");
@@ -562,7 +562,7 @@ function createThermostat( dID ){
     temperature_input.max = "40";
     temperature_input.value = "6";
     temperature_input.step = "0.1";
-    temperature_input.addEventListener("change", function(){requestDeviceTemperature(dID, this.value);})
+    temperature_input.addEventListener("change", function(){requestDeviceTemperature(this.parentNode.parentNode.parentNode.id.replace("device_", ""), this.value);})
 
     env_temperature.type = "hidden";
     env_temperature.className = "env_temperature";
@@ -698,7 +698,7 @@ function updateEnvironmentTemperature(dID, temp){
 //////////// Conditioner DEVICE
 
 
-function createConditioner( dID ){
+function createConditioner(){
 
     let wrapper = document.createElement("div");
     let buttons_container = document.createElement("div");
@@ -745,7 +745,7 @@ function createConditioner( dID ){
     pic_container.appendChild(pic2);
     pic_container.appendChild(pic);
     pic_container.addEventListener("click", function () {
-        requestPowerDevice(dID, "1");
+        requestPowerDevice(this.parentNode.parentNode.id.replace("device_", ""));
     })
 
     temperature_title.textContent = "Temperature Set:";
@@ -756,7 +756,7 @@ function createConditioner( dID ){
     temperature_input.max = "40";
     temperature_input.value = "6";
     temperature_input.step = "0.1";
-    temperature_input.addEventListener("change", function(){requestDeviceTemperature(dID, this.value);})
+    temperature_input.addEventListener("change", function(){requestDeviceTemperature(this.parentNode.parentNode.parentNode.id.replace("device_", ""), this.value);})
 
     env_temperature.type = "hidden";
     env_temperature.className = "env_temperature";
@@ -773,7 +773,7 @@ function createConditioner( dID ){
     speed_input.max = "100";
     speed_input.value = "0";
     speed_input.addEventListener("change", function () {
-        requestDeviceSpeed(dID, this.value);
+        requestDeviceSpeed(this.parentNode.parentNode.parentNode.parentNode.id.replace("device_", ""), this.value);
     });
 
     speed_value.className = "speed_value";
