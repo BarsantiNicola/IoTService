@@ -8,8 +8,6 @@ import java.util.concurrent.TimeoutException;
 import com.rabbitmq.client.ConnectionFactory;
 import config.interfaces.ConfigurationInterface;
 
-import javax.annotation.PreDestroy;
-
 ///// EndPoint
 //
 //  Description: class designed as a base class to generate endpoints to
@@ -69,7 +67,6 @@ public class EndPoint{
     }
 
     // Close channel and connection. Not necessary as it happens implicitly any way.
-    @PreDestroy
     public void close(){
 
         if( channel != null )

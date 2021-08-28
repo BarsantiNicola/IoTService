@@ -450,6 +450,7 @@ public class SmarthomeManager implements Serializable {
             //  forward to the sub location the execution of the command
             result = this.locations.get( location ).changeDeviceSubLocation( device.getRoomHint(), new_sublocation, name, trial );
             //  we don't need to update the device information(done by the SmarthomeLocation.changeDeviceSubLocation)
+
         }
 
         this.releaseSmarthomeMutex(); //  release of mutual exclusion
@@ -476,14 +477,23 @@ public class SmarthomeManager implements Serializable {
 
         //  verification that the device is present and don't exist a device with the new name assigned
         if( this.devices.containsKey( old_name ) && !this.devices.containsKey( new_name )){
+            result = true;
 
             if( !trial ) {
 
-                SmarthomeWebDevice device = this.devices.remove(old_name);
-                device.changeDeviceName(new_name);
-                this.devices.put(new_name, device);
+                SmarthomeWebDevice device = this.devices.remove(old_name);  //  removes the device from the list of devices
+
+                //  removing the device from the smartHome
+                if( this.locations.get(device.getStructureHint()).removeDevice( device.getRoomHint(), device.giveDeviceName(), false )) {
+
+                    device.changeDeviceName(new_name);  //  changing the device name
+                    //  re-adding the device to the subLocation
+                    this.locations.get(device.getStructureHint()).addDevice(device.getRoomHint(), device, false );
+                    //  re-adding the device to the list of devices
+                    this.devices.put( new_name, device );
+                }else
+                    result = false;
             }
-            result = true;
 
         }
 
@@ -510,7 +520,7 @@ public class SmarthomeManager implements Serializable {
             try {
                 result = this.devices.get(name).setParam( param, trial );
             }catch(Exception e){
-                System.out.println(e.getMessage());
+
                 e.printStackTrace();
             }
         }

@@ -96,7 +96,6 @@ public class WebUpdateReceiver extends EndPoint implements Consumer{
 
                                 response.put("type", "ADD_DEVICE" );
                                 response.put( "data", data );
-                                System.out.println("RESPONSE: " + gson.toJson(response));
 
                             }
                             break;
@@ -139,6 +138,7 @@ public class WebUpdateReceiver extends EndPoint implements Consumer{
                                 response.put( "data", data );
 
                             }
+
                             break;
 
                         case REMOVE_LOCATION:
@@ -181,7 +181,7 @@ public class WebUpdateReceiver extends EndPoint implements Consumer{
                         case CHANGE_DEVICE_SUB_LOCATION:
 
                             if( message.areSet("location", "sublocation", "name" ) &&
-                                    this.smarthome.removeDevice( message.getData("name"), false )) {
+                                    this.smarthome.changeDeviceSubLocation( message.getData("location"), message.getData( "sublocation"), message.getData( "name" ), false )) {
 
                                 data.put( "location" , message.getData( "location" ));
                                 data.put( "sublocation" , message.getData( "sublocation" ));
@@ -213,6 +213,7 @@ public class WebUpdateReceiver extends EndPoint implements Consumer{
 
                     if( response.containsKey("type"))
                         target.getBasicRemote().sendText( gson.toJson(response));
+
 
             }catch( Exception e ) {
 

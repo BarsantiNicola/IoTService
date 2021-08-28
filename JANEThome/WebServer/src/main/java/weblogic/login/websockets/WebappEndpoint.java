@@ -303,14 +303,14 @@ public class WebappEndpoint {
                     if ( !request.areSet( "location", "sublocation", "name" ))
                         return;
 
-                    System.out.println("APPROVED");
                     if (smarthome.changeDeviceSubLocation(request.getData("location"), request.getData("sublocation"), request.getData("name"), true )) {
-                        System.out.println("EXECUTING");
+
                         String network = this.smarthome.getDeviceNetwork( request.getData( "name" ));
                         dID = this.smarthome.getDeviceIdByName( request.getData( "name" ));
                         String subLoc = this.smarthome.getDeviceSubLocation( request.getData( "name" ));
+
                         if( network != null && dID != null && subLoc != null ) {
-                            System.out.println("SENDING");
+
                             String[] netInfo = network.split( ":" );
                             this.restInterface.changeDeviceSublocation(
                                     this.username,
@@ -320,6 +320,7 @@ public class WebappEndpoint {
                                     subLoc,
                                     request.getData( "sublocation" ),
                                     netInfo[0], Integer.parseInt( netInfo[1] ));
+
                         }
                     }
                     break;

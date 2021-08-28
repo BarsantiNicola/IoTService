@@ -115,7 +115,7 @@ public class SmarthomeUpdater extends EndPoint implements Consumer{
                         case CHANGE_DEVICE_SUB_LOCATION:
 
                             if( message.areSet("location", "sublocation", "name" ))
-                                this.smarthome.removeDevice( message.getData("name"), false );
+                                this.smarthome.changeDeviceSubLocation( message.getData( "location" ), message.getData( "sublocation"), message.getData("name"), false );
                             break;
 
                         case UPDATE:
