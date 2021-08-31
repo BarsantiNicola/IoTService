@@ -37,7 +37,7 @@ public class WebappServlet extends HttpServlet{
         BasicData userData = (BasicData) req.getSession().getAttribute( "authData" );
         try{
             if( !parameters.containsKey( "auth" ) || userData == null || !userData.isValid( parameters.get( "auth" ))){
-                logger.info( "Invalid access to the webapp, starting information removal" );
+                logger.info( "Invalid access to the webapp, starting information removal: "  + !parameters.containsKey( "auth" ) + " : " + ( userData == null ) + " : " );
 
                 if (userData != null) {
 

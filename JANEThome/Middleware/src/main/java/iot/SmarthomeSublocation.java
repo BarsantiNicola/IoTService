@@ -34,7 +34,7 @@ public class SmarthomeSublocation implements Serializable {
     public static List<SmarthomeSublocation> createTestingEnvironment(String location){
 
         List<SmarthomeSublocation> sublocations = new ArrayList<>();
-        sublocations.add(new SmarthomeSublocation("default"));
+
         int nSublocations = random.nextInt(2)+1;
         for( int a = 0;a<nSublocations; a++) {
             String name = createRandomString();

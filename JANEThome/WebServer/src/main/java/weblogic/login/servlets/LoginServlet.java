@@ -159,7 +159,8 @@ public class LoginServlet extends HttpServlet {
         boolean loginReq = data.containsKey( "email" ) && data.containsKey("password" );
         boolean autologin = data.containsKey( "auth" );
 
-        return autologin? LoginServlet.RequestType.AUTOLOGIN_REQ : loginReq?  RequestType.LOGIN_REQ : RequestType.UNKNOWN;
+        return loginReq? RequestType.LOGIN_REQ : autologin? RequestType.AUTOLOGIN_REQ : RequestType.UNKNOWN;
+
     }
 
     //  it extracts all of the usable parameters from the request and return it as a key-value collection

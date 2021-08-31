@@ -56,6 +56,7 @@ public class SmarthomeLocation implements Serializable {
         this.ipAddress = address;
         this.port = port;
         initializeLogger();
+        this.sublocations.put("default",new SmarthomeSublocation("default"));
 
     }
 
