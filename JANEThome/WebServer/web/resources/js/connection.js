@@ -345,6 +345,7 @@ function createSmarthome(smarthomeDefinition){
                         updateDevice(device.name.toLowerCase(), "action.devices.traits.TemperatureSetting", device.param.TemperatureSetting);
                         break;
                 }
+                enableDevice(device.name.toLowerCase(), device.connectivity);
             }
         }
     }

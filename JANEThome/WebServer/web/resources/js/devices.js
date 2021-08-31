@@ -76,10 +76,10 @@ function updateDevice(dID, action, value){
         case "action.devices.traits.OnOff":
             powerDevice(dID, value);
             break;
-        case "action.devices.traits.TemperatureSample":
+        case "action.devices.traits.Temperature":
             updateEnvironmentTemperature(dID, value);
             break;
-        case "action.devices.traits.Power":
+        case "action.devices.traits.Connectivity":
             enableDevice(dID, value);
             break;
         default:
@@ -885,7 +885,7 @@ function enableDevice(dID, status){
 
     let device = document.getElementById("device_"+dID);
 
-    if( device === undefined )
+    if( device === null )
         return false;
 
     switch(status){
@@ -895,7 +895,7 @@ function enableDevice(dID, status){
             break;
         case "1":
             device.getElementsByClassName("fa-circle")[0].style.color = "#57b846";
-            device.getElementsByClassName("device_body_wrapper")[0].style.display = "none";
+            device.getElementsByClassName("device_body_wrapper")[0].style.display = "flex";
             break;
         default:
             return false;

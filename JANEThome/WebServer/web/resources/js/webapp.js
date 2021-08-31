@@ -1390,6 +1390,10 @@ function validateAddress(ipaddress) {
     return /^(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/.test(ipaddress);
 }
 
+function validatePort(port) {
+    let num = parseInt(port);
+    return !isNaN(num) && num>0;
+}
 
 function unlockDeviceName(node){
 
@@ -1653,8 +1657,9 @@ $("#add_location_sub").on('click', function(e){
 
     let location_name = form.elements['location'].value.toLowerCase();
     let address = form.elements['address'].value;
+    let port = form.elements['port'].value;
 
-    if( location_name.length !== 0 && address.length !== 0 && validateAddress(address)){
+    if( location_name.length !== 0 && address.length !== 0 && validateAddress(address) && validatePort(port)){
         let locations = document.getElementsByClassName("location");
         for( let location of locations )
             if( location.id === location_name ){
@@ -1663,8 +1668,7 @@ $("#add_location_sub").on('click', function(e){
                 errorFlag = true;
                 return;
             }
-        //  TODO SERVER VERIFICATION
-        requestServerLocation(location_name, address, "80");
+        requestServerLocation(location_name, address, parseInt(port).toString());
 
     }else{
         loading.style.display = "none";
@@ -1719,6 +1723,22 @@ $("#locInput").on('keyup',function(){
 
 //  function to undo add location button error state
 $("#addrInput").on('keyup',function(){
+
+    let form = this.parentNode.parentNode;
+    let button = form.getElementsByClassName("location-form-button")[0];
+    let loading = form.getElementsByClassName("loading_placeholder")[0];
+    let error = form.getElementsByClassName("error_placeholder")[0];
+
+    if( errorFlag ) {
+        error.style.display = "none";
+        loading.style.display = "none";
+        button.style.display = "flex";
+        errorFlag = false;
+    }
+})
+
+//  function to undo add location button error state
+$("#portInput").on('keyup',function(){
 
     let form = this.parentNode.parentNode;
     let button = form.getElementsByClassName("location-form-button")[0];

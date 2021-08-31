@@ -13,6 +13,7 @@ import java.util.logging.SimpleFormatter;
 public class SmarthomeWebDevice extends SmarthomeDevice {
 
     private final HashMap<String,String> param;    //  set of states associated to the device
+    private boolean connectivity;
     private transient Logger logger;
 
     //////  TODO To be removed only for testing purpose
@@ -105,6 +106,7 @@ public class SmarthomeWebDevice extends SmarthomeDevice {
     public SmarthomeWebDevice(String id, String name, String location, String sub_location, DeviceType type) {
         super(id, name, location, sub_location, type);
         this.param = new HashMap<>();
+        this.connectivity = true;
         this.initializeLogger();
     }
 
@@ -147,6 +149,16 @@ public class SmarthomeWebDevice extends SmarthomeDevice {
                     "Invalid request to perform an action, missing parameters [device_name:" + param.containsKey("device_name") +
             "][action:" + param.containsKey("action") + "][value:" + param.containsKey("value") + "]" );
             return false;
+        }
+
+        DeviceType typos = SmarthomeDevice.convertType(this.type);
+        if(( typos == DeviceType.THERMOSTAT || typos == DeviceType.CONDITIONER) && param.get( "action").compareTo("action.devices.traits.Temperature") == 0 )
+            return true;
+
+        if( param.get( "action").compareTo("action.devices.traits.Connectivity") == 0 ){
+            if( !trial )
+                this.connectivity = param.get("value").compareTo("1")==0;
+            return true;
         }
 
         //  verification that this is the correct device
@@ -242,6 +254,7 @@ public class SmarthomeWebDevice extends SmarthomeDevice {
 
         HashMap<String,Object> result = new HashMap<>();
 
+        result.put("connectivity" , this.connectivity?"1":"0" );
         //  getting the name
         if( this.name.containsKey("name"))  //  for compatibility reason we can use the id if the name is not found
             result.put("name", this.name.get("name"));
