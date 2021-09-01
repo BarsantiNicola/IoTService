@@ -1705,6 +1705,20 @@ function addLocation(location_name){
     }
 }
 
+function errorAddLocation(){
+
+    let button_wrapper= document.getElementById("add_location_sub");
+    let button = button_wrapper.getElementsByClassName("location-form-button")[0];
+    let loading = button_wrapper.getElementsByClassName("loading_placeholder")[0];
+    let error = button_wrapper.getElementsByClassName("error_placeholder")[0];
+
+    if( button.style.display === "none" ){
+        loading.style.display = "none";
+        error.style.display = "flex";
+        errorFlag = true;
+    }
+}
+
 //  function to undo add location button error state
 $("#locInput").on('keyup',function(){
 

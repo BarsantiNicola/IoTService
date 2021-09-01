@@ -41,7 +41,7 @@ public class SmarthomeLocation implements Serializable {
         int nLocations = random.nextInt(3)+1;
         for( int a = 0;a<nLocations; a++) {
             String name = createRandomString();
-            locations.add( new SmarthomeLocation(name, "8.8.8.8", 300, SmarthomeSublocation.createTestingEnvironment(name)));
+            locations.add( new SmarthomeLocation(name, "8.8.8.8", Math.abs(random.nextInt()), SmarthomeSublocation.createTestingEnvironment(name)));
         }
         return locations;
     }

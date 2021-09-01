@@ -421,6 +421,10 @@ function requestDeviceDoor(dID){
     if( device === null )
         return;
 
+    let lock_state = device.getElementsByClassName("lock_unlock")[0].value;
+    if( lock_state === "1")
+        return
+
     let value;
     switch(device.getElementsByClassName("open_close")[0].value){
         case "0":
@@ -432,6 +436,7 @@ function requestDeviceDoor(dID){
         default:
             return;
     }
+
 
     serverDoorOpenRequest(dID, value);
 
@@ -470,9 +475,10 @@ function openDoor(dID, open){
 function requestDeviceLock(dID){
 
     let device = document.getElementById("device_"+dID);
-    if( device === undefined )
+    if( device === null )
         return;
 
+    let door_state = device.getElementsByClassName("open_close")[0].value;
     let value;
     switch(device.getElementsByClassName("lock_unlock")[0].value){
         case "0":
@@ -484,6 +490,9 @@ function requestDeviceLock(dID){
         default:
             return;
     }
+
+    if( door_state !== "0" && value === "1" )
+        return;
 
     serverDoorLockRequest(dID, value);
 

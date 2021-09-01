@@ -17,6 +17,6 @@ public interface RESTinterface {
     boolean changeDeviceSublocation( String username, String dID, String name, String location, String subLocation, String newSubLocation, String ipAddr, int port );
     boolean changeDeviceName( String username, String dID, String old_name, String new_name, String ipAddr, int port );
     boolean removeDevice( String username, String dID, String name, String ipAddr, int port );
-    boolean execCommand( String username, String dID, String name, String action, String value, String ipAddr, int port );
+    boolean execCommand( String username, String dID, String action, String value, String ipAddr, int port );
 
 }

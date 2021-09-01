@@ -207,10 +207,20 @@ public class WebappEndpoint {
                     if (smarthome.addLocation(request.getData("location"), request.getData("address"), Integer.parseInt(request.getData("port")), true )){
                         this.restInterface.addLocation(
                                 this.username,
+
                                 request.getData( "location" ),
                                 request.getData( "address" ),
                                 Integer.parseInt( request.getData( "port" ) ));
 
+                    }else{
+
+                        HashMap<String, Object> response = new HashMap<>();
+                        response.put("type", "ERROR_LOCATION");
+                        try {
+                            session.getBasicRemote().sendText(gson.toJson(response));
+                        }catch( IOException e){
+                            e.printStackTrace();
+                        }
                     }
                     break;
 
@@ -381,7 +391,6 @@ public class WebappEndpoint {
                             this.restInterface.execCommand(
                                     this.username,
                                     dID,
-                                    request.getData( "device_name" ),
                                     request.getData( "action" ),
                                     request.getData( "value" ),
                                     netInfo[0], Integer.parseInt( netInfo[1] ));

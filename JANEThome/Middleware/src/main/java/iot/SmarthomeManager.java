@@ -1,7 +1,6 @@
 package iot;
 
 import com.google.gson.Gson;
-import config.beans.Configuration;
 import config.interfaces.ConfigurationInterface;
 import rabbit.in.SmarthomeUpdater;
 
@@ -19,6 +18,7 @@ import java.util.logging.SimpleFormatter;
 
 //  Class used to manage a user's smarthome. It will be used as a container accessed by all the user's sessions.
 //  The class will be used concurrently by many threads so it has to guarantee mutual exclusion access on its resources.
+@SuppressWarnings("all")
 public class SmarthomeManager implements Serializable {
 
     private final String username;            //  username associated with the smarthome
@@ -105,6 +105,13 @@ public class SmarthomeManager implements Serializable {
         this.smartHomeMutex.release();
     }
 
+    //  verifies that the given address:port is not already used into the smarthome
+    private boolean verifyAddressUnivocity( String address, int port ){
+        for( SmarthomeLocation loc : this.locations.values() )
+            if( loc.getIpAddress().compareTo(address) == 0 && loc.getPort() == port )
+                return false;
+        return true;
+    }
 
     /////// PUBLIC FUNCTIONS
 
@@ -131,7 +138,7 @@ public class SmarthomeManager implements Serializable {
         }
 
         //  if the location is not already present we add it
-        if( !this.locations.containsKey( location ) ) {
+        if( this.verifyAddressUnivocity( address, port) && !this.locations.containsKey( location ) ) {
 
             if( !trial ) {
                 this.locations.put(location, new SmarthomeLocation(location, address, port));

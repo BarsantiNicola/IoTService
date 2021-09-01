@@ -230,16 +230,15 @@ public class DeviceUpdate implements Serializable{
     }
 
     //  builds a DeviceUpdate instance for executing a command of a device
-    public static DeviceUpdate buildDeviceUpdate( String dID, String name, String action, String value ){
+    public static DeviceUpdate buildDeviceUpdate( String dID, String action, String value ){
 
         //  parameters verification
-        if( dID == null || dID.length() == 0 || name == null || name.length() == 0 ||
+        if( dID == null || dID.length() == 0 ||
                 action == null || action.length() == 0 || value == null || value.length() == 0 )
             return null;
 
         DeviceUpdate update = new DeviceUpdate( UpdateType.UPDATE );
         update.setData("dID" , dID );
-        update.setData("device_name" , name );
         update.setData("action" , action );
         update.setData("value", value );
         return update;

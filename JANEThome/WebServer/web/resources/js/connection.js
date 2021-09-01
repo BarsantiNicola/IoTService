@@ -298,6 +298,9 @@ function messageManager(update){
         case "UPDATE":
             updateDevice(update.data.device_name, update.data.action, update.data.value);
             break;
+        case "ERROR_LOCATION":
+            errorAddLocation();
+            break;
         default:
             break;
     }

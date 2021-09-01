@@ -56,6 +56,9 @@ public class DeviceUpdateMessage extends Message {
 
     }
 
+    public boolean removeUpdate( DeviceUpdate update ){
+        return this.updates.remove(update);
+    }
     //  gives back the list of DeviceUpdate classes
     public List<DeviceUpdate> getAllDeviceUpdate(){
         return updates;

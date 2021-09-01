@@ -82,11 +82,13 @@ public class UpdateSender extends EndPoint implements SenderInterface {
 
         //  getting the updates. For each update we will verify its consistence and then send it
         for( DeviceUpdate update : updates )
-            if( this.verifyUpdate(update) && this.sendMessage( update , destination ))
+            if( this.verifyUpdate(update))
                 sentCount++;
-            else
-                this.logger.severe( "The current update will not been sent" );
-
+            else {
+                message.removeUpdate( update );
+                this.logger.severe("The current update will not been sent");
+            }
+        this.sendMessage( message , destination );
         logger.info( "Sent " + sentCount + " updates of " + updates.size());
         return sentCount;
     }
@@ -123,7 +125,7 @@ public class UpdateSender extends EndPoint implements SenderInterface {
                 return update.areSet( "location", "sublocation", "dID", "name" );
 
             case UPDATE:
-                return update.areSet( "dID" , "device_name", "action", "value" );
+                return update.areSet( "dID", "action", "value" );
 
         }
         this.logger.severe( "Error during message verification. Unmatched update type" );

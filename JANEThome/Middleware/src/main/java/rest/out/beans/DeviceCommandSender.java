@@ -20,7 +20,7 @@ import java.util.logging.SimpleFormatter;
 public class DeviceCommandSender implements RESTinterface {
 
     @EJB
-    private SenderInterface notifier;     //  TODO to be removed, only for testing purpose
+    private SenderInterface notifier;
 
     @EJB
     private ConfigurationInterface configuration;   //  gives the configuration for the rest interface
@@ -229,12 +229,12 @@ public class DeviceCommandSender implements RESTinterface {
 
     @Override
     //  executes the given command to the specified device of the user's smartHome
-    public boolean execCommand( String username, String dID, String name, String action, String value, String ipAddr, int port ) {
+    public boolean execCommand( String username, String dID, String action, String value, String ipAddr, int port ) {
 
         try{
 
             DeviceUpdateMessage message = new DeviceUpdateMessage( username );
-            message.addUpdates( DeviceUpdate.buildDeviceUpdate( dID, name, action, value ));
+            message.addUpdates( DeviceUpdate.buildDeviceUpdate( dID, action, value ));
             return this.notifier.sendMessage( message ) > 0;
 
         }catch( InvalidMessageException e ){
