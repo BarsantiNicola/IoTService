@@ -11,6 +11,8 @@ import iot.SmarthomeManager;
 import org.apache.commons.lang.SerializationUtils;
 import rabbit.EndPoint;
 import rabbit.msg.DeviceUpdate;
+import rabbit.msg.DeviceUpdateMessage;
+
 import java.io.IOException;
 import java.util.Map;
 import java.util.logging.ConsoleHandler;
@@ -49,82 +51,84 @@ public class SmarthomeUpdater extends EndPoint implements Consumer{
 
             DeliverCallback deliverCallback = (consumerTag, delivery) -> {
 
-                DeviceUpdate message;
+                DeviceUpdateMessage request;
 
                 try {
 
-                    message = (DeviceUpdate) SerializationUtils.deserialize( delivery.getBody() );
-                    switch( message.getUpdateType() ) {
+                    request = (DeviceUpdateMessage) SerializationUtils.deserialize( delivery.getBody() );
+                    for( DeviceUpdate message : request.getAllDeviceUpdate()) {
+                        switch (message.getUpdateType()) {
 
-                        case ADD_LOCATION:
+                            case ADD_LOCATION:
 
-                            if( message.areSet("location", "address", "port" ))
-                                this.smarthome.addLocation( message.getData("location"), message.getData("address"), Integer.parseInt(message.getData( "port")), false );
-                            break;
+                                if (message.areSet("location", "address", "port"))
+                                    this.smarthome.addLocation(message.getData("location"), message.getData("address"), Integer.parseInt(message.getData("port")), false);
+                                break;
 
-                        case ADD_SUB_LOCATION:
+                            case ADD_SUB_LOCATION:
 
-                            if( message.areSet("location", "sublocation" ))
-                                this.smarthome.addSubLocation( message.getData("location"), message.getData("sublocation"), false );
-                            break;
+                                if (message.areSet("location", "sublocation"))
+                                    this.smarthome.addSubLocation(message.getData("location"), message.getData("sublocation"), false);
+                                break;
 
-                        case ADD_DEVICE:
+                            case ADD_DEVICE:
 
-                            if( message.areSet("location", "sublocation", "name", "type", "dID" ))
-                                this.smarthome.addDevice( message.getData("location"), message.getData("sublocation"), message.getData("dID"),
-                                            message.getData("name"), SmarthomeDevice.DeviceType.StringToType(message.getData("type")), false );
+                                if (message.areSet("location", "sublocation", "name", "type", "dID"))
+                                    this.smarthome.addDevice(message.getData("location"), message.getData("sublocation"), message.getData("dID"),
+                                            message.getData("name"), SmarthomeDevice.DeviceType.StringToType(message.getData("type")), false);
 
-                            break;
+                                break;
 
-                        case RENAME_LOCATION:
+                            case RENAME_LOCATION:
 
-                            if( message.areSet("old_name", "new_name" ))
-                                this.smarthome.changeLocationName( message.getData("old_name"), message.getData("new_name"), false );
-                            break;
+                                if (message.areSet("old_name", "new_name"))
+                                    this.smarthome.changeLocationName(message.getData("old_name"), message.getData("new_name"), false);
+                                break;
 
-                        case RENAME_SUB_LOCATION:
+                            case RENAME_SUB_LOCATION:
 
-                            if( message.areSet("location", "old_name", "new_name" ))
-                                this.smarthome.changeSublocationName( message.getData("location"), message.getData("old_name"), message.getData("new_name"), false );
-                            break;
+                                if (message.areSet("location", "old_name", "new_name"))
+                                    this.smarthome.changeSublocationName(message.getData("location"), message.getData("old_name"), message.getData("new_name"), false);
+                                break;
 
-                        case RENAME_DEVICE:
+                            case RENAME_DEVICE:
 
-                            if( message.areSet("old_name", "new_name" ))
-                                this.smarthome.changeDeviceName( message.getData("old_name"), message.getData("new_name"), false );
-                            break;
+                                if (message.areSet("old_name", "new_name"))
+                                    this.smarthome.changeDeviceName(message.getData("old_name"), message.getData("new_name"), false);
+                                break;
 
-                        case REMOVE_LOCATION:
+                            case REMOVE_LOCATION:
 
-                            if( message.areSet("location" ))
-                                this.smarthome.removeLocation( message.getData("location"), false );
-                            break;
+                                if (message.areSet("location"))
+                                    this.smarthome.removeLocation(message.getData("location"), false);
+                                break;
 
-                        case REMOVE_SUB_LOCATION:
+                            case REMOVE_SUB_LOCATION:
 
-                            if( message.areSet("location", "sublocation" ))
-                                this.smarthome.removeSublocation( message.getData("location"), message.getData("sublocation"), false );
-                            break;
+                                if (message.areSet("location", "sublocation"))
+                                    this.smarthome.removeSublocation(message.getData("location"), message.getData("sublocation"), false);
+                                break;
 
-                        case REMOVE_DEVICE:
+                            case REMOVE_DEVICE:
 
-                            if( message.areSet("name" ))
-                                this.smarthome.removeDevice( message.getData("name"), false );
-                            break;
+                                if (message.areSet("name"))
+                                    this.smarthome.removeDevice(message.getData("name"), false);
+                                break;
 
-                        case CHANGE_DEVICE_SUB_LOCATION:
+                            case CHANGE_DEVICE_SUB_LOCATION:
 
-                            if( message.areSet("location", "sublocation", "name" ))
-                                this.smarthome.changeDeviceSubLocation( message.getData( "location" ), message.getData( "sublocation"), message.getData("name"), false );
-                            break;
+                                if (message.areSet("location", "sublocation", "name"))
+                                    this.smarthome.changeDeviceSubLocation(message.getData("location"), message.getData("sublocation"), message.getData("name"), false);
+                                break;
 
-                        case UPDATE:
+                            case UPDATE:
 
-                            if( message.areSet("device_name", "action", "value" ))
-                                this.smarthome.performAction( message.getData("device_name"), message.getData("action"), message.getData("value"), false );
-                            break;
+                                if (message.areSet("device_name", "action", "value"))
+                                    this.smarthome.performAction(message.getData("device_name"), message.getData("action"), message.getData("value"), message.giveConvertedTimestamp(), false);
+                                break;
 
-                        default:
+                            default:
+                        }
                     }
 
                 }catch( Exception e ) {

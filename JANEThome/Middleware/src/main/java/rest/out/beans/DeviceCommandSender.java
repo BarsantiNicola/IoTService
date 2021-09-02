@@ -10,6 +10,7 @@ import rest.out.interfaces.RESTinterface;
 
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
+import java.util.Date;
 import java.util.logging.ConsoleHandler;
 import java.util.logging.Handler;
 import java.util.logging.Logger;
@@ -47,14 +48,15 @@ public class DeviceCommandSender implements RESTinterface {
     }
 
     @Override
-    //  adds a new location to the user's smartHome
-    public boolean addLocation( String username, String location, String ipAddr, int port ) {
+    //  adds a new location to the user's smartHome and in case of success automatically forward the message to
+    //  all the service components
+    public boolean addLocation( String username, String from, String location, String ipAddr, int port ) {
 
         Logger logger = this.initializeLogger();
 
         try {
-            DeviceUpdateMessage message = new DeviceUpdateMessage( username );
-            message.addUpdates(DeviceUpdate.buildAddLocation( location, ipAddr, port ));
+            DeviceUpdateMessage message = new DeviceUpdateMessage( username, from );
+            message.addUpdates(DeviceUpdate.buildAddLocation( new Date(System.currentTimeMillis()), location, ipAddr, port ));
             return this.notifier.sendMessage( message ) > 0;
 
         }catch( InvalidMessageException e ){
@@ -67,12 +69,12 @@ public class DeviceCommandSender implements RESTinterface {
 
     @Override
     //  changes the location name into the user's smartHome
-    public boolean changeLocationName( String username, String name, String newName, String ipAddr, int port ) {
+    public boolean changeLocationName( String username, String from, String name, String newName, String ipAddr, int port ) {
 
         try {
 
-            DeviceUpdateMessage message = new DeviceUpdateMessage( username );
-            message.addUpdates( DeviceUpdate.buildRenameLocation( name, newName ));
+            DeviceUpdateMessage message = new DeviceUpdateMessage( username, from );
+            message.addUpdates( DeviceUpdate.buildRenameLocation( new Date(System.currentTimeMillis()), name, newName ));
             return this.notifier.sendMessage( message ) > 0;
 
         }catch( InvalidMessageException e ){
@@ -85,12 +87,12 @@ public class DeviceCommandSender implements RESTinterface {
 
     @Override
     //  removes the location from the user's smartHome
-    public boolean removeLocation( String username, String name, String ipAddr, int port ) {
+    public boolean removeLocation( String username, String from, String name, String ipAddr, int port ) {
 
         try {
 
-            DeviceUpdateMessage message = new DeviceUpdateMessage( username );
-            message.addUpdates( DeviceUpdate.buildRemoveLocation( name ));
+            DeviceUpdateMessage message = new DeviceUpdateMessage( username, from );
+            message.addUpdates( DeviceUpdate.buildRemoveLocation( new Date(System.currentTimeMillis()), name ));
             return this.notifier.sendMessage( message ) > 0;
 
         }catch( InvalidMessageException e ){
@@ -103,12 +105,12 @@ public class DeviceCommandSender implements RESTinterface {
 
     @Override
     //  adds a new subLocation to the user's smartHome
-    public boolean addSubLocation( String username, String location, String sublocation, String ipAddr, int port ) {
+    public boolean addSubLocation( String username, String from, String location, String sublocation, String ipAddr, int port ) {
 
         try {
 
-            DeviceUpdateMessage message = new DeviceUpdateMessage( username );
-            message.addUpdates( DeviceUpdate.buildAddSubLocation( location, sublocation ));
+            DeviceUpdateMessage message = new DeviceUpdateMessage( username, from );
+            message.addUpdates( DeviceUpdate.buildAddSubLocation( new Date(System.currentTimeMillis()), location, sublocation ));
             return this.notifier.sendMessage( message ) > 0;
 
         }catch( InvalidMessageException e ){
@@ -121,12 +123,12 @@ public class DeviceCommandSender implements RESTinterface {
 
     @Override
     //  changes the subLocation name into the user's smartHome
-    public boolean changeSubLocationName( String username, String location, String name, String newName, String ipAddr, int port ) {
+    public boolean changeSubLocationName( String username, String from, String location, String name, String newName, String ipAddr, int port ) {
 
         try {
 
-            DeviceUpdateMessage message = new DeviceUpdateMessage( username );
-            message.addUpdates( DeviceUpdate.buildRenameSubLocation( location, name, newName ));
+            DeviceUpdateMessage message = new DeviceUpdateMessage( username, from );
+            message.addUpdates( DeviceUpdate.buildRenameSubLocation( new Date(System.currentTimeMillis()), location, name, newName ));
             return this.notifier.sendMessage( message ) > 0;
 
         }catch( InvalidMessageException e ){
@@ -139,12 +141,12 @@ public class DeviceCommandSender implements RESTinterface {
 
     @Override
     //  removes the subLocation from the user's smartHome
-    public boolean removeSubLocation( String username, String location, String sublocation, String ipAddr, int port ) {
+    public boolean removeSubLocation( String username, String from, String location, String sublocation, String ipAddr, int port ) {
 
         try {
 
-            DeviceUpdateMessage message = new DeviceUpdateMessage( username );
-            message.addUpdates(DeviceUpdate.buildRemoveSubLocation( location, sublocation ));
+            DeviceUpdateMessage message = new DeviceUpdateMessage( username, from );
+            message.addUpdates(DeviceUpdate.buildRemoveSubLocation( new Date(System.currentTimeMillis()), location, sublocation ));
             return this.notifier.sendMessage( message ) > 0;
 
         }catch( InvalidMessageException e ){
@@ -157,12 +159,12 @@ public class DeviceCommandSender implements RESTinterface {
 
     @Override
     //  adds a new device to the user's smartHome
-    public boolean addDevice( String username, String dID, String name, String location, String sublocation, SmarthomeDevice.DeviceType type, String ipAddr, int port ) {
+    public boolean addDevice( String username, String from, String dID, String name, String location, String sublocation, SmarthomeDevice.DeviceType type, String ipAddr, int port ) {
 
         try {
 
-            DeviceUpdateMessage message = new DeviceUpdateMessage( username );
-            message.addUpdates(DeviceUpdate.buildAddDevice( location, sublocation, dID, name, type ));
+            DeviceUpdateMessage message = new DeviceUpdateMessage( username, from );
+            message.addUpdates(DeviceUpdate.buildAddDevice( new Date(System.currentTimeMillis()), location, sublocation, dID, name, type ));
             return this.notifier.sendMessage( message ) > 0;
 
         }catch( InvalidMessageException e ){
@@ -175,12 +177,12 @@ public class DeviceCommandSender implements RESTinterface {
 
     @Override
     //  changes the device's subLocation into the user's smartHome
-    public boolean changeDeviceSublocation( String username, String dID, String name, String location, String subLocation, String newSubLocation, String ipAddr, int port ){
+    public boolean changeDeviceSublocation( String username, String from, String dID, String name, String location, String subLocation, String newSubLocation, String ipAddr, int port ){
 
         try {
 
-            DeviceUpdateMessage message = new DeviceUpdateMessage( username );
-            message.addUpdates(DeviceUpdate.buildChangeDeviceSubLocation( location, dID, name, newSubLocation ));
+            DeviceUpdateMessage message = new DeviceUpdateMessage( username, from );
+            message.addUpdates(DeviceUpdate.buildChangeDeviceSubLocation( new Date(System.currentTimeMillis()), location, dID, name, newSubLocation ));
             return this.notifier.sendMessage( message ) > 0;
 
         }catch( InvalidMessageException e ){
@@ -193,12 +195,12 @@ public class DeviceCommandSender implements RESTinterface {
 
     @Override
     //  changes the device's name into the user's smartHome
-    public boolean changeDeviceName( String username, String dID, String old_name, String new_name, String ipAddr, int port ) {
+    public boolean changeDeviceName( String username, String from, String dID, String old_name, String new_name, String ipAddr, int port ) {
 
         try {
 
-            DeviceUpdateMessage message = new DeviceUpdateMessage( username );
-            message.addUpdates(DeviceUpdate.buildRenameDevice( dID, old_name, new_name ));
+            DeviceUpdateMessage message = new DeviceUpdateMessage( username, from );
+            message.addUpdates(DeviceUpdate.buildRenameDevice( new Date(System.currentTimeMillis()), dID, old_name, new_name ));
             return this.notifier.sendMessage( message ) > 0;
 
         }catch( InvalidMessageException e ){
@@ -211,12 +213,12 @@ public class DeviceCommandSender implements RESTinterface {
 
     @Override
     //  removes the device from the user's smartHome
-    public boolean removeDevice( String username, String dID, String name, String ipAddr, int port ) {
+    public boolean removeDevice( String username, String from, String dID, String name, String ipAddr, int port ) {
 
         try{
 
-            DeviceUpdateMessage message = new DeviceUpdateMessage( username );
-            message.addUpdates( DeviceUpdate.buildRemoveDevice( dID, name ));
+            DeviceUpdateMessage message = new DeviceUpdateMessage( username, from );
+            message.addUpdates( DeviceUpdate.buildRemoveDevice( new Date(System.currentTimeMillis()), dID, name ));
             return this.notifier.sendMessage( message ) > 0;
 
         }catch( InvalidMessageException e ){
@@ -229,12 +231,12 @@ public class DeviceCommandSender implements RESTinterface {
 
     @Override
     //  executes the given command to the specified device of the user's smartHome
-    public boolean execCommand( String username, String dID, String action, String value, String ipAddr, int port ) {
+    public boolean execCommand( String username, String from, String dID, String action, String value, String ipAddr, int port ) {
 
         try{
 
-            DeviceUpdateMessage message = new DeviceUpdateMessage( username );
-            message.addUpdates( DeviceUpdate.buildDeviceUpdate( dID, action, value ));
+            DeviceUpdateMessage message = new DeviceUpdateMessage( username, from );
+            message.addUpdates( DeviceUpdate.buildDeviceUpdate( new Date(System.currentTimeMillis()), dID, action, value ));
             return this.notifier.sendMessage( message ) > 0;
 
         }catch( InvalidMessageException e ){

@@ -49,7 +49,6 @@ public class WebUpdateReceiver extends EndPoint implements Consumer{
 
         DeliverCallback deliverCallback = (consumerTag, delivery) -> {
 
-            System.out.println("NEW MESSAGEEEEEEE");
             Gson gson = new Gson();
             DeviceUpdateMessage request;
             HashMap<String, Object> response = new HashMap<>();
@@ -202,7 +201,7 @@ public class WebUpdateReceiver extends EndPoint implements Consumer{
                             if (message.areSet("dID", "action", "value")) {
 
                                 String name = this.smarthome.getDeviceNameById(message.getData("dID"));
-                                if (this.smarthome.performAction(name, message.getData("action"), message.getData("value"), false)) {
+                                if (this.smarthome.performAction(name, message.getData("action"), message.getData("value"), message.giveConvertedTimestamp(), false)) {
 
                                     data.put("device_name", name);
                                     data.put("action", message.getData("action"));

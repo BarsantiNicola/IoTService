@@ -150,6 +150,7 @@ public class WebappEndpoint {
                             String[] netInfo = network.split( ":" );
                             this.restInterface.changeLocationName(
                                     this.username,
+                                    "websocket_"+session.getId(),
                                     request.getData( "old_name" ),
                                     request.getData( "new_name" ),
                                     netInfo[0], Integer.parseInt( netInfo[1] ));
@@ -169,6 +170,7 @@ public class WebappEndpoint {
                             String[] netInfo = network.split( ":" );
                             this.restInterface.changeSubLocationName(
                                     this.username,
+                                    "websocket_"+session.getId(),
                                     request.getData( "location" ),
                                     request.getData("old_name"),
                                     request.getData("new_name"),
@@ -191,6 +193,7 @@ public class WebappEndpoint {
                             String[] netInfo = network.split( ":" );
                             this.restInterface.changeDeviceName(
                                     this.username,
+                                    "websocket_"+session.getId(),
                                     dID,
                                     request.getData( "old_name" ),
                                     request.getData( "new_name" ),
@@ -207,7 +210,7 @@ public class WebappEndpoint {
                     if (smarthome.addLocation(request.getData("location"), request.getData("address"), Integer.parseInt(request.getData("port")), true )){
                         this.restInterface.addLocation(
                                 this.username,
-
+                                "websocket_"+session.getId(),
                                 request.getData( "location" ),
                                 request.getData( "address" ),
                                 Integer.parseInt( request.getData( "port" ) ));
@@ -236,6 +239,7 @@ public class WebappEndpoint {
                             String[] netInfo = network.split( ":" );
                             this.restInterface.addSubLocation(
                                     this.username,
+                                    "websocket_"+session.getId(),
                                     request.getData( "location" ),
                                     request.getData( "sublocation" ),
                                     netInfo[0], Integer.parseInt( netInfo[1] ));
@@ -255,6 +259,7 @@ public class WebappEndpoint {
                             String[] netInfo = network.split( ":" );
                             this.restInterface.removeLocation(
                                     this.username,
+                                    "websocket_"+session.getId(),
                                     request.getData( "location" ),
                                     netInfo[0], Integer.parseInt( netInfo[1] ));
                         }
@@ -273,6 +278,7 @@ public class WebappEndpoint {
                             String[] netInfo = network.split( ":" );
                             this.restInterface.removeSubLocation(
                                     this.username,
+                                    "websocket_"+session.getId(),
                                     request.getData( "location" ),
                                     request.getData( "sublocation" ),
                                     netInfo[0], Integer.parseInt( netInfo[1] ));
@@ -298,6 +304,7 @@ public class WebappEndpoint {
                             String[] netInfo = network.split( ":" );
                             this.restInterface.addDevice(
                                     this.username,
+                                    "websocket_"+session.getId(),
                                     dID,
                                     request.getData( "name" ),
                                     request.getData( "location" ),
@@ -324,6 +331,7 @@ public class WebappEndpoint {
                             String[] netInfo = network.split( ":" );
                             this.restInterface.changeDeviceSublocation(
                                     this.username,
+                                    "websocket_"+session.getId(),
                                     dID,
                                     request.getData( "name" ),
                                     request.getData( "location" ),
@@ -348,6 +356,7 @@ public class WebappEndpoint {
                             String[] netInfo = network.split( ":" );
                             this.restInterface.removeDevice(
                                     this.username,
+                                    "websocket_"+session.getId(),
                                     dID,
                                     request.getData( "name" ),
                                     netInfo[0], Integer.parseInt( netInfo[1] ));
@@ -382,7 +391,7 @@ public class WebappEndpoint {
                     if( !request.areSet( "device_name", "action", "value"))
                         return;
 
-                    if( smarthome.performAction(request.getData("device_name"), request.getData( "action"), request.getData( "value"), true )) {
+                    if( smarthome.performAction(request.getData("device_name"), request.getData( "action"), request.getData( "value"), null, true )) {
 
                         String network = this.smarthome.getDeviceNetwork( request.getData( "device_name" ));
                         dID = this.smarthome.getDeviceIdByName( request.getData( "device_name" ));
@@ -390,6 +399,7 @@ public class WebappEndpoint {
                             String[] netInfo = network.split( ":" );
                             this.restInterface.execCommand(
                                     this.username,
+                                    "websocket_"+session.getId(),
                                     dID,
                                     request.getData( "action" ),
                                     request.getData( "value" ),

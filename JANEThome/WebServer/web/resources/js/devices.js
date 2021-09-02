@@ -900,11 +900,11 @@ function enableDevice(dID, status){
     switch(status){
         case "0":
             device.getElementsByClassName("fa-circle")[0].style.color = "red";
-            device.getElementsByClassName("device_body_wrapper")[0].style.display = "none";
+            device.getElementsByClassName("device_body_wrapper")[0].style.visibility = "hidden";
             break;
         case "1":
             device.getElementsByClassName("fa-circle")[0].style.color = "#57b846";
-            device.getElementsByClassName("device_body_wrapper")[0].style.display = "flex";
+            device.getElementsByClassName("device_body_wrapper")[0].style.visibility = "visible";
             break;
         default:
             return false;

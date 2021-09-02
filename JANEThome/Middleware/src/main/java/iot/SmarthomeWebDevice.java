@@ -1,5 +1,7 @@
 package iot;
 
+import com.google.gson.Gson;
+
 import java.security.SecureRandom;
 import java.util.*;
 import java.util.logging.ConsoleHandler;
@@ -15,6 +17,7 @@ public class SmarthomeWebDevice extends SmarthomeDevice {
     private final HashMap<String,String> param;    //  set of states associated to the device
     private boolean connectivity;
     private transient Logger logger;
+    private transient HashMap<String,Date> expires; //  set of timestamp associated with each trait to discard old updates
 
     //////  TODO To be removed only for testing purpose
     private final static transient Random random = new SecureRandom();
@@ -43,60 +46,112 @@ public class SmarthomeWebDevice extends SmarthomeDevice {
 
     }
 
+    ///////
+
+    //  updates the last change happened to the device to prevent to previous late updates to be applied
+    private void setExpires( HashMap<String,Date> expires){
+
+        this.expires = expires;
+
+    }
+
+    //  verifies if the update can be applied or is. With force enabled the system will be always updated but
+    //  no expire will updated
+    private boolean updateLastChange( String trait, Date time, boolean trial, boolean force ){
+
+        if( trial )
+            return true;
+
+        Gson gson = new Gson();
+
+        if( force || ( this.expires.containsKey( trait ) && this.expires.get( trait ).before( time ))){
+
+            if( this.expires.containsKey( trait ) )
+                this.expires.replace( trait, time );
+            else
+                this.expires.put( trait, time );
+            return true;
+
+        }
+
+        return false;
+
+    }
+
     public static SmarthomeWebDevice setParameters(SmarthomeWebDevice device){
+
         HashMap<String,String> param = new HashMap<>();
+        HashMap<String,Date> exp = new HashMap<>();
+        Date last = new Date(System.currentTimeMillis());
         switch(SmarthomeDevice.convertType(device.getType())){
             case LIGHT:
                 param.put("action", "action.devices.traits.OnOff");
                 param.put("device_name" , device.giveDeviceName());
                 param.put( "value" , "0");
-                device.setParam(param, false );
+                device.setParam(param, false, true );
                 param.replace("action" , "action.devices.traits.Brightness");
-                device.setParam(param, false );
+                device.setParam(param, false, true );
                 param.replace("action", "action.devices.traits.ColorSetting");
                 param.replace("value" , "#ECFF00" );
-                device.setParam(param, false );
+                device.setParam(param, false, true );
+                exp.put( "action.devices.traits.OnOff", last );
+                exp.put( "action.devices.traits.Brightness", last );
+                exp.put( "action.devices.traits.ColorSetting", last );
                 break;
 
             case FAN:
                 param.put("action", "action.devices.traits.OnOff");
                 param.put("device_name" , device.giveDeviceName());
                 param.put( "value" , "0");
-                device.setParam( param, false );
+                device.setParam( param, false, true );
                 param.replace("action" , "action.devices.traits.FanSpeed");
-                device.setParam( param, false );
+                device.setParam( param, false, true );
+                exp.put( "action.devices.traits.OnOff", last );
+                exp.put( "action.devices.traits.FanSpeed", last );
                 break;
 
             case DOOR:
                 param.put("action", "action.devices.traits.LockUnlock");
                 param.put("device_name" , device.giveDeviceName());
                 param.put( "value" , "0");
-                device.setParam( param, false );
+                device.setParam( param, false, true );
                 param.replace("action" , "action.devices.traits.OpenClose");
-                device.setParam( param, false );
+                device.setParam( param, false, true );
+                exp.put( "action.devices.traits.LockUnlock", last );
+                exp.put( "action.devices.traits.OpenClose", last );
                 break;
 
             case CONDITIONER:
                 param.put("action", "action.devices.traits.OnOff");
                 param.put("device_name" , device.giveDeviceName());
                 param.put( "value" , "0");
-                device.setParam( param, false );
+                device.setParam( param, false, true );
                 param.replace("action" , "action.devices.traits.FanSpeed");
-                device.setParam( param, false );
+                device.setParam( param, false, true );
                 param.replace("action", "action.devices.traits.TemperatureSetting");
                 param.replace("value" , "6.0" );
-                device.setParam( param, false );
+                device.setParam( param, false, true );
+                exp.put( "action.devices.traits.OnOff", last );
+                exp.put( "action.devices.traits.FanSpeed", last );
+                exp.put( "action.devices.traits.TemperatureSetting", last );
                 break;
 
             case THERMOSTAT:
                 param.put("action", "action.devices.traits.TemperatureSetting");
                 param.put("device_name" , device.giveDeviceName());
                 param.put( "value" , "6.0");
+                device.setParam( param, false, true );
+                param.put("action", "action.devices.traits.Temperature");
+                param.put("device_name" , device.giveDeviceName());
+                param.put( "value" , "7.0");
+                device.setParam( param, false, true );
+                exp.put( "action.devices.traits.Temperature", last );
+                exp.put( "action.devices.traits.TemperatureSetting", last );
                 break;
 
             default:
         }
-
+        device.setExpires(exp);
         return device;
     }
 
@@ -104,10 +159,13 @@ public class SmarthomeWebDevice extends SmarthomeDevice {
 
     // Constructor
     public SmarthomeWebDevice(String id, String name, String location, String sub_location, DeviceType type) {
+
         super(id, name, location, sub_location, type);
         this.param = new HashMap<>();
+        this.expires = new HashMap<>();
         this.connectivity = true;
         this.initializeLogger();
+
     }
 
     ////// UTILITY FUNCTIONS
@@ -140,21 +198,37 @@ public class SmarthomeWebDevice extends SmarthomeDevice {
     //
     //  The function will return true if the operation is correctly executed, false otherwise. The usage of
     //  an hashmap as a parameter is made to deploy the mechanism in the most general way as possible
-    public boolean setParam( HashMap<String,String> param, boolean trial ){
+    //  Parameters:
+    //       - param: contains the param to make the action
+    //       - trial: useful for operation testing, not apply any modification just verify if it is possible
+    //       - force: useful for device initialization, force the system to update its status not considering the expire
+    public boolean setParam( HashMap<String,String> param, boolean trial, boolean force ){
 
         this.initializeLogger();
+        Gson gson = new Gson();
+
         //  verification that the mandatory parameters are present
+        if( !trial && !param.containsKey("timestamp") && !force ){
+            logger.severe( "Error, missing timestamp into application update");
+            return false;
+        }
+
         if( !param.containsKey("action") || !param.containsKey("device_name") || !param.containsKey("value")) {
             logger.severe(
                     "Invalid request to perform an action, missing parameters [device_name:" + param.containsKey("device_name") +
-            "][action:" + param.containsKey("action") + "][value:" + param.containsKey("value") + "]" );
+            "][action:" + param.containsKey("action") + "][value:" + param.containsKey("value") + "][" + param.containsKey("timestamp") + "]" );
+            return false;
+        }
+
+        if( !this.updateLastChange( param.get( "action" ) , gson.fromJson(param.get( "timestamp"), Date.class), trial, force )){
+            logger.warning( "The requested action has an old timestamp, discarding the request" );
             return false;
         }
 
         DeviceType typos = SmarthomeDevice.convertType(this.type);
-        if(( typos == DeviceType.THERMOSTAT || typos == DeviceType.CONDITIONER) && param.get( "action").compareTo("action.devices.traits.Temperature") == 0 )
+        if(( typos == DeviceType.THERMOSTAT || typos == DeviceType.CONDITIONER) && param.get( "action").compareTo("action.devices.traits.Temperature") == 0 ) {
             return true;
-
+        }
         if( param.get( "action").compareTo("action.devices.traits.Connectivity") == 0 ){
             if( !trial )
                 this.connectivity = param.get("value").compareTo("1")==0;

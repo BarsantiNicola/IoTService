@@ -13,16 +13,16 @@ public class DeviceUpdateMessage extends Message {
     private final List<DeviceUpdate> updates = new ArrayList<>();
 
     //  throws an exception in case of invalid target
-    public DeviceUpdateMessage( String target ) throws InvalidMessageException{
+    public DeviceUpdateMessage( String target, String from ) throws InvalidMessageException{
 
-        super(target);
+        super( target, from );
     }
 
     //  throws an exception in case of invalid target
-    public DeviceUpdateMessage( String target, List<DeviceUpdate> updates ) throws InvalidMessageException{
+    public DeviceUpdateMessage( String target, String from, List<DeviceUpdate> updates ) throws InvalidMessageException{
 
-        super(target);
-        this.updates.addAll(updates);
+        super( target, from );
+        this.updates.addAll( updates );
 
     }
 

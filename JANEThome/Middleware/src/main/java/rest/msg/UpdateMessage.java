@@ -1,6 +1,4 @@
-package rest.out;
-
-import rest.UpdateRequest;
+package rest.msg;
 
 import java.util.List;
 

@@ -1,4 +1,7 @@
-package rest;
+package rest.msg;
+
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 
 import java.util.Date;
 
@@ -7,7 +10,7 @@ public class UpdateRequest{
     private String dID;
     private String action;
     private String value;
-    private Date   timestamp;
+    private String timestamp;
 
     public void setdID( String dID ){
         this.dID = dID;
@@ -21,8 +24,15 @@ public class UpdateRequest{
         this.value = value;
     }
 
-    public void setTimestamp( Date timestamp ){
+    public void setTimestamp( String timestamp ){
         this.timestamp = timestamp;
+    }
+
+    public Date giveConvertedTimestamp(){
+
+        Gson gson = new GsonBuilder().setDateFormat( "yyyy-MM-dd'T'HH:mm:ss.SSS" ).create();
+        return gson.fromJson( this.timestamp, Date.class );
+
     }
 
     public String getdID(){
@@ -37,7 +47,7 @@ public class UpdateRequest{
         return this.value;
     }
 
-    public Date getTimestamp(){
+    public String getTimestamp(){
         return this.timestamp;
     }
 

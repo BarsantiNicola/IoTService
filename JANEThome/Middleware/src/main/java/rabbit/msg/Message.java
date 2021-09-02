@@ -7,10 +7,13 @@ import java.io.Serializable;
 //  different messages that can be sent on the rabbitMQ message broker
 public abstract class Message implements Serializable {
 
-    private final String destination;                    //  destination ID for a message
+    private String destination;                    //  destination ID for a message
+    private String from;                           //  source unique ID of the sender(usefull for google chrome for preventing double update)
     protected final static Gson converter = new Gson();  //  used to traslate the message into a json string
 
-    public Message( String destination ) throws InvalidMessageException{
+    public Message(){}
+
+    public Message( String destination, String from ) throws InvalidMessageException{
 
         if( destination == null || destination.length() == 0 )
             throw new InvalidMessageException();
@@ -18,14 +21,24 @@ public abstract class Message implements Serializable {
         if( destination.compareTo("db") != 0 && !destination.contains("@"))
             throw new InvalidMessageException();
 
-        this.destination = destination;
+        if( from == null || from.length() == 0 )
+            throw new InvalidMessageException();
 
+        this.destination = destination;
+        this.from = from;
     }
+
+    public void setDestination( String destination ){ this.destination = destination; }
+
+    public void setFrom( String from ){ this.from = from; }
 
     public String getDestination(){
-        return destination;
+        return this.destination;
     }
 
+    public String getFrom(){
+        return this.from;
+    }
     @Override
     public String toString(){
         return converter.toJson(this );

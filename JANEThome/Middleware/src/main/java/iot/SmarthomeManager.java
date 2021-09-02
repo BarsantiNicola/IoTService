@@ -5,10 +5,7 @@ import config.interfaces.ConfigurationInterface;
 import rabbit.in.SmarthomeUpdater;
 
 import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.List;
+import java.util.*;
 import java.util.concurrent.Semaphore;
 import java.util.logging.ConsoleHandler;
 import java.util.logging.Handler;
@@ -510,7 +507,7 @@ public class SmarthomeManager implements Serializable {
     }
 
     //  executes a command on the specified device. In case of success the command is valid and executable
-    public boolean performAction( String name, String action, String value, boolean trial ){
+    public boolean performAction(String name, String action, String value, Date timestamp, boolean trial ){
 
         //  mutual exclusion on the interactions with the data structure
         if( this.getSmartHomeMutex() )
@@ -519,13 +516,19 @@ public class SmarthomeManager implements Serializable {
         boolean result = false;
 
         if( this.devices.containsKey( name )) {
+
             HashMap<String,String> param = new HashMap<>();
+            Gson gson = new Gson();
             param.put( "device_name", name );
             param.put( "action", action );
             param.put( "value", value );
+            if( trial )
+                param.put( "timestamp" , gson.toJson( new Date(System.currentTimeMillis() )));
+            else
+                param.put( "timestamp", gson.toJson( timestamp ));
 
             try {
-                result = this.devices.get(name).setParam( param, trial );
+                result = this.devices.get(name).setParam( param, trial, false );
             }catch(Exception e){
 
                 e.printStackTrace();

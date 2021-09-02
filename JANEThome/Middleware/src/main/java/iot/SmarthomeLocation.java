@@ -158,24 +158,24 @@ public class SmarthomeLocation implements Serializable {
     boolean changeDeviceSubLocation( String old_sublocation, String new_sublocation, String name, boolean trial ){
 
         initializeLogger();
-        System.out.println("executing" );
+
         //  verification of the presence of both the subLocations
         if( !this.sublocations.containsKey( new_sublocation ) || !this.sublocations.containsKey( old_sublocation ))
             return false;
-        System.out.println("accepted " + old_sublocation + " : " + new_sublocation );
+
         //  getting the device from the old sub-location
         SmarthomeWebDevice device = this.sublocations.get( old_sublocation ).getDevice( name );
 
         //  removing the device from the old sub-location
         if( this.sublocations.get( old_sublocation ).removeDevice( name, trial )){
-            System.out.println("removed " + trial );
+
             if( trial )
                 return true;
 
             //  changing the device information to update the subLocation
             //  the update will also affect the devices array into the SmarthomeManager
             device.setRoomHint( new_sublocation );
-            System.out.println("adding");
+
             //  putting the device into the new subLocation
             this.sublocations.get( new_sublocation ).addDevice( device, false );
 
