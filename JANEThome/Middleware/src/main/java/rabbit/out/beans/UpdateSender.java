@@ -71,7 +71,7 @@ public class UpdateSender extends EndPoint implements SenderInterface {
         }
 
         //  verificationi that the destination is valid
-        if( destination.indexOf( '@' ) == -1 && destination.compareTo( "db" ) != 0 ) {
+        if( destination.indexOf( '@' ) == -1 ) {
 
             this.logger.severe( "Error, invalid destination. A destination can consist of a user email or the keyword 'db'" );
             return sentCount;
@@ -89,7 +89,9 @@ public class UpdateSender extends EndPoint implements SenderInterface {
                 this.logger.severe("The current update will not been sent");
             }
         this.sendMessage( message , destination );
-        logger.info( "Sent " + sentCount + " updates of " + updates.size());
+        logger.info( "Sent " + sentCount + " updates of " + updates.size() + " to " + destination );
+        this.sendMessage( message, "db" );
+        logger.info( "Sent " + sentCount + " updates of " + updates.size() + " to the database for information storing" );
         return sentCount;
     }
 
@@ -133,19 +135,17 @@ public class UpdateSender extends EndPoint implements SenderInterface {
     }
 
     //  private function to send a message via rabbitMQ. It returns true in case of success
-    private boolean sendMessage( Serializable object, String uID ){
+    private void sendMessage( Serializable object, String uID ){
 
         try{
 
             logger.info("Sending a new message to " + uID );
             channel.basicPublish("DeviceUpdate", uID, null, SerializationUtils.serialize(object));
-            return true;
 
         }catch(IOException e){
 
             logger.severe("Error, unable to send the message");
             e.printStackTrace();
-            return false;
 
         }
     }
