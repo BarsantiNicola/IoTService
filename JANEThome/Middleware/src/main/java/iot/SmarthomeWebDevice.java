@@ -1,6 +1,7 @@
 package iot;
 
 import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 
 import java.security.SecureRandom;
 import java.util.*;
@@ -43,38 +44,6 @@ public class SmarthomeWebDevice extends SmarthomeDevice {
             devices.add(setParameters(new SmarthomeWebDevice(name, name, location, sub_location, DeviceType.values()[new Random().nextInt(DeviceType.values().length-1)])));
         }
         return devices;
-
-    }
-
-    ///////
-
-    //  updates the last change happened to the device to prevent to previous late updates to be applied
-    private void setExpires( HashMap<String,Date> expires){
-
-        this.expires = expires;
-
-    }
-
-    //  verifies if the update can be applied or is. With force enabled the system will be always updated but
-    //  no expire will updated
-    private boolean updateLastChange( String trait, Date time, boolean trial, boolean force ){
-
-        if( trial )
-            return true;
-
-        Gson gson = new Gson();
-
-        if( force || ( this.expires.containsKey( trait ) && this.expires.get( trait ).before( time ))){
-
-            if( this.expires.containsKey( trait ) )
-                this.expires.replace( trait, time );
-            else
-                this.expires.put( trait, time );
-            return true;
-
-        }
-
-        return false;
 
     }
 
@@ -151,8 +120,72 @@ public class SmarthomeWebDevice extends SmarthomeDevice {
 
             default:
         }
+
+        exp.put( "action.devices.traits.Connectivity" , last );
         device.setExpires(exp);
         return device;
+    }
+
+    ///////
+
+    //// UTILITY FUNCTIONS
+
+    //  updates the last change happened to the device to prevent to previous late updates to be applied
+    private void setExpires( HashMap<String,Date> expires){
+
+        this.expires = expires;
+
+    }
+
+    //  verifies if the update can be applied or is. With force enabled the system will be always updated but
+    //  no expire will updated
+    private boolean updateLastChange( String trait, Date time, boolean trial, boolean force ){
+
+        //  during a trial we aren't interested into the timestamp comparison
+        if( trial )
+            return true;
+
+        //  if the device doesn't contain the action we reject it
+        if( !super.traits.contains( trait ) &&
+                trait.compareTo("action.devices.traits.Connectivity") != 0 &&
+                trait.compareTo("action.devices.traits.Temperature") != 0 )
+            return false;
+
+        //  if there isn't a timestamp already setted every action is good
+        if( !this.expires.containsKey( trait )){
+
+            this.expires.put( trait, time);
+            return true;
+
+        }
+
+        //  if there is a setted timestamp and force is setted we change the value even if the timestamp is old
+        if( force ){
+
+            // only if the timestamp is old we update
+            if( this.expires.get( trait ).before( time ))
+                this.expires.replace( trait, time );
+
+            return true;
+
+        }
+
+        //  we verify if these is a duplicate message, in the case return true for updating eventually pending client
+        Gson gson = new GsonBuilder().setDateFormat( "yyyy-MM-dd'T'HH:mm:ss.SSS" ).create();
+        if( this.expires.containsKey( trait ) && gson.toJson(time).compareTo( gson.toJson( this.expires.get( trait ))) == 0 )
+            return true;
+
+        //  we verify the expire time and in case is older we update it
+        if( this.expires.get( trait ).before( time )){
+
+            this.expires.replace( trait, time );
+            return true;
+
+        }
+
+        //  update is old we can discard it
+        return false;
+
     }
 
     //////
@@ -229,6 +262,7 @@ public class SmarthomeWebDevice extends SmarthomeDevice {
         if(( typos == DeviceType.THERMOSTAT || typos == DeviceType.CONDITIONER) && param.get( "action").compareTo("action.devices.traits.Temperature") == 0 ) {
             return true;
         }
+
         if( param.get( "action").compareTo("action.devices.traits.Connectivity") == 0 ){
             if( !trial )
                 this.connectivity = param.get("value").compareTo("1")==0;
@@ -315,9 +349,22 @@ public class SmarthomeWebDevice extends SmarthomeDevice {
             }
 
         //  all the remaining actions use binary values(0/1)
-        if( action.compareTo("OnOff") == 0 || action.compareTo("OpenClose") == 0 || action.compareTo("LockUnlock") == 0)
-            return value.compareTo("0") == 0 || value.compareTo("1") == 0;
+        boolean comparison = value.compareTo( "0" ) == 0 || value.compareTo( "1" ) == 0;
+        if( action.compareTo( "OnOff" ) == 0 )
+            return comparison;
 
+        //  for door operations we have to verify the consistence of the operation
+        if( action.compareTo( "OpenClose" ) == 0)
+            if( this.param.containsKey( "LockUnlock" ))
+                return comparison && this.param.get( "LockUnlock" ).compareTo( "0" ) == 0;
+            else
+                return comparison;
+
+        if( action.compareTo( "LockUnlock" ) == 0 )
+            if( this.param.containsKey( "OpenClose" ))
+                return comparison && this.param.get("OpenClose").compareTo("0") == 0;
+            else
+                return comparison;
         return false;
 
     }

@@ -10,7 +10,13 @@ import rest.out.interfaces.RESTinterface;
 
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
+import java.util.Arrays;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import java.util.logging.ConsoleHandler;
 import java.util.logging.Handler;
 import java.util.logging.Logger;
@@ -25,6 +31,8 @@ public class DeviceCommandSender implements RESTinterface {
 
     @EJB
     private ConfigurationInterface configuration;   //  gives the configuration for the rest interface
+
+    private final ExecutorService executors = Executors.newCachedThreadPool();
 
     private Logger initializeLogger(){
 
@@ -43,8 +51,10 @@ public class DeviceCommandSender implements RESTinterface {
     }
 
     //  sends a command to the device REST server
-    private boolean sendCommand(){
-        return true;
+    private Future<Boolean> sendCommand( String address, int port, String path, HashMap<String,String> request ){
+
+        return executors.submit(new RESTsender(address, port, path, request ));
+
     }
 
     @Override
@@ -53,23 +63,33 @@ public class DeviceCommandSender implements RESTinterface {
     public boolean addLocation( String username, String from, String location, String ipAddr, int port ) {
 
         Logger logger = this.initializeLogger();
-
+        HashMap<String,String> conf = configuration.getConfiguration( "rest" );
+        HashMap<String,String> data = new HashMap<>();
+        data.put( "location" , location );
+        data.put( "address", ipAddr );
+        data.put( "port", String.valueOf( port ));
         try {
-            DeviceUpdateMessage message = new DeviceUpdateMessage( username, from );
-            message.addUpdates(DeviceUpdate.buildAddLocation( new Date(System.currentTimeMillis()), location, ipAddr, port ));
-            return this.notifier.sendMessage( message ) > 0;
 
-        }catch( InvalidMessageException e ){
+            if( this.sendCommand( conf.get("control_address"), Integer.parseInt(conf.get("control_port")), conf.get("control_path"), data ).get()){
 
-            e.printStackTrace();
+                DeviceUpdateMessage message = new DeviceUpdateMessage( username, from );
+                message.addUpdates(DeviceUpdate.buildAddLocation( new Date(System.currentTimeMillis()), location, ipAddr, port ));
+                return this.notifier.sendMessage( message ) > 0;
+
+            }
             return false;
 
+        }catch( InvalidMessageException | InterruptedException | ExecutionException e ){
+            e.printStackTrace();
+            return false;
         }
+
     }
 
     @Override
     //  changes the location name into the user's smartHome
     public boolean changeLocationName( String username, String from, String name, String newName, String ipAddr, int port ) {
+
 
         try {
 
