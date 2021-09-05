@@ -13,6 +13,7 @@ import java.util.logging.SimpleFormatter;
 @SuppressWarnings("unused")
 public class SmarthomeLocation implements Serializable {
 
+    private String locId;
     private final HashMap<String,SmarthomeSublocation> sublocations = new HashMap<>();   //  list of all the sublocations
     private String location;                           //  location name
     private String ipAddress;                          //  ip address used by the location
@@ -250,6 +251,10 @@ public class SmarthomeLocation implements Serializable {
         this.ipAddress = ip;
     }
 
+    public void setLocId(String locId) {
+        this.locId = locId;
+    }
+
     /////// GETTERS
 
     String getLocation(){ return location; }
@@ -257,6 +262,13 @@ public class SmarthomeLocation implements Serializable {
     // returns the port used by the location component
     int getPort(){ return port; }
 
+    public String getLocId() {
+        return locId;
+    }
+
     String getIpAddress(){ return ipAddress; }
 
+    public HashMap<String, SmarthomeSublocation> getSublocations() {
+        return sublocations;
+    }
 }
