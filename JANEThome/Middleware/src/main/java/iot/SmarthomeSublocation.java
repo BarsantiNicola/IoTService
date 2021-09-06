@@ -12,6 +12,7 @@ import java.util.logging.SimpleFormatter;
 //  A sublocation is a container for devices and has to be deployed into a location
 public class SmarthomeSublocation implements Serializable {
 
+    private String subLocId;
     private String subLocation;              //  sublocation name
     private transient Logger logger;
 
@@ -155,4 +156,11 @@ public class SmarthomeSublocation implements Serializable {
 
     }
 
+    public String getSubLocId() {
+        return subLocId;
+    }
+
+    public void setSubLocId(String subLocId) {
+        this.subLocId = subLocId;
+    }
 }

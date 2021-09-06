@@ -666,4 +666,38 @@ public class SmarthomeManager implements Serializable {
 
         return result;
     }
+
+    public String getLocIdByName(String locName){
+        String result = "";
+        //  mutual exclusion on the interactions with the data structure
+        if( this.getSmartHomeMutex() )
+            return result;
+
+        for( SmarthomeLocation location: this.locations.values() )
+            if( location.getLocation().compareTo( locName ) == 0 )
+                result = location.getLocId();
+
+        this.releaseSmarthomeMutex(); //  release of mutual exclusion
+
+        return result;
+    }
+
+    public String getSubLocIdByName(String locId, String subLocName){
+        String result = "";
+        //  mutual exclusion on the interactions with the data structure
+        if( this.getSmartHomeMutex() )
+            return result;
+
+        for( SmarthomeLocation location: this.locations.values() )
+            if( location.getLocId().compareTo( locId ) == 0 ){
+                for (SmarthomeSublocation sublocation: location.getSublocations().values()){
+                    if (sublocation.getSubLocation().compareTo(subLocName) == 0)
+                        result = sublocation.getSubLocId();
+                }
+            }
+
+        this.releaseSmarthomeMutex(); //  release of mutual exclusion
+
+        return result;
+    }
 }
