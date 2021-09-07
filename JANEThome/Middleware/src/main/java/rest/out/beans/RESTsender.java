@@ -25,13 +25,14 @@ public class RESTsender implements Callable<Boolean> {
     @Override
     public Boolean call(){
 
-        return ClientBuilder
+       /* return ClientBuilder
                 .newClient()
                 .target( this.address + ":" + this.port )
                 .path( path )
                 .request( MediaType.APPLICATION_JSON )
                 .post(Entity.entity( this.params, MediaType.APPLICATION_JSON ))
-                .getStatus() == 200;
+                .getStatus() == 200;*/
+        return true;
 
     }
 }

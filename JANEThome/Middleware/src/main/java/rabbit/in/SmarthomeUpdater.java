@@ -61,14 +61,14 @@ public class SmarthomeUpdater extends EndPoint implements Consumer{
 
                             case ADD_LOCATION:
 
-                                if (message.areSet("location", "address", "port"))
-                                    this.smarthome.addLocation(message.getData("location"), message.getData("address"), Integer.parseInt(message.getData("port")), false);
+                                if (message.areSet("location", "locID", "address", "port"))
+                                    this.smarthome.addLocation(message.getData("location"), message.getData( "locID" ), message.getData("address"), Integer.parseInt(message.getData("port")), false);
                                 break;
 
                             case ADD_SUB_LOCATION:
 
-                                if (message.areSet("location", "sublocation"))
-                                    this.smarthome.addSubLocation(message.getData("location"), message.getData("sublocation"), false);
+                                if (message.areSet("location", "sublocation", "sublocID" ))
+                                    this.smarthome.addSubLocation(message.getData("location"), message.getData("sublocation"), message.getData("sublocID" ), false);
                                 break;
 
                             case ADD_DEVICE:

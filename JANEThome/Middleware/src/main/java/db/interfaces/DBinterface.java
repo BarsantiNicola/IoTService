@@ -1,8 +1,12 @@
 package db.interfaces;
 
 import iot.SmarthomeManager;
+import statistics.Statistic;
+import statistics.Statistics;
 
 import javax.ejb.Remote;
+import java.util.Date;
+import java.util.List;
 
 @Remote
 public interface DBinterface {
@@ -17,5 +21,6 @@ public interface DBinterface {
     String generateNewSmartID();
     SmarthomeManager getSmarthome( String email );
     boolean changePassword( String email, String new_password );
+    List<Statistic> getStatistics(String dID, String action, Date startTime, Date endTime );
 
 }

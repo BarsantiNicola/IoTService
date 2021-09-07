@@ -90,7 +90,7 @@ public class DeviceUpdate implements Serializable{
     ////  MESSAGE BUILDERS
 
     //  builds a DeviceUpdate instance for adding a location
-    public static DeviceUpdate buildAddLocation( Date timestamp, String location, String address, int port ){
+    public static DeviceUpdate buildAddLocation( Date timestamp, String location, String locID, String address, int port ){
 
         //  parameters verification
         if( location == null || location.length() == 0 || address == null || address.length() == 0 )
@@ -98,6 +98,7 @@ public class DeviceUpdate implements Serializable{
 
         DeviceUpdate update = new DeviceUpdate( UpdateType.ADD_LOCATION, timestamp );
         update.setData( "location" , location );
+        update.setData( "locID", locID );
         update.setData( "address" , address );
         update.setData( "port" , String.valueOf( port ));
         return update;
@@ -105,7 +106,7 @@ public class DeviceUpdate implements Serializable{
     }
 
     //  builds a DeviceUpdate instance for adding a sub-location
-    public static DeviceUpdate buildAddSubLocation( Date timestamp, String location, String subLocation ){
+    public static DeviceUpdate buildAddSubLocation( Date timestamp, String location, String subLocation, String sublocID ){
 
         //  parameters verification
         if( location == null || location.length() == 0 || subLocation == null || subLocation.length() == 0 )
@@ -114,6 +115,7 @@ public class DeviceUpdate implements Serializable{
         DeviceUpdate update = new DeviceUpdate( UpdateType.ADD_SUB_LOCATION, timestamp );
         update.setData( "location" , location );
         update.setData( "sublocation" , subLocation );
+        update.setData( "sublocID" , sublocID );
         return update;
 
     }

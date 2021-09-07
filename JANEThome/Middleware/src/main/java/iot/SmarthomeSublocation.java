@@ -13,7 +13,7 @@ import java.util.logging.SimpleFormatter;
 public class SmarthomeSublocation implements Serializable {
 
     private String subLocId;
-    private String subLocation;              //  sublocation name
+    private String subLocation;        //  sublocation name
     private transient Logger logger;
 
     private final HashMap<String,SmarthomeWebDevice> devices = new HashMap<>();  //  deployed devices
@@ -35,11 +35,10 @@ public class SmarthomeSublocation implements Serializable {
     public static List<SmarthomeSublocation> createTestingEnvironment(String location){
 
         List<SmarthomeSublocation> sublocations = new ArrayList<>();
-
         int nSublocations = random.nextInt(2)+1;
         for( int a = 0;a<nSublocations; a++) {
             String name = createRandomString();
-            sublocations.add(new SmarthomeSublocation( name, SmarthomeWebDevice.createTestingEnvironment(location, name)));
+            sublocations.add(new SmarthomeSublocation( name, String.valueOf(a+1), SmarthomeWebDevice.createTestingEnvironment(location, name)));
         }
         return sublocations;
     }
@@ -47,16 +46,17 @@ public class SmarthomeSublocation implements Serializable {
 
     //////// CONSTRUCTORS
 
-    SmarthomeSublocation( String subLocation ){
+    SmarthomeSublocation( String subLocation, String sublocID ){
 
         this.subLocation = subLocation;
+        this.subLocId = sublocID;
         initializeLogger();
 
     }
 
-    SmarthomeSublocation( String subLocation, List<SmarthomeWebDevice> devices ){
+    SmarthomeSublocation( String subLocation, String sublocID, List<SmarthomeWebDevice> devices ){
 
-        this( subLocation );
+        this( subLocation, sublocID );
         devices.forEach(device -> this.devices.put(device.giveDeviceName(), device));
 
     }

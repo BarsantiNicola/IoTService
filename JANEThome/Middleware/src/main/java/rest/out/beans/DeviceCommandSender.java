@@ -1,6 +1,7 @@
 package rest.out.beans;
 
 import config.interfaces.ConfigurationInterface;
+import config.interfaces.GeneratorInterface;
 import iot.SmarthomeDevice;
 import rabbit.msg.DeviceUpdate;
 import rabbit.msg.DeviceUpdateMessage;
@@ -31,6 +32,9 @@ public class DeviceCommandSender implements RESTinterface {
 
     @EJB
     private ConfigurationInterface configuration;   //  gives the configuration for the rest interface
+
+    @EJB
+    GeneratorInterface idGenerator;
 
     private final ExecutorService executors = Executors.newCachedThreadPool();
 
@@ -65,15 +69,17 @@ public class DeviceCommandSender implements RESTinterface {
         Logger logger = this.initializeLogger();
         HashMap<String,String> conf = configuration.getConfiguration( "rest" );
         HashMap<String,String> data = new HashMap<>();
+        String locID = idGenerator.generateLID();
         data.put( "location" , location );
+        data.put( "locID", locID );
         data.put( "address", ipAddr );
         data.put( "port", String.valueOf( port ));
         try {
-
-            if( this.sendCommand( conf.get("control_address"), Integer.parseInt(conf.get("control_port")), conf.get("control_path"), data ).get()){
+            Future<Boolean> result = this.sendCommand( conf.get("control_address"), Integer.parseInt(conf.get("control_port")), conf.get("control_path"), data );
+            if( result.get() ){
 
                 DeviceUpdateMessage message = new DeviceUpdateMessage( username, from );
-                message.addUpdates(DeviceUpdate.buildAddLocation( new Date(System.currentTimeMillis()), location, ipAddr, port ));
+                message.addUpdates(DeviceUpdate.buildAddLocation( new Date(System.currentTimeMillis()), location, locID, ipAddr, port ));
                 return this.notifier.sendMessage( message ) > 0;
 
             }
@@ -125,12 +131,12 @@ public class DeviceCommandSender implements RESTinterface {
 
     @Override
     //  adds a new subLocation to the user's smartHome
-    public boolean addSubLocation( String username, String from, String location, String sublocation, String ipAddr, int port ) {
+    public boolean addSubLocation( String username, String from, String location, String sublocation, String sublocID, String ipAddr, int port ) {
 
         try {
 
             DeviceUpdateMessage message = new DeviceUpdateMessage( username, from );
-            message.addUpdates( DeviceUpdate.buildAddSubLocation( new Date(System.currentTimeMillis()), location, sublocation ));
+            message.addUpdates( DeviceUpdate.buildAddSubLocation( new Date(System.currentTimeMillis()), location, sublocation, sublocID ));
             return this.notifier.sendMessage( message ) > 0;
 
         }catch( InvalidMessageException e ){
@@ -179,10 +185,10 @@ public class DeviceCommandSender implements RESTinterface {
 
     @Override
     //  adds a new device to the user's smartHome
-    public boolean addDevice( String username, String from, String dID, String name, String location, String sublocation, SmarthomeDevice.DeviceType type, String ipAddr, int port ) {
+    public boolean addDevice( String username, String from, String name, String location, String sublocation, SmarthomeDevice.DeviceType type, String ipAddr, int port ) {
 
         try {
-
+            String dID = idGenerator.generateDID();
             DeviceUpdateMessage message = new DeviceUpdateMessage( username, from );
             message.addUpdates(DeviceUpdate.buildAddDevice( new Date(System.currentTimeMillis()), location, sublocation, dID, name, type ));
             return this.notifier.sendMessage( message ) > 0;

@@ -1,5 +1,6 @@
 package rest.in;
 
+import config.interfaces.GeneratorInterface;
 import rabbit.msg.DeviceUpdate;
 import rabbit.msg.DeviceUpdateMessage;
 import rabbit.msg.InvalidMessageException;

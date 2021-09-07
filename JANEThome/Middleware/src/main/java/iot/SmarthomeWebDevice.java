@@ -260,6 +260,8 @@ public class SmarthomeWebDevice extends SmarthomeDevice {
 
         DeviceType typos = SmarthomeDevice.convertType(this.type);
         if(( typos == DeviceType.THERMOSTAT || typos == DeviceType.CONDITIONER) && param.get( "action").compareTo("action.devices.traits.Temperature") == 0 ) {
+            if( !trial && !this.connectivity )
+                this.connectivity = true;
             return true;
         }
 
@@ -303,6 +305,9 @@ public class SmarthomeWebDevice extends SmarthomeDevice {
 
         logger.info( "Request to perform an action correctly done [DeviceName: " + param.get("device_name") + "][Action: " +
                 param.get("action") + "][Value: " + param.get("value") + "]");
+        if( !this.connectivity )
+            this.connectivity = true;
+
         return true;
 
     }

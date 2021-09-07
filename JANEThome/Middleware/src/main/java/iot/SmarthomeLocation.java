@@ -18,6 +18,7 @@ public class SmarthomeLocation implements Serializable {
     private String location;                           //  location name
     private String ipAddress;                          //  ip address used by the location
     private int port;                                  //  the port used by the location
+    private int maxSublocID;
     private transient Logger logger;
 
 
@@ -42,7 +43,12 @@ public class SmarthomeLocation implements Serializable {
         int nLocations = random.nextInt(3)+1;
         for( int a = 0;a<nLocations; a++) {
             String name = createRandomString();
-            locations.add( new SmarthomeLocation(name, "8.8.8.8", Math.abs(random.nextInt()), SmarthomeSublocation.createTestingEnvironment(name)));
+            locations.add( new SmarthomeLocation(
+                    name,
+                    String.valueOf(a+1),
+                    "8.8.8.8",
+                    Math.abs(random.nextInt()),
+                    SmarthomeSublocation.createTestingEnvironment(name)));
         }
         return locations;
     }
@@ -51,20 +57,22 @@ public class SmarthomeLocation implements Serializable {
 
     /////// CONSTRUCTORS
 
-    SmarthomeLocation(String location, String address, int port){
+    SmarthomeLocation(String location, String locID, String address, int port ){
 
         this.location = location;
         this.ipAddress = address;
         this.port = port;
+        this.locId = locID;
+        this.maxSublocID = 1;
         initializeLogger();
-        this.sublocations.put("default",new SmarthomeSublocation("default"));
+        this.sublocations.put("default",new SmarthomeSublocation("default", "0" ));
 
     }
 
-    SmarthomeLocation(String name, String address, int port, List<SmarthomeSublocation> sublocations){
+    SmarthomeLocation(String name, String locID, String address, int port, List<SmarthomeSublocation> sublocations){
 
-        this(name,address,port);
-        sublocations.forEach(subLocation -> this.sublocations.put(subLocation.getSubLocation(), subLocation));
+        this( name, locID, address, port );
+        sublocations.forEach(subLocation -> this.sublocations.put( subLocation.getSubLocation(), subLocation ));
 
     }
 
@@ -88,8 +96,13 @@ public class SmarthomeLocation implements Serializable {
 
     //// SUB-LOCATIONS
 
+    //  returns the next sublocation ID
+    public String giveNextSublocID() {
+        return String.valueOf( this.maxSublocID++ );
+    }
+
     //  adds a new sublocation into the location. It returns false if a sublocation with the given name is already present
-    boolean addSublocation( String sublocation, boolean trial ){
+    boolean addSublocation( String sublocation, String sublocID, boolean trial ){
 
         initializeLogger();
 
@@ -98,7 +111,7 @@ public class SmarthomeLocation implements Serializable {
             return false;
 
         if( !trial ) {
-            this.sublocations.put(sublocation, new SmarthomeSublocation(sublocation));
+            this.sublocations.put( sublocation, new SmarthomeSublocation( sublocation, sublocID ));
             logger.info("New Sublocation " + sublocation + " correctly added to " + this.location);
         }
 

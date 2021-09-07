@@ -21,9 +21,10 @@ public class SmarthomeManager implements Serializable {
     private final String username;            //  username associated with the smarthome
     private final HashMap<String, SmarthomeLocation> locations;   //  locations of the smarthome
     private final HashMap<String, SmarthomeWebDevice> devices;    //  copy of all the devices for fast retrieval(optimization)
-    private final Semaphore smartHomeMutex;   //  semaphore for mutual exclusion
+    private transient final Semaphore smartHomeMutex;   //  semaphore for mutual exclusion
     private transient Logger logger;
     private SmarthomeUpdater updater;
+
     ////////  TODO To be removed, only for testing purpose
 
     public static SmarthomeManager createTestingEnvironment(String username, boolean connected, ConfigurationInterface configuration ){
@@ -42,7 +43,7 @@ public class SmarthomeManager implements Serializable {
         this.locations = new HashMap<>();
         this.devices = new HashMap<>();
         this.smartHomeMutex = new Semaphore( 1 );
-        initializeLogger();
+        this.initializeLogger();
         if( connected )
             this.updater = new SmarthomeUpdater( username, this, configuration );
 
@@ -115,7 +116,7 @@ public class SmarthomeManager implements Serializable {
     //// LOCATIONS
 
     //  adds a new location into the smarthome. Return false in case the location is already present
-    public boolean addLocation( String location, String address, int port , boolean trial ){
+    public boolean addLocation( String location, String locID, String address, int port , boolean trial ){
 
         initializeLogger();
 
@@ -138,7 +139,7 @@ public class SmarthomeManager implements Serializable {
         if( this.verifyAddressUnivocity( address, port) && !this.locations.containsKey( location ) ) {
 
             if( !trial ) {
-                this.locations.put(location, new SmarthomeLocation(location, address, port));
+                this.locations.put(location, new SmarthomeLocation( location, locID, address, port ));
                 this.logger.info("New location " + location + " added [" + address + "][" + port + "]");
             }
             result = true;
@@ -239,7 +240,7 @@ public class SmarthomeManager implements Serializable {
     //// SUB-LOCATIONS
 
     //  adds a new sublocation into a defined location. Returns true in case of success
-    public boolean addSubLocation( String location, String subLocation, boolean trial ){
+    public boolean addSubLocation( String location, String subLocation, String sublocID, boolean trial ){
 
         //  mutual exclusion on the interactions with the data structure
         if( this.getSmartHomeMutex() )
@@ -258,7 +259,7 @@ public class SmarthomeManager implements Serializable {
                 return true;
 
             }
-            result = this.locations.get(location).addSublocation(subLocation, trial);
+            result = this.locations.get(location).addSublocation( subLocation, sublocID, trial );
 
         }
         this.releaseSmarthomeMutex();  //  release of mutual exclusion
@@ -668,33 +669,46 @@ public class SmarthomeManager implements Serializable {
     }
 
     public String getLocIdByName(String locName){
+
         String result = "";
+
         //  mutual exclusion on the interactions with the data structure
         if( this.getSmartHomeMutex() )
             return result;
 
-        for( SmarthomeLocation location: this.locations.values() )
-            if( location.getLocation().compareTo( locName ) == 0 )
-                result = location.getLocId();
+        if( this.locations.containsKey( locName ))
+            result = this.locations.get( locName ).getLocId();
 
         this.releaseSmarthomeMutex(); //  release of mutual exclusion
 
         return result;
     }
 
-    public String getSubLocIdByName(String locId, String subLocName){
+    public String getNextSublocID( String locName ){
+
         String result = "";
         //  mutual exclusion on the interactions with the data structure
         if( this.getSmartHomeMutex() )
             return result;
 
-        for( SmarthomeLocation location: this.locations.values() )
-            if( location.getLocId().compareTo( locId ) == 0 ){
-                for (SmarthomeSublocation sublocation: location.getSublocations().values()){
-                    if (sublocation.getSubLocation().compareTo(subLocName) == 0)
-                        result = sublocation.getSubLocId();
-                }
-            }
+        if( this.locations.containsKey( locName ))
+            result = this.locations.get( locName ).giveNextSublocID();
+
+        this.releaseSmarthomeMutex(); //  release of mutual exclusion
+
+        return result;
+
+    }
+
+    public String getSubLocIdByName(String locName, String subLocName){
+
+        String result = "";
+        //  mutual exclusion on the interactions with the data structure
+        if( this.getSmartHomeMutex() )
+            return result;
+
+        if( this.locations.containsKey( locName ) && this.locations.get( locName ).getSublocations().containsKey( subLocName ))
+            result = this.locations.get( locName ).getSublocations().get( subLocName ).getSubLocId();
 
         this.releaseSmarthomeMutex(); //  release of mutual exclusion
 

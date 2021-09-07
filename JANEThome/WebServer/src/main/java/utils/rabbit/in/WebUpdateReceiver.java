@@ -62,8 +62,9 @@ public class WebUpdateReceiver extends EndPoint implements Consumer{
 
                         case ADD_LOCATION:
 
-                            if (message.areSet("location", "address", "port") &&
-                                    this.smarthome.addLocation(message.getData("location"), message.getData("address"),
+                            if (message.areSet("location", "locID", "address", "port") &&
+                                    this.smarthome.addLocation(message.getData("location"),
+                                            message.getData( "locID"), message.getData("address"),
                                             Integer.parseInt(message.getData("port")), false)) {
 
                                 data.put("location", message.getData("location"));
@@ -75,8 +76,8 @@ public class WebUpdateReceiver extends EndPoint implements Consumer{
 
                         case ADD_SUB_LOCATION:
 
-                            if (message.areSet("location", "sublocation") &&
-                                    this.smarthome.addSubLocation(message.getData("location"), message.getData("sublocation"), false)) {
+                            if (message.areSet("location", "sublocation", "sublocID" ) &&
+                                    this.smarthome.addSubLocation(message.getData("location"), message.getData("sublocation"), message.getData("sublocID"), false)) {
 
                                 data.put("location", message.getData("location"));
                                 data.put("sublocation", message.getData("sublocation"));

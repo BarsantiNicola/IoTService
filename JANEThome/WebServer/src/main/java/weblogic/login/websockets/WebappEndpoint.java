@@ -3,10 +3,10 @@ package weblogic.login.websockets;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import config.interfaces.ConfigurationInterface;
+import db.interfaces.DBinterface;
 import iot.SmarthomeManager;
 import iot.SmarthomeDevice;
 import rest.out.interfaces.RESTinterface;
-import statistics.Statistics;
 import weblogic.login.EndpointConfigurator;
 import utils.rabbit.in.WebUpdateReceiver;
 import weblogic.login.beans.BasicData;
@@ -16,6 +16,7 @@ import javax.servlet.http.HttpSession;
 import javax.websocket.*;
 import javax.websocket.server.ServerEndpoint;
 import java.io.IOException;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.logging.ConsoleHandler;
 import java.util.logging.Handler;
@@ -46,6 +47,9 @@ public class WebappEndpoint {
     @EJB
     private RESTinterface restInterface;  //  interface to send commands to the devices
 
+    @EJB
+    private DBinterface db; //  interface to request data from the database
+
     @OnOpen
     public void onOpen( Session session, EndpointConfig config ){
 
@@ -68,8 +72,8 @@ public class WebappEndpoint {
             this.username = userData.getUser();
 
             //  getting the stored smarthome definition from the database
-            if( !this.getSmarthome( this.username ))  //  if the user hasn't already a smarthome we create a default one
-                this.smarthome = new SmarthomeManager( this.username , true, configuration );
+            if( !this.getSmarthome( this.username )) //  if the user hasn't already a smarthome we create a default one
+                this.smarthome = new SmarthomeManager(this.username, true, configuration);
 
             //  Generation of callback channel for web client update notification
             this.updater = new WebUpdateReceiver( this.username , session, this.smarthome, configuration );
@@ -115,6 +119,8 @@ public class WebappEndpoint {
 
             //  needed to convert the dates given by the web pages
             Gson gson = new GsonBuilder().setDateFormat( "yyyy-MM-dd'T'HH:mm:ss" ).create();
+            Gson gson2 = new GsonBuilder().setDateFormat("yyyy-MM-dd'T'HH").create();
+            String dID;
 
             if ( smarthome == null ) {
 
@@ -188,7 +194,7 @@ public class WebappEndpoint {
                     if ( smarthome.changeDeviceName( request.getData( "old_name" ), request.getData( "new_name" ), true )){
 
                         String network = this.smarthome.getDeviceNetwork( request.getData( "old_name" ));
-                        String dID = this.smarthome.getDeviceIdByName( request.getData( "old_name") );
+                        dID = this.smarthome.getDeviceIdByName( request.getData( "old_name") );
                         if( network != null && dID.length() > 0 ) {
                             String[] netInfo = network.split( ":" );
                             this.restInterface.changeDeviceName(
@@ -207,7 +213,7 @@ public class WebappEndpoint {
                     if ( !request.areSet("location", "address", "port"))
                         return;
 
-                    if (smarthome.addLocation(request.getData("location"), request.getData("address"), Integer.parseInt(request.getData("port")), true )){
+                    if (smarthome.addLocation( request.getData("location"), "" , request.getData("address"), Integer.parseInt(request.getData("port")), true )){
                         this.restInterface.addLocation(
                                 this.username,
                                 "websocket_"+session.getId(),
@@ -232,7 +238,7 @@ public class WebappEndpoint {
                     if ( !request.areSet("location", "sublocation" ))
                         return;
 
-                    if (smarthome.addSubLocation(request.getData("location"), request.getData("sublocation"), true )){
+                    if (smarthome.addSubLocation(request.getData("location"), request.getData("sublocation"), "", true )){
 
                         String network = this.smarthome.getLocationNetwork( request.getData( "location" ));
                         if( network != null ) {
@@ -242,6 +248,7 @@ public class WebappEndpoint {
                                     "websocket_"+session.getId(),
                                     request.getData( "location" ),
                                     request.getData( "sublocation" ),
+                                    this.smarthome.getNextSublocID( request.getData( "location" )),
                                     netInfo[0], Integer.parseInt( netInfo[1] ));
                         }
                     }
@@ -292,10 +299,9 @@ public class WebappEndpoint {
                         return;
 
                     //  TODO request to the db to obtain a new ID to be assigned to the device
-                    String dID = request.getData( "name" );  //  PLACEHOLDER
-                    if( dID.length()>0 && smarthome.addDevice(request.getData("location"),
+                    if( smarthome.addDevice(request.getData("location"),
                                                                 request.getData("sublocation"),
-                                                                dID,
+                                                                "",
                                                                 request.getData("name"),
                                                                 SmarthomeDevice.DeviceType.StringToType(request.getData("type")), true )){
 
@@ -305,7 +311,6 @@ public class WebappEndpoint {
                             this.restInterface.addDevice(
                                     this.username,
                                     "websocket_"+session.getId(),
-                                    dID,
                                     request.getData( "name" ),
                                     request.getData( "location" ),
                                     request.getData( "sublocation" ),
@@ -377,7 +382,13 @@ public class WebappEndpoint {
                     HashMap<String, String> data2 = new HashMap<>();
                     data2.put("device_name", req.getData().get("device_name"));
                     data2.put("statistic", req.getData().get("statistic"));
-                    data2.put("values", gson.toJson(Statistics.buildTestEnvironment()));
+                    data2.put("values", gson.toJson(db.getStatistics(
+                            req.getData().get("device_name"),
+                            req.getData().get("statistic"),
+                            gson2.fromJson( req.getData().get( "start" ).replace(":00:00.000Z", ""), Date.class),
+                            gson2.fromJson( req.getData().get( "stop" ).replace(":00:00.000Z", ""), Date.class)
+                    )));
+
                     WebRequest resp = new WebRequest(req.getStringType(), data2 );
                     try {
                         session.getBasicRemote().sendText(gson.toJson(resp));

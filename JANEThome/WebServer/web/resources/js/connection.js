@@ -296,6 +296,7 @@ function messageManager(update){
             updateStatistic( update.data.device_name, update.data.statistic, data);
             break;
         case "UPDATE":
+            enableDevice( update.data.device_name, "1" );
             updateDevice(update.data.device_name, update.data.action, update.data.value);
             break;
         case "ERROR_LOCATION":

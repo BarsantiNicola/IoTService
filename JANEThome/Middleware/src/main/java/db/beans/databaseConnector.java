@@ -2,8 +2,12 @@ package db.beans;
 
 import db.interfaces.DBinterface;
 import iot.SmarthomeManager;
+import statistics.Statistic;
+import statistics.Statistics;
 
 import javax.ejb.Stateless;
+import java.util.Date;
+import java.util.List;
 
 @Stateless
 public class databaseConnector implements DBinterface {
@@ -27,6 +31,13 @@ public class databaseConnector implements DBinterface {
     public SmarthomeManager getSmarthome(String username) {
 
         return null;
+    }
+
+    @Override
+    public List<Statistic> getStatistics(String dID, String action, Date startTime, Date endTime ){
+
+        return Statistics.buildTestEnvironment();
+
     }
 
 
