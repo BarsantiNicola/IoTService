@@ -15,7 +15,7 @@ import java.util.logging.SimpleFormatter;
 //  The class is used by the WebServer to store information about the user devices
 public class SmarthomeWebDevice extends SmarthomeDevice {
 
-    private final HashMap<String,String> param;    //  set of states associated to the device
+    private final HashMap<String,String> param = new HashMap<>();    //  set of states associated to the device
     private boolean connectivity;
     private transient Logger logger;
     private transient HashMap<String,Date> expires; //  set of timestamp associated with each trait to discard old updates
@@ -48,7 +48,6 @@ public class SmarthomeWebDevice extends SmarthomeDevice {
     }
 
     public static SmarthomeWebDevice setParameters(SmarthomeWebDevice device){
-
         HashMap<String,String> param = new HashMap<>();
         HashMap<String,Date> exp = new HashMap<>();
         Date last = new Date(System.currentTimeMillis());
@@ -191,14 +190,16 @@ public class SmarthomeWebDevice extends SmarthomeDevice {
     //////
 
     // Constructor
-    public SmarthomeWebDevice(String id, String name, String location, String sub_location, DeviceType type) {
 
+
+    public SmarthomeWebDevice() {
+    }
+
+    public SmarthomeWebDevice(String id, String name, String location, String sub_location, DeviceType type) {
         super(id, name, location, sub_location, type);
-        this.param = new HashMap<>();
         this.expires = new HashMap<>();
         this.connectivity = true;
         this.initializeLogger();
-
     }
 
     ////// UTILITY FUNCTIONS

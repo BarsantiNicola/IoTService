@@ -1,5 +1,9 @@
 package iot;
 
+import com.google.gson.annotations.Expose;
+import com.google.gson.annotations.SerializedName;
+import org.bson.types.ObjectId;
+
 import java.util.*;
 import java.io.Serializable;
 import java.util.logging.Logger;
@@ -46,7 +50,10 @@ public class SmarthomeSublocation implements Serializable {
 
     //////// CONSTRUCTORS
 
-    SmarthomeSublocation( String subLocation, String sublocID ){
+    public SmarthomeSublocation() {
+    }
+
+    SmarthomeSublocation(String subLocation, String sublocID ){
 
         this.subLocation = subLocation;
         this.subLocId = sublocID;

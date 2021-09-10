@@ -57,6 +57,10 @@ public class SmarthomeLocation implements Serializable {
 
     /////// CONSTRUCTORS
 
+
+    public SmarthomeLocation() {
+    }
+
     SmarthomeLocation(String location, String locID, String address, int port ){
 
         this.location = location;
@@ -192,7 +196,6 @@ public class SmarthomeLocation implements Serializable {
 
             //  putting the device into the new subLocation
             this.sublocations.get( new_sublocation ).addDevice( device, false );
-
             logger.info( "Device " + name + "'s sublocation correctly changed from " + old_sublocation + " to " + new_sublocation );
             return true;
         }

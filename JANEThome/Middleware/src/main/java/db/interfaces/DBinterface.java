@@ -1,6 +1,7 @@
 package db.interfaces;
 
 import iot.SmarthomeManager;
+import iot.User;
 import statistics.Statistic;
 import statistics.Statistics;
 
@@ -11,8 +12,9 @@ import java.util.List;
 @Remote
 public interface DBinterface {
 
+    boolean connectDB();
     boolean login( String email, String password );
-    boolean addUser( String name, String surname, String email, String password );
+    boolean addUser(User user);
     boolean emailPresent( String email );
 
     String getUserFirstName( String email );

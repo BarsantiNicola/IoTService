@@ -1,5 +1,7 @@
 package iot;
 
+import com.google.gson.annotations.Expose;
+
 import java.io.Serializable;
 import java.util.*;
 
@@ -54,22 +56,35 @@ public class SmarthomeDevice implements Serializable {
 
     }
 
+    @Expose
     protected String id;      //  ID to uniquely identify a device
+    @Expose
     protected String type;    //  type of device according to google home format
-
+    @Expose
     protected ArrayList<String> traits;          //  set of actions available for the device according to google home format
+    @Expose
     protected HashMap<String,String> name;       //  set of names usable for the device
+    @Expose
     private String roomHint;                   //  name of the location in which the device is deployed
+    @Expose
     private String structureHint;              //  name of the sub-location in which the device is deployed
+    @Expose
     private HashMap<String,String> deviceInfo; //  set of manufacturer info(name, model, hw and sw version)
+    @Expose
     private HashMap<String,String> attributes; //  set of information used by the traits
+    @Expose
     private HashMap<String,String> customData; //  custom data that can be send by google in each request for the device
+    @Expose
     private ArrayList<String> otherDeviceIds;  //  other ids for the devices(not used by us)
-
+    @Expose
     private Boolean willReportState;     //  specify if the reportStateAndNotification is active
+    @Expose
     protected Boolean notificationSupportedByAgent;  //  specify if the service is able to receive notification(for reportStateAndNotification)
 
     //// CONSTRUCTORS
+
+    public SmarthomeDevice() {
+    }
 
     public SmarthomeDevice(String id, String name, String location, String sub_location, DeviceType type ){
 
