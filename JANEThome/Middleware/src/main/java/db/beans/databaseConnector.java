@@ -8,6 +8,7 @@ import iot.User;
 import statistics.Statistic;
 import statistics.Statistics;
 
+import javax.annotation.PostConstruct;
 import javax.ejb.Stateless;
 import java.util.Date;
 import java.util.List;
@@ -16,9 +17,9 @@ import java.util.List;
 public class databaseConnector implements DBinterface {
 
     @Override
-    public boolean connectDB() {
+    @PostConstruct
+    public void connectDB() {
         MongoClientProvider.connectDB();
-        return false;
     }
 
     @Override
@@ -58,11 +59,6 @@ public class databaseConnector implements DBinterface {
     @Override
     public String getUserLastName(String username) {
         return MongoClientProvider.getUserByUsername(username).getLastName();
-    }
-
-    @Override
-    public String generateNewSmartID() {
-        return "0";
     }
 
     //////

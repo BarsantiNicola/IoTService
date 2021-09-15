@@ -1,6 +1,7 @@
 package weblogic.login.servlets;
 
 import db.interfaces.DBinterface;
+import iot.User;
 import utils.mail.interfaces.EmailServiceLocal;
 import weblogic.login.beans.UserData;
 import weblogic.login.interfaces.RegistrationInterface;
@@ -156,8 +157,7 @@ public class RegistrationServlet extends HttpServlet {
                     }
 
                     context.unbind("ejb:module/registration_" + parameters.get("token"));
-
-                    if( db.addUser( data.getFirstName(), data.getLastName(), data.getEmail(), data.getPassword() ))
+                    if( db.addUser( new User( data.getEmail(), data.getFirstName(), data.getLastName(), data.getEmail(), data.getPassword())))
                         resp.sendRedirect( "registration.jsp?state=2" );
                     else
                         resp.sendRedirect( "registration.jsp?state=3" );

@@ -11,6 +11,8 @@ import rest.out.interfaces.RESTinterface;
 
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
+import javax.ws.rs.core.Response;
+import javax.xml.transform.Result;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
@@ -55,7 +57,7 @@ public class DeviceCommandSender implements RESTinterface {
     }
 
     //  sends a command to the device REST server
-    private Future<Boolean> sendCommand( String address, int port, String path, HashMap<String,String> request ){
+    private Future<Response> sendCommand(String address, int port, String path, HashMap<String,String> request ){
 
         return executors.submit(new RESTsender(address, port, path, request ));
 
@@ -75,8 +77,8 @@ public class DeviceCommandSender implements RESTinterface {
         data.put( "address", ipAddr );
         data.put( "port", String.valueOf( port ));
         try {
-            Future<Boolean> result = this.sendCommand( conf.get("control_address"), Integer.parseInt(conf.get("control_port")), conf.get("control_path"), data );
-            if( result.get() ){
+            Future<Response> result = this.sendCommand( conf.get("control_address"), Integer.parseInt(conf.get("control_port")), conf.get("control_path"), data );
+            if( result.get() != null ){
 
                 DeviceUpdateMessage message = new DeviceUpdateMessage( username, from );
                 message.addUpdates(DeviceUpdate.buildAddLocation( new Date(System.currentTimeMillis()), location, locID, ipAddr, port ));

@@ -6,7 +6,7 @@ import javax.ws.rs.core.Response;
 import java.util.HashMap;
 import java.util.concurrent.Callable;
 
-public class RESTsender implements Callable<Boolean> {
+public class RESTsender implements Callable<Response> {
 
     private final String address;
     private final int port;
@@ -23,16 +23,15 @@ public class RESTsender implements Callable<Boolean> {
     }
 
     @Override
-    public Boolean call(){
+    public Response call(){
 
-       /* return ClientBuilder
+       return ClientBuilder
                 .newClient()
                 .target( this.address + ":" + this.port )
                 .path( path )
                 .request( MediaType.APPLICATION_JSON )
-                .post(Entity.entity( this.params, MediaType.APPLICATION_JSON ))
-                .getStatus() == 200;*/
-        return true;
+                .post(Entity.entity( this.params, MediaType.APPLICATION_JSON ));
+        //return true;
 
     }
 }

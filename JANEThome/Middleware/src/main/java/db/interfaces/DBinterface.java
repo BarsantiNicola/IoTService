@@ -12,15 +12,14 @@ import java.util.List;
 @Remote
 public interface DBinterface {
 
-    boolean connectDB();
+    void connectDB();
     boolean login( String email, String password );
     boolean addUser(User user);
     boolean emailPresent( String email );
 
     String getUserFirstName( String email );
     String getUserLastName( String email );
-
-    String generateNewSmartID();
+    
     SmarthomeManager getSmarthome( String email );
     boolean changePassword( String email, String new_password );
     List<Statistic> getStatistics(String dID, String action, Date startTime, Date endTime );
