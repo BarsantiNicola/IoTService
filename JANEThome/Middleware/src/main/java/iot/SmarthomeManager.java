@@ -7,7 +7,6 @@ import db.model.MongoEntity;
 import org.bson.types.ObjectId;
 import org.mongodb.morphia.annotations.Embedded;
 import org.mongodb.morphia.annotations.Entity;
-import org.mongodb.morphia.annotations.Id;
 import org.mongodb.morphia.annotations.Transient;
 import rabbit.in.SmarthomeUpdater;
 
@@ -548,7 +547,7 @@ public class SmarthomeManager extends MongoEntity implements Serializable {
                 param.put("timestamp", gson.toJson(timestamp));
 
             try {
-                result = this.devices.get(name).setParam(param, trial, false); //todo: capisci perchè errore
+                result = this.devices.get(name).setParam(param, trial, false);
             } catch (Exception e) {
 
                 e.printStackTrace();

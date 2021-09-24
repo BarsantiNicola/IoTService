@@ -13,7 +13,7 @@ import java.util.*;
 public class Configuration implements ConfigurationInterface {
 
     private final HashMap<String,HashMap<String,String>> conf = new HashMap<>();
-    private static final String[] files = { "rabbit.conf", "rest.conf" };
+    private static final String[] files = { "rabbit.conf", "rest.conf", "mail.conf", "tokens.conf" };
 
     public Configuration(){
 
