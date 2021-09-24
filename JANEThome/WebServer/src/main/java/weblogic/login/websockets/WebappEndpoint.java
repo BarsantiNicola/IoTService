@@ -71,9 +71,8 @@ public class WebappEndpoint {
             BasicData userData  = (BasicData)((HttpSession) config.getUserProperties().get( "httpsession" )).getAttribute( "authData" );
             this.username = userData.getUser();
 
-            //  getting the stored smarthome definition from the database
-            if( !this.getSmarthome( this.username )) //  if the user hasn't already a smarthome we create a default one
-                this.smarthome = new SmarthomeManager(this.username, true, configuration);
+            //  getting the stored smarthome definition from the database/cache
+            this.getSmarthome( this.username ); //  if the user hasn't already a smarthome the function creates a default one
 
             //  Generation of callback channel for web client update notification
             this.updater = new WebUpdateReceiver( this.username , session, this.smarthome, configuration );
@@ -498,16 +497,17 @@ public class WebappEndpoint {
     }
 
     //  connector with the db, request the stored smarthome definition formatted has a SmarthomeManager to the database
-    private boolean getSmarthome( String username ){
+    private void getSmarthome( String username ){
 
         //  try to get a copy from the user http session
         this.smarthome = (SmarthomeManager)((HttpSession) config.getUserProperties().get( "httpsession" )).getAttribute( "smarthome" );
         //  TODO to be changed with a request to the db to obtain the stored smarthome definition
         if( this.smarthome == null ) {
-            this.smarthome = SmarthomeManager.createTestingEnvironment(username, true, configuration );
+            this.smarthome = db.getSmarthome(username);// SmarthomeManager.createTestingEnvironment(username, true, configuration );
+            if( this.smarthome == null )
+                this.smarthome = new SmarthomeManager(username, true, configuration );
             ((HttpSession) config.getUserProperties().get( "httpsession" )).setAttribute( "smarthome", this.smarthome );
         }
-        return true;
 
     }
 

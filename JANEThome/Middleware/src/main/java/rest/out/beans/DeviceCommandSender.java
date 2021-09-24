@@ -12,8 +12,6 @@ import rest.out.interfaces.RESTinterface;
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.ws.rs.core.Response;
-import javax.xml.transform.Result;
-import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.concurrent.ExecutionException;
