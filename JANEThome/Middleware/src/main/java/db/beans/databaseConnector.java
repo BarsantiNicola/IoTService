@@ -18,8 +18,8 @@ public class databaseConnector implements DBinterface {
 
     @Override
     @PostConstruct
-    public boolean connectDB() {
-       return MongoClientProvider.connectDB();
+    public void connectDB() {
+       MongoClientProvider.connectDB();
     }
 
     @Override
