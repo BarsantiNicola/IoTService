@@ -12,7 +12,7 @@ import java.util.List;
 @Remote
 public interface DBinterface {
 
-    void connectDB();
+    boolean connectDB();
     boolean login( String email, String password );
     boolean addUser(User user);
     boolean emailPresent( String email );
