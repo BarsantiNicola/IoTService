@@ -156,9 +156,10 @@ public class WebappEndpoint {
                             this.restInterface.changeLocationName(
                                     this.username,
                                     "websocket_"+session.getId(),
+                                    this.smarthome.getLocIdByName(request.getData("old_name" )),
                                     request.getData( "old_name" ),
                                     request.getData( "new_name" ),
-                                    netInfo[0], Integer.parseInt( netInfo[1] ));
+                                    netInfo[0]);
                         }
                     }
                     break;
@@ -178,8 +179,10 @@ public class WebappEndpoint {
                                     "websocket_"+session.getId(),
                                     request.getData( "location" ),
                                     request.getData("old_name"),
+                                    this.smarthome.getLocIdByName(request.getData( "location")),
+                                    this.smarthome.getSubLocIdByName(request.getData( "location"), request.getData( "old_name")),
                                     request.getData("new_name"),
-                                    netInfo[0], Integer.parseInt(netInfo[1]));
+                                    netInfo[0]);
                         }
                     }
 
@@ -202,7 +205,7 @@ public class WebappEndpoint {
                                     dID,
                                     request.getData( "old_name" ),
                                     request.getData( "new_name" ),
-                                    netInfo[0], Integer.parseInt( netInfo[1] ));
+                                    netInfo[0]);
                         }
                     }
                     break;
@@ -267,7 +270,8 @@ public class WebappEndpoint {
                                     this.username,
                                     "websocket_"+session.getId(),
                                     request.getData( "location" ),
-                                    netInfo[0], Integer.parseInt( netInfo[1] ));
+                                    this.smarthome.getLocIdByName(request.getData( "location" )),
+                                    netInfo[0]);
                         }
                     }
                     break;
@@ -287,6 +291,7 @@ public class WebappEndpoint {
                                     "websocket_"+session.getId(),
                                     request.getData( "location" ),
                                     request.getData( "sublocation" ),
+                                    this.smarthome.getSubLocIdByName( request.getData( "location"), request.getData( "sublocation" )),
                                     netInfo[0], Integer.parseInt( netInfo[1] ));
                         }
                     }
@@ -313,6 +318,7 @@ public class WebappEndpoint {
                                     request.getData( "name" ),
                                     request.getData( "location" ),
                                     request.getData( "sublocation" ),
+                                    this.smarthome.getSubLocIdByName(request.getData( "location" ), request.getData( "sublocation") ),
                                     SmarthomeDevice.DeviceType.StringToType(request.getData("type")),
                                     netInfo[0], Integer.parseInt( netInfo[1] ));
                         }
@@ -341,6 +347,7 @@ public class WebappEndpoint {
                                     request.getData( "location" ),
                                     subLoc,
                                     request.getData( "sublocation" ),
+                                    this.smarthome.getSubLocIdByName( request.getData( "location" ) , request.getData( "sublocation" )),
                                     netInfo[0], Integer.parseInt( netInfo[1] ));
 
                         }
@@ -348,10 +355,9 @@ public class WebappEndpoint {
                     break;
 
                 case REMOVE_DEVICE:
-                    logger.info( "REQUEST ARRIVED");
                     if( !request.areSet( "name" ))
                         return;
-                    logger.info( "REQUEST Approved");
+
                     if(smarthome.removeDevice(request.getData("name"), true )) {
                         logger.info( "REQUEST TESTED");
                         String network = this.smarthome.getDeviceNetwork( request.getData( "name" ));

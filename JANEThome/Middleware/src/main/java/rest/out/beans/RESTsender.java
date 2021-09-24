@@ -1,38 +1,75 @@
 package rest.out.beans;
 
+import javax.ws.rs.client.ClientBuilder;
+import javax.ws.rs.client.Entity;
 import javax.ws.rs.core.*;
 import java.lang.annotation.Annotation;
 import java.net.URI;
 import java.util.*;
 import java.util.concurrent.Callable;
 
-@SuppressWarnings("unused")
+@SuppressWarnings("all")
 public class RESTsender implements Callable<Response> {
 
     private final String address;
     private final int port;
     private final HashMap<String,String> params;
     private final String path;
+    private final REQ_TYPE reqType;
 
-    RESTsender(String address, int port, String path, HashMap<String,String> params ){
+    public enum REQ_TYPE{
+        GET,
+        PUT,
+        POST,
+        PATCH,
+        DELETE
+    }
+
+    RESTsender(String address, int port, String path, REQ_TYPE reqType, HashMap<String,String> params ){
 
         this.address = address;
         this.port = port;
         this.params = params;
         this.path = path;
+        this.reqType = reqType;
 
     }
 
     @Override
     public Response call(){
-
         //  TODO ENABLE REST INTERFACE
-       /*return ClientBuilder
-                .newClient()
-                .target( this.address + ":" + this.port )
-                .path( path )
-                .request( MediaType.APPLICATION_JSON )
-                .post(Entity.entity( this.params, MediaType.APPLICATION_JSON ));*/
+       /*
+        switch( this.reqType ){
+            case PUT:
+                return ClientBuilder
+                        .newClient()
+                        .target( this.address + ":" + this.port )
+                        .path( path )
+                        .request( MediaType.APPLICATION_JSON )
+                        .put(Entity.entity( this.params, MediaType.APPLICATION_JSON ));
+            case POST:
+                return ClientBuilder
+                        .newClient()
+                        .target( this.address + ":" + this.port )
+                        .path( path )
+                        .request( MediaType.APPLICATION_JSON )
+                        .post(Entity.entity( this.params, MediaType.APPLICATION_JSON ));
+            case DELETE:
+                return ClientBuilder
+                        .newClient()
+                        .target( this.address + ":" + this.port )
+                        .path( path )
+                        .request( MediaType.APPLICATION_JSON )
+                        .delete();
+            case PATCH:
+                return ClientBuilder
+                        .newClient()
+                        .target( this.address + ":" + this.port )
+                        .path( path )
+                        .request( MediaType.APPLICATION_JSON )
+                        .method("PATCH", Entity.entity( this.params, MediaType.APPLICATION_JSON ));
+        }
+        */
 
         return new Response() {
 
