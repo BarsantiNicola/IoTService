@@ -8,8 +8,8 @@ import org.bson.types.ObjectId;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
-import java.net.UnknownHostException;
-import java.util.List;
+import java.util.*;
+import java.util.concurrent.ThreadLocalRandom;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -20,18 +20,20 @@ class MongoClientProviderTest {
     @BeforeAll
     static void setUp() {
         Configuration configuration = new Configuration();
-        user = new User("pluto","federico","lapenna","f.lapenna@studenti.unipi.it","test");
-        manager = new SmarthomeManager("test",false,configuration);
-        manager.addLocation("casa","2","via pippo",8888,false);
-        manager.addSubLocation("casa","bagno","1",false);
-        manager.addDevice("casa","bagno","45456","porta",SmarthomeDevice.DeviceType.DOOR,false);
+        user = new User("pluto", "federico", "lapenna", "f.lapenna@studenti.unipi.it", "test");
+        manager = SmarthomeManager.createTestingEnvironment("test", true, configuration);
+        initStatisticsTest(SmarthomeDevice.DeviceType.DOOR);
+        initStatisticsTest(SmarthomeDevice.DeviceType.FAN);
+        initStatisticsTest(SmarthomeDevice.DeviceType.THERMOSTAT);
+        initStatisticsTest(SmarthomeDevice.DeviceType.CONDITIONER);
+
         user.setHomeManager(manager);
 
         MongoClientProvider.connectDB();
     }
 
     @Test
-    void testDeleteManager(){
+    void testDeleteManager() {
         MongoClientProvider.writeManager(manager);
         assertTrue(MongoClientProvider.deleteManager(manager.getUsername()));
     }
@@ -42,27 +44,27 @@ class MongoClientProviderTest {
     }
 
     @Test
-    void testWriteManager(){
+    void testWriteManager() {
         assertNotNull(MongoClientProvider.writeManager(manager));
         MongoClientProvider.deleteManager(manager.getUsername());
     }
 
     @Test
-    void testGetManagerById(){
+    void testGetManagerById() {
         MongoClientProvider.writeManager(manager);
         assertNotNull(MongoClientProvider.getManagerById(manager.getKey().toString()));
         MongoClientProvider.deleteManager(manager.getUsername());
     }
 
     @Test
-    void testGetManagerByUsername(){
+    void testGetManagerByUsername() {
         MongoClientProvider.writeManager(manager);
         assertNotNull(MongoClientProvider.getManagerByUsername(manager.getUsername()));
         MongoClientProvider.deleteManager(manager.getUsername());
     }
 
     @Test
-    void testGetAllManager(){
+    void testGetAllManager() {
         MongoClientProvider.writeManager(manager);
         manager.setKey(new ObjectId());
         MongoClientProvider.writeManager(manager);
@@ -73,7 +75,7 @@ class MongoClientProviderTest {
     }
 
     @Test
-    void testdeleteUser(){
+    void testdeleteUser() {
         MongoClientProvider.writeManager(manager);
         MongoClientProvider.writeUser(user);
         assertTrue(MongoClientProvider.deleteUser(user.getUsername()));
@@ -81,7 +83,7 @@ class MongoClientProviderTest {
     }
 
     @Test
-    void testWriteUser(){
+    void testWriteUser() {
         MongoClientProvider.writeManager(manager);
         assertNotNull(MongoClientProvider.writeUser(user));
         MongoClientProvider.deleteUser(user.getUsername());
@@ -89,7 +91,7 @@ class MongoClientProviderTest {
     }
 
     @Test
-    void getUserById(){
+    void getUserById() {
         MongoClientProvider.writeManager(manager);
         MongoClientProvider.writeUser(user);
         assertNotNull(MongoClientProvider.getUserById(user.getKey().toString()));
@@ -98,7 +100,7 @@ class MongoClientProviderTest {
     }
 
     @Test
-    void testGetAllUsers(){
+    void testGetAllUsers() {
         MongoClientProvider.writeManager(manager);
         MongoClientProvider.writeUser(user);
         manager.setKey(new ObjectId());
@@ -113,7 +115,7 @@ class MongoClientProviderTest {
     }
 
     @Test
-    void testReferenceUserManager(){
+    void testReferenceUserManager() {
         MongoClientProvider.writeManager(manager);
         MongoClientProvider.writeUser(user);
         assertNotNull(MongoClientProvider.getUserById(user.getKey().toString()).getHomeManager());
@@ -122,7 +124,7 @@ class MongoClientProviderTest {
     }
 
     @Test
-    void testGetUserByUser(){
+    void testGetUserByUser() {
         MongoClientProvider.writeManager(manager);
         MongoClientProvider.writeUser(user);
         assertNotNull(MongoClientProvider.getUserByUsername(user.getUsername()));
@@ -131,7 +133,7 @@ class MongoClientProviderTest {
     }
 
     @Test
-    void testCheckUserByUserAndPass(){
+    void testCheckUserByUserAndPass() {
         MongoClientProvider.writeManager(manager);
         MongoClientProvider.writeUser(user);
         assertTrue(MongoClientProvider.checkUserByUserAndPass(user.getUsername(), user.getPassword()));
@@ -141,7 +143,7 @@ class MongoClientProviderTest {
     }
 
     @Test
-    void testMailPresent(){
+    void testMailPresent() {
         MongoClientProvider.writeManager(manager);
         MongoClientProvider.writeUser(user);
         assertTrue(MongoClientProvider.mailPresent(user.getEmail()));
@@ -151,7 +153,7 @@ class MongoClientProviderTest {
 
 
     @Test
-    void testUpdateFieldOfUser(){
+    void testUpdateFieldOfUser() {
         MongoClientProvider.writeManager(manager);
         MongoClientProvider.writeUser(user);
         assertTrue(MongoClientProvider.updateFieldOfUser(user.getUsername(), IUserDAO.PASS, "ciaociao"));
@@ -159,5 +161,95 @@ class MongoClientProviderTest {
         assertNotEquals(u.getPassword(), user.getPassword());
         MongoClientProvider.deleteUser(user.getUsername());
         MongoClientProvider.deleteManager(manager.getUsername());
+    }
+
+    @Test
+    void testGetStatistics() {
+        MongoClientProvider.writeManager(manager);
+        MongoClientProvider.deleteManager(manager.getUsername());
+    }
+
+    private static void initStatisticsTest(SmarthomeDevice.DeviceType ty) {
+        String type = SmarthomeDevice.DeviceType.typeToString(ty);
+        List<String> devices = getNameDev(type);
+        Date startDate = new GregorianCalendar(2020, Calendar.JANUARY, 1).getGregorianChange();
+        Date endDate = new Date();
+        int numTest = 10;
+
+        switch (ty) {
+            case FAN:
+                for (String d : devices) {
+                    for (int i = 0; i < numTest; i++) {
+                        manager.performAction(d, Action.ONOFF,
+                                String.valueOf(ThreadLocalRandom.current().nextInt(0, 1)),
+                                between(startDate, endDate), true);
+                        manager.performAction(d, Action.FANSPEED,
+                                String.valueOf(ThreadLocalRandom.current().nextInt(0, 100)),
+                                between(startDate, endDate), true);
+                    }
+                }
+                break;
+
+            case DOOR:
+                for (String d : devices) {
+                    for (int i = 0; i < numTest; i++) {
+                        manager.performAction(d, Action.OPENCLOSE,
+                                String.valueOf(ThreadLocalRandom.current().nextInt(0, 1)),
+                                between(startDate, endDate), true);
+                    }
+                }
+                break;
+
+            case THERMOSTAT:
+                for (String d : devices) {
+                    for (int i = 0; i < numTest; i++) {
+                        manager.performAction(d, Action.TEMPSET,
+                                String.valueOf(ThreadLocalRandom.current().nextInt(0, 30)),
+                                between(startDate, endDate), true);
+                    }
+                }
+                break;
+
+            case CONDITIONER:
+                for (String d : devices) {
+                    for (int i = 0; i < numTest; i++) {
+                        manager.performAction(d, Action.ONOFF,
+                                String.valueOf(ThreadLocalRandom.current().nextInt(0, 1)),
+                                between(startDate, endDate), true);
+                        manager.performAction(d, Action.TEMPSET,
+                                String.valueOf(ThreadLocalRandom.current().nextInt(0, 30)),
+                                between(startDate, endDate), true);
+                    }
+                }
+                break;
+
+            default:
+                break;
+        }
+
+
+    }
+
+    private static List<String> getNameDev(String type) {
+        List<String> dev = new ArrayList<>();
+        for (SmarthomeLocation sm : manager.getLocations()) {
+            for (SmarthomeSublocation sublocation : sm.getSublocations().values()) {
+                for (SmarthomeWebDevice d : sublocation.getDevices()) {
+                    if (type.compareTo(d.getType()) == 0)
+                        dev.add(d.getName().get("name"));
+                }
+            }
+        }
+        return dev;
+    }
+
+    public static Date between(Date startInclusive, Date endExclusive) {
+        long startMillis = startInclusive.getTime();
+        long endMillis = endExclusive.getTime();
+        long randomMillisSinceEpoch = ThreadLocalRandom
+                .current()
+                .nextLong(startMillis, endMillis);
+
+        return new Date(randomMillisSinceEpoch);
     }
 }
