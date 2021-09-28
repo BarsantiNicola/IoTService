@@ -30,3 +30,4 @@ PasswordRequestHandler.java
 /out/
 jms/
 target
+log
