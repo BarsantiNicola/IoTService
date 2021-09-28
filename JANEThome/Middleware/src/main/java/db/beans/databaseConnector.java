@@ -19,7 +19,7 @@ public class databaseConnector implements DBinterface {
     @Override
     @PostConstruct
     public void connectDB() {
-       MongoClientProvider.connectDB();
+        MongoClientProvider.connectDB();
     }
 
     @Override
@@ -49,19 +49,12 @@ public class databaseConnector implements DBinterface {
 
     }
 
-
-    //////  TODO GET FIRST NAME AND LAST NAME WILL CALLED TOGETHER, IF U WANT U CAN COMBINE THEM IN A UNIQUE FUNCTION
     @Override
-    public String getUserFirstName(String username) {
-        return MongoClientProvider.getUserByUsername(username).getFirstName();
+    public String[] getUserFirstAndLastName(String username) {
+        User s = MongoClientProvider.getUserByUsername(username);
+        return new String[]{s.getFirstName(), s.getLastName()};
     }
 
-    @Override
-    public String getUserLastName(String username) {
-        return MongoClientProvider.getUserByUsername(username).getLastName();
-    }
-
-    //////
 
     @Override
     public boolean changePassword(String username, String new_password) {

@@ -70,7 +70,9 @@ public class LoginServlet extends HttpServlet {
 
                     //  used by the web page to show the user name into the page
                     UserLogin infoData = new UserLogin();
-                    infoData.setParameters( db.getUserFirstName(parameters.get( "email" )),db.getUserLastName( parameters.get( "email" )));
+                    //TODO:NB: getUserFirstAndLastName vuole lo user, se email == user è ok
+                    String[] names = db.getUserFirstAndLastName(parameters.get( "email" ));
+                    infoData.setParameters( names[0],names[1]);
                     req.getSession().setAttribute( "infoData", infoData );
 
                     //  used for authorizing the requests, authtoken provided by the user and stored into the server must be equal

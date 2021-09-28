@@ -17,8 +17,7 @@ public interface DBinterface {
     boolean addUser(User user);
     boolean emailPresent( String email );
 
-    String getUserFirstName( String email );
-    String getUserLastName( String email );
+    String[] getUserFirstAndLastName( String email );
     
     SmarthomeManager getSmarthome( String email );
     boolean changePassword( String email, String new_password );
