@@ -10,4 +10,11 @@ public interface Action {
     String TEMPSET = "action.devices.traits.TemperatureSetting";
     String TEMP = "action.devices.traits.Temperature";
     String CONNECT = "action.devices.traits.Connectivity";
+
+    String LIGHT_ACTION ="action.devices.types.LIGHT";
+    String FAN_ACTION = "action.devices.types.FAN";
+    String DOOR_ACTION = "action.devices.types.DOOR";
+    String THERM_ACTION = "action.devices.types.THERMOSTAT";
+    String AC_ACTION = "action.devices.types.AC_UNIT";
+
 }

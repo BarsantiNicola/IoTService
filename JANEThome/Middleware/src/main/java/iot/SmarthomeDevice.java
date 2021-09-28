@@ -5,6 +5,8 @@ import com.google.gson.annotations.Expose;
 import java.io.Serializable;
 import java.util.*;
 
+import static iot.Action.*;
+
 //  Class developed to maintain the definition of a smarthome device. The class in compatible with
 //  the google home device definition and can be used to aggregate a response for the google sync requests
 //  [https://developers.google.com/assistant/smarthome/reference/rest/v1/devices/sync]
@@ -14,6 +16,7 @@ import java.util.*;
 
 @SuppressWarnings("unused")
 public class SmarthomeDevice implements Serializable {
+
 
     public enum DeviceType{
         LIGHT,            //  https://developers.google.com/assistant/smarthome/guides/light
@@ -27,19 +30,19 @@ public class SmarthomeDevice implements Serializable {
 
             switch( type ){
                 case LIGHT:
-                    return "Light";
+                    return LIGHT_ACTION;
 
                 case FAN:
-                    return "Fan";
+                    return FAN_ACTION;
 
                 case DOOR:
-                    return "Door";
+                    return DOOR_ACTION;
 
                 case THERMOSTAT:
-                    return "Thermostat";
+                    return THERM_ACTION;
 
                 case CONDITIONER:
-                    return "Conditioner";
+                    return AC_ACTION;
 
                 default:
                     return "Unknown";
@@ -114,47 +117,47 @@ public class SmarthomeDevice implements Serializable {
         switch(type){
             case LIGHT:
                 this.name.put("defaultNames", "[\"JanetHOME Light\"]");
-                this.type = "action.devices.types.LIGHT";
+                this.type = LIGHT_ACTION;
                 this.traits.addAll(Arrays.asList(
-                        "action.devices.traits.OnOff",
-                        "action.devices.traits.ColorSetting",
-                        "action.devices.traits.Brightness"
+                        Action.ONOFF,
+                        Action.COLORSET,
+                        Action.BRIGHNESS
                 ));
                 break;
 
             case FAN:
                 this.name.put("defaultNames", "[\"JanetHOME Fan\"]");
-                this.type = "action.devices.types.FAN";
+                this.type = Action.FAN_ACTION;
                 this.traits.addAll(Arrays.asList(
-                        "action.devices.traits.OnOff",
-                        "action.devices.traits.FanSpeed"
+                        Action.ONOFF,
+                        Action.FANSPEED
                 ));
                 break;
 
             case DOOR:
                 this.name.put("defaultNames", "[\"JanetHOME Door\"]");
-                this.type = "action.devices.types.DOOR";
+                this.type = Action.DOOR_ACTION;
                 this.traits.addAll(Arrays.asList(
-                        "action.devices.traits.OpenClose",
-                        "action.devices.traits.LockUnlock"
+                        Action.OPENCLOSE,
+                        Action.LOCKUNLOCK
                 ));
                 break;
 
             case THERMOSTAT:
                 this.name.put("defaultNames", "[\"JanetHOME Thermostat\"]");
-                this.type = "action.devices.types.THERMOSTAT";
+                this.type = Action.THERM_ACTION;
                 this.traits.add(
-                        "action.devices.traits.TemperatureSetting"
+                        Action.TEMPSET
                 );
                 break;
 
             case CONDITIONER:
                 this.name.put("defaultNames", "[\"JanetHOME Conditioner\"]");
-                this.type = "action.devices.types.AC_UNIT";
+                this.type = Action.AC_ACTION;
                 this.traits.addAll(Arrays.asList(
-                        "action.devices.traits.OnOff",
-                        "action.devices.traits.FanSpeed",
-                        "action.devices.traits.TemperatureSetting"
+                        Action.ONOFF,
+                        Action.FANSPEED,
+                        Action.TEMPSET
                 ));
                 break;
 

@@ -133,7 +133,7 @@ public class DeviceUpdate implements Serializable{
         update.setData("sublocation" , sublocation);
         update.setData("dID" , dID);
         update.setData("name" , name);
-        update.setData("type" , SmarthomeDevice.DeviceType.typeToString(type));
+        update.setData("type" , type.toString().toLowerCase());
         return update;
 
     }

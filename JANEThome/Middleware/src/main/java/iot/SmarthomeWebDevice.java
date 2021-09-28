@@ -3,13 +3,11 @@ package iot;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.annotations.Expose;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.security.SecureRandom;
 import java.util.*;
-import java.util.logging.ConsoleHandler;
-import java.util.logging.Handler;
-import java.util.logging.Logger;
-import java.util.logging.SimpleFormatter;
 import java.util.Date;
 
 
@@ -216,16 +214,7 @@ public class SmarthomeWebDevice extends SmarthomeDevice {
         if (this.logger != null)
             return;
 
-        this.logger = Logger.getLogger(getClass().getName());
-
-        //  verification of the number of instantiated handlers
-        if (logger.getHandlers().length == 0) { //  first time the logger is created we generate its handler
-
-            Handler consoleHandler = new ConsoleHandler();
-            consoleHandler.setFormatter(new SimpleFormatter());
-            logger.addHandler(consoleHandler);
-
-        }
+        this.logger = LogManager.getLogger(getClass());
 
     }
 
@@ -249,19 +238,19 @@ public class SmarthomeWebDevice extends SmarthomeDevice {
 
         //  verification that the mandatory parameters are present
         if (!trial && !param.containsKey("timestamp") && !force) {
-            logger.severe("Error, missing timestamp into application update");
+            logger.error("Error, missing timestamp into application update");
             return false;
         }
 
         if (!param.containsKey("action") || !param.containsKey("device_name") || !param.containsKey("value")) {
-            logger.severe(
+            logger.error(
                     "Invalid request to perform an action, missing parameters [device_name:" + param.containsKey("device_name") +
                             "][action:" + param.containsKey("action") + "][value:" + param.containsKey("value") + "][" + param.containsKey("timestamp") + "]");
             return false;
         }
 
         if (!this.updateLastChange(param.get("action"), gson.fromJson(param.get("timestamp"), Date.class), trial, force)) {
-            logger.warning("The requested action has an old timestamp, discarding the request");
+            logger.warn("The requested action has an old timestamp, discarding the request");
             return false;
         }
 
@@ -281,11 +270,11 @@ public class SmarthomeWebDevice extends SmarthomeDevice {
         //  verification that this is the correct device
         if (param.get("device_name").compareTo(this.giveDeviceName()) != 0 || !this.getTraits().contains(param.get("action"))) {
             if (param.get("device_name").compareTo(this.giveDeviceName()) != 0)
-                logger.severe(
+                logger.error(
                         "Invalid request to perform an action, not the correct device. [CurrentDevice: " + this.giveDeviceName() +
                                 "][RequestedDevice: " + param.get("device_name"));
             else
-                logger.severe("Invalid request to perform an action, invalid trait. [Action: " + param.get("action"));
+                logger.error("Invalid request to perform an action, invalid trait. [Action: " + param.get("action"));
             return false;
         }
 
@@ -296,13 +285,13 @@ public class SmarthomeWebDevice extends SmarthomeDevice {
         //  validation of the given value for the requested action
         if (!validateValue(value, param.get("value"))) {
 
-            logger.severe("Invalid request to perform an action, invalid value");
+            logger.error("Invalid request to perform an action, invalid value");
             return false;
 
         }
-
-        if (trial)
-            return true;
+//
+//        if (trial)
+//            return true;
 
         //  applying the action to the data structure
         if (this.param.containsKey(value))
@@ -311,7 +300,10 @@ public class SmarthomeWebDevice extends SmarthomeDevice {
             this.param.put(value, param.get("value"));
 
         //add value on historical list
-        historical.put(new Date(), new Operation(param.get("action"), param.get("value")));
+        if (param.containsKey("timestamp")) {
+            historical.put(gson.fromJson(param.get("timestamp"), Date.class), new Operation(param.get("action"), param.get("value")));
+            System.out.print(param.get("device_name") + "-->" + param.get("timestamp"));
+        }
 
         logger.info("Request to perform an action correctly done [DeviceName: " + param.get("device_name") + "][Action: " +
                 param.get("action") + "][Value: " + param.get("value") + "]");

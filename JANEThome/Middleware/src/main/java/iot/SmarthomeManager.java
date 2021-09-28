@@ -35,7 +35,9 @@ public class SmarthomeManager extends MongoEntity implements Serializable {
     private HashMap<String, SmarthomeWebDevice> devices = new HashMap<>();    //  copy of all the devices for fast retrieval(optimization)
     @Transient
     private Semaphore smartHomeMutex = null;   //  semaphore for mutual exclusion
+    @Transient
     private transient Logger logger;
+    @Transient
     private SmarthomeUpdater updater;
 
     ////////  TODO To be removed, only for testing purpose
@@ -59,10 +61,10 @@ public class SmarthomeManager extends MongoEntity implements Serializable {
         this.username = username;
         this.locations = new HashMap<>();
         this.devices = new HashMap<>();
-        this.smartHomeMutex = new Semaphore( 1 );
+        this.smartHomeMutex = new Semaphore(1);
         this.initializeLogger();
-        if( connected )
-            this.updater = new SmarthomeUpdater( username, this, configuration );
+        if (connected)
+            this.updater = new SmarthomeUpdater(username, this, configuration);
 
     }
 
@@ -134,7 +136,7 @@ public class SmarthomeManager extends MongoEntity implements Serializable {
     //// LOCATIONS
 
     //  adds a new location into the smarthome. Return false in case the location is already present
-    public boolean addLocation( String location, String locID, String address, int port , boolean trial ){
+    public boolean addLocation(String location, String locID, String address, int port, boolean trial) {
 
         initializeLogger();
 
@@ -156,8 +158,8 @@ public class SmarthomeManager extends MongoEntity implements Serializable {
         //  if the location is not already present we add it
         if (this.verifyAddressUnivocity(address, port) && !this.locations.containsKey(location)) {
 
-            if( !trial ) {
-                this.locations.put(location, new SmarthomeLocation( location, locID, address, port ));
+            if (!trial) {
+                this.locations.put(location, new SmarthomeLocation(location, locID, address, port));
                 this.logger.info("New location " + location + " added [" + address + "][" + port + "]");
             }
             result = true;
@@ -175,7 +177,7 @@ public class SmarthomeManager extends MongoEntity implements Serializable {
         initializeLogger();
 
         //  mutual exclusion on the interactions with the data structure
-        if( this.getSmartHomeMutex() )
+        if (this.getSmartHomeMutex())
             return false;
 
         boolean result = false;
@@ -258,7 +260,7 @@ public class SmarthomeManager extends MongoEntity implements Serializable {
     //// SUB-LOCATIONS
 
     //  adds a new sublocation into a defined location. Returns true in case of success
-    public boolean addSubLocation( String location, String subLocation, String sublocID, boolean trial ){
+    public boolean addSubLocation(String location, String subLocation, String sublocID, boolean trial) {
 
         //  mutual exclusion on the interactions with the data structure
         if (this.getSmartHomeMutex())
@@ -277,7 +279,7 @@ public class SmarthomeManager extends MongoEntity implements Serializable {
                 return true;
 
             }
-            result = this.locations.get(location).addSublocation( subLocation, sublocID, trial );
+            result = this.locations.get(location).addSublocation(subLocation, sublocID, trial);
 
         }
         this.releaseSmarthomeMutex();  //  release of mutual exclusion
@@ -541,10 +543,8 @@ public class SmarthomeManager extends MongoEntity implements Serializable {
             param.put("device_name", name);
             param.put("action", action);
             param.put("value", value);
-            if (trial)
-                param.put("timestamp", gson.toJson(new Date(System.currentTimeMillis())));
-            else
-                param.put("timestamp", gson.toJson(timestamp));
+
+            param.put("timestamp", gson.toJson(timestamp));
 
             try {
                 result = this.devices.get(name).setParam(param, trial, false);
@@ -688,7 +688,7 @@ public class SmarthomeManager extends MongoEntity implements Serializable {
         return result;
     }
 
-    public String getLocIdByName(String locName){
+    public String getLocIdByName(String locName) {
 
         String result = "";
 
@@ -696,23 +696,23 @@ public class SmarthomeManager extends MongoEntity implements Serializable {
         if (this.getSmartHomeMutex())
             return result;
 
-        if( this.locations.containsKey( locName ))
-            result = this.locations.get( locName ).getLocId();
+        if (this.locations.containsKey(locName))
+            result = this.locations.get(locName).getLocId();
 
         this.releaseSmarthomeMutex(); //  release of mutual exclusion
 
         return result;
     }
 
-    public String getNextSublocID( String locName ){
+    public String getNextSublocID(String locName) {
 
         String result = "";
         //  mutual exclusion on the interactions with the data structure
-        if( this.getSmartHomeMutex() )
+        if (this.getSmartHomeMutex())
             return result;
 
-        if( this.locations.containsKey( locName ))
-            result = this.locations.get( locName ).giveNextSublocID();
+        if (this.locations.containsKey(locName))
+            result = this.locations.get(locName).giveNextSublocID();
 
         this.releaseSmarthomeMutex(); //  release of mutual exclusion
 
@@ -720,15 +720,15 @@ public class SmarthomeManager extends MongoEntity implements Serializable {
 
     }
 
-    public String getSubLocIdByName(String locName, String subLocName){
+    public String getSubLocIdByName(String locName, String subLocName) {
 
         String result = "";
         //  mutual exclusion on the interactions with the data structure
-        if( this.getSmartHomeMutex() )
+        if (this.getSmartHomeMutex())
             return result;
 
-        if( this.locations.containsKey( locName ) && this.locations.get( locName ).getSublocations().containsKey( subLocName ))
-            result = this.locations.get( locName ).getSublocations().get( subLocName ).getSubLocId();
+        if (this.locations.containsKey(locName) && this.locations.get(locName).getSublocations().containsKey(subLocName))
+            result = this.locations.get(locName).getSublocations().get(subLocName).getSubLocId();
 
         this.releaseSmarthomeMutex(); //  release of mutual exclusion
 
