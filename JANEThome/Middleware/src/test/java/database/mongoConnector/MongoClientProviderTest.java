@@ -13,160 +13,158 @@ import java.util.concurrent.ThreadLocalRandom;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-class MongoClientProviderTest {
+class mongoClientProviderTest {
     private static SmarthomeManager manager;
     private static User user;
+    private static MongoClientProvider mongoClientProvider;
 
     @BeforeAll
     static void setUp() {
-        Configuration configuration = new Configuration();
-        user = new User("pluto", "federico", "lapenna", "f.lapenna@studenti.unipi.it", "test");
-        manager = SmarthomeManager.createTestingEnvironment("test", true, configuration);
-        initStatisticsTest(SmarthomeDevice.DeviceType.DOOR);
-        initStatisticsTest(SmarthomeDevice.DeviceType.FAN);
-        initStatisticsTest(SmarthomeDevice.DeviceType.THERMOSTAT);
-        initStatisticsTest(SmarthomeDevice.DeviceType.CONDITIONER);
+        try{
+            Configuration configuration = new Configuration();
+            mongoClientProvider = new MongoClientProvider(configuration);
+            user = new User("pluto", "federico", "lapenna", "f.lapenna@studenti.unipi.it", "test");
+            manager = SmarthomeManager.createTestingEnvironment("test", true, configuration);
+            initStatisticsTest(SmarthomeDevice.DeviceType.DOOR);
+            initStatisticsTest(SmarthomeDevice.DeviceType.FAN);
+            initStatisticsTest(SmarthomeDevice.DeviceType.THERMOSTAT);
+            initStatisticsTest(SmarthomeDevice.DeviceType.CONDITIONER);
 
-        user.setHomeManager(manager);
-
-        MongoClientProvider.connectDB();
+            user.setHomeManager(manager);
+        }catch (Exception e){}
+//        mongoClientProvider.connectDB();
     }
 
     @Test
     void testDeleteManager() {
-        MongoClientProvider.writeManager(manager);
-        assertTrue(MongoClientProvider.deleteManager(manager.getUsername()));
-    }
-
-    @Test
-    void testConnectDB() {
-        assertTrue(MongoClientProvider.connectDB());
+        mongoClientProvider.writeManager(manager);
+        assertTrue(mongoClientProvider.deleteManager(manager.getUsername()));
     }
 
     @Test
     void testWriteManager() {
-        assertNotNull(MongoClientProvider.writeManager(manager));
-        MongoClientProvider.deleteManager(manager.getUsername());
+        assertNotNull(mongoClientProvider.writeManager(manager));
+        mongoClientProvider.deleteManager(manager.getUsername());
     }
 
     @Test
     void testGetManagerById() {
-        MongoClientProvider.writeManager(manager);
-        assertNotNull(MongoClientProvider.getManagerById(manager.getKey().toString()));
-        MongoClientProvider.deleteManager(manager.getUsername());
+        mongoClientProvider.writeManager(manager);
+        assertNotNull(mongoClientProvider.getManagerById(manager.getKey().toString()));
+        mongoClientProvider.deleteManager(manager.getUsername());
     }
 
     @Test
     void testGetManagerByUsername() {
-        MongoClientProvider.writeManager(manager);
-        assertNotNull(MongoClientProvider.getManagerByUsername(manager.getUsername()));
-        MongoClientProvider.deleteManager(manager.getUsername());
+        mongoClientProvider.writeManager(manager);
+        assertNotNull(mongoClientProvider.getManagerByUsername(manager.getUsername()));
+        mongoClientProvider.deleteManager(manager.getUsername());
     }
 
     @Test
     void testGetAllManager() {
-        MongoClientProvider.writeManager(manager);
+        mongoClientProvider.writeManager(manager);
         manager.setKey(new ObjectId());
-        MongoClientProvider.writeManager(manager);
+        mongoClientProvider.writeManager(manager);
         List<SmarthomeManager> ms;
-        ms = MongoClientProvider.getAllManagers();
+        ms = mongoClientProvider.getAllManagers();
         assertTrue(ms.size() >= 2);
-        MongoClientProvider.deleteManager(manager.getUsername());
+        mongoClientProvider.deleteManager(manager.getUsername());
     }
 
     @Test
     void testdeleteUser() {
-        MongoClientProvider.writeManager(manager);
-        MongoClientProvider.writeUser(user);
-        assertTrue(MongoClientProvider.deleteUser(user.getUsername()));
-        MongoClientProvider.deleteManager(manager.getUsername());
+        mongoClientProvider.writeManager(manager);
+        mongoClientProvider.writeUser(user);
+        assertTrue(mongoClientProvider.deleteUser(user.getUsername()));
+        mongoClientProvider.deleteManager(manager.getUsername());
     }
 
     @Test
     void testWriteUser() {
-        MongoClientProvider.writeManager(manager);
-        assertNotNull(MongoClientProvider.writeUser(user));
-        MongoClientProvider.deleteUser(user.getUsername());
-        MongoClientProvider.deleteManager(manager.getUsername());
+        mongoClientProvider.writeManager(manager);
+        assertNotNull(mongoClientProvider.writeUser(user));
+        mongoClientProvider.deleteUser(user.getUsername());
+        mongoClientProvider.deleteManager(manager.getUsername());
     }
 
     @Test
     void getUserById() {
-        MongoClientProvider.writeManager(manager);
-        MongoClientProvider.writeUser(user);
-        assertNotNull(MongoClientProvider.getUserById(user.getKey().toString()));
-        MongoClientProvider.deleteUser(user.getUsername());
-        MongoClientProvider.deleteManager(manager.getUsername());
+        mongoClientProvider.writeManager(manager);
+        mongoClientProvider.writeUser(user);
+        assertNotNull(mongoClientProvider.getUserById(user.getKey().toString()));
+        mongoClientProvider.deleteUser(user.getUsername());
+        mongoClientProvider.deleteManager(manager.getUsername());
     }
 
     @Test
     void testGetAllUsers() {
-        MongoClientProvider.writeManager(manager);
-        MongoClientProvider.writeUser(user);
+        mongoClientProvider.writeManager(manager);
+        mongoClientProvider.writeUser(user);
         manager.setKey(new ObjectId());
         user.setKey(new ObjectId());
-        MongoClientProvider.writeManager(manager);
-        MongoClientProvider.writeUser(user);
+        mongoClientProvider.writeManager(manager);
+        mongoClientProvider.writeUser(user);
         List<User> us;
-        us = MongoClientProvider.getAllUsers();
+        us = mongoClientProvider.getAllUsers();
         assertTrue(us.size() >= 2);
-        MongoClientProvider.deleteUser(user.getUsername());
-        MongoClientProvider.deleteManager(manager.getUsername());
+        mongoClientProvider.deleteUser(user.getUsername());
+        mongoClientProvider.deleteManager(manager.getUsername());
     }
 
     @Test
     void testReferenceUserManager() {
-        MongoClientProvider.writeManager(manager);
-        MongoClientProvider.writeUser(user);
-        assertNotNull(MongoClientProvider.getUserById(user.getKey().toString()).getHomeManager());
-        MongoClientProvider.deleteUser(user.getUsername());
-        MongoClientProvider.deleteManager(manager.getUsername());
+        mongoClientProvider.writeManager(manager);
+        mongoClientProvider.writeUser(user);
+        assertNotNull(mongoClientProvider.getUserById(user.getKey().toString()).getHomeManager());
+        mongoClientProvider.deleteUser(user.getUsername());
+        mongoClientProvider.deleteManager(manager.getUsername());
     }
 
     @Test
     void testGetUserByUser() {
-        MongoClientProvider.writeManager(manager);
-        MongoClientProvider.writeUser(user);
-        assertNotNull(MongoClientProvider.getUserByUsername(user.getUsername()));
-        MongoClientProvider.deleteUser(user.getUsername());
-        MongoClientProvider.deleteManager(manager.getUsername());
+        mongoClientProvider.writeManager(manager);
+        mongoClientProvider.writeUser(user);
+        assertNotNull(mongoClientProvider.getUserByUsername(user.getUsername()));
+        mongoClientProvider.deleteUser(user.getUsername());
+        mongoClientProvider.deleteManager(manager.getUsername());
     }
 
     @Test
     void testCheckUserByUserAndPass() {
-        MongoClientProvider.writeManager(manager);
-        MongoClientProvider.writeUser(user);
-        assertTrue(MongoClientProvider.checkUserByUserAndPass(user.getUsername(), user.getPassword()));
-        assertFalse(MongoClientProvider.checkUserByUserAndPass("paperino", user.getPassword()));
-        MongoClientProvider.deleteUser(user.getUsername());
-        MongoClientProvider.deleteManager(manager.getUsername());
+        mongoClientProvider.writeManager(manager);
+        mongoClientProvider.writeUser(user);
+        assertTrue(mongoClientProvider.checkUserByUserAndPass(user.getUsername(), user.getPassword()));
+        assertFalse(mongoClientProvider.checkUserByUserAndPass("paperino", user.getPassword()));
+        mongoClientProvider.deleteUser(user.getUsername());
+        mongoClientProvider.deleteManager(manager.getUsername());
     }
 
     @Test
     void testMailPresent() {
-        MongoClientProvider.writeManager(manager);
-        MongoClientProvider.writeUser(user);
-        assertTrue(MongoClientProvider.mailPresent(user.getEmail()));
-        MongoClientProvider.deleteUser(user.getUsername());
-        MongoClientProvider.deleteManager(manager.getUsername());
+        mongoClientProvider.writeManager(manager);
+        mongoClientProvider.writeUser(user);
+        assertTrue(mongoClientProvider.mailPresent(user.getEmail()));
+        mongoClientProvider.deleteUser(user.getUsername());
+        mongoClientProvider.deleteManager(manager.getUsername());
     }
 
 
     @Test
     void testUpdateFieldOfUser() {
-        MongoClientProvider.writeManager(manager);
-        MongoClientProvider.writeUser(user);
-        assertTrue(MongoClientProvider.updateFieldOfUser(user.getUsername(), IUserDAO.PASS, "ciaociao"));
-        User u = MongoClientProvider.getUserById(user.getKey().toString());
+        mongoClientProvider.writeManager(manager);
+        mongoClientProvider.writeUser(user);
+        assertTrue(mongoClientProvider.updateFieldOfUser(user.getUsername(), IUserDAO.PASS, "ciaociao"));
+        User u = mongoClientProvider.getUserById(user.getKey().toString());
         assertNotEquals(u.getPassword(), user.getPassword());
-        MongoClientProvider.deleteUser(user.getUsername());
-        MongoClientProvider.deleteManager(manager.getUsername());
+        mongoClientProvider.deleteUser(user.getUsername());
+        mongoClientProvider.deleteManager(manager.getUsername());
     }
 
     @Test
     void testGetStatistics() {
-        MongoClientProvider.writeManager(manager);
-        MongoClientProvider.deleteManager(manager.getUsername());
+        mongoClientProvider.writeManager(manager);
+        mongoClientProvider.deleteManager(manager.getUsername());
     }
 
     private static void initStatisticsTest(SmarthomeDevice.DeviceType ty) {

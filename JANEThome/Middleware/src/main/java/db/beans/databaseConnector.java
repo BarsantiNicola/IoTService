@@ -15,31 +15,33 @@ import java.util.List;
 
 @Stateless
 public class databaseConnector implements DBinterface {
+    MongoClientProvider mongoClientProvider;
 
     @Override
     @PostConstruct
     public void connectDB() {
-        MongoClientProvider.connectDB();
+        mongoClientProvider = new MongoClientProvider();
+//        mongoClientProvider.connectDB();
     }
 
     @Override
     public boolean login(String username, String password) {
-        return MongoClientProvider.checkUserByUserAndPass(username, password);
+        return mongoClientProvider.checkUserByUserAndPass(username, password);
     }
 
     @Override
     public boolean addUser(User user) {
-        return MongoClientProvider.writeUser(user) != null;
+        return mongoClientProvider.writeUser(user) != null;
     }
 
     @Override
     public boolean emailPresent(String email) {
-        return MongoClientProvider.mailPresent(email);
+        return mongoClientProvider.mailPresent(email);
     }
 
     @Override
     public SmarthomeManager getSmarthome(String username) {
-        return MongoClientProvider.getUserByUsername(username).getHomeManager();
+        return mongoClientProvider.getUserByUsername(username).getHomeManager();
     }
 
     @Override
@@ -51,13 +53,13 @@ public class databaseConnector implements DBinterface {
 
     @Override
     public String[] getUserFirstAndLastName(String username) {
-        User s = MongoClientProvider.getUserByUsername(username);
+        User s = mongoClientProvider.getUserByUsername(username);
         return new String[]{s.getFirstName(), s.getLastName()};
     }
 
 
     @Override
     public boolean changePassword(String username, String new_password) {
-        return MongoClientProvider.updateFieldOfUser(username, IUserDAO.PASS, new_password);
+        return mongoClientProvider.updateFieldOfUser(username, IUserDAO.PASS, new_password);
     }
 }

@@ -1,6 +1,8 @@
 package db.mongoConnector;
 
 import com.mongodb.*;
+import config.beans.Configuration;
+import config.interfaces.ConfigurationInterface;
 import db.dao.SmartHomeManagerDAO;
 import db.dao.UserDAO;
 import db.interfaces.ISmartHomeManagerDAO;
@@ -12,10 +14,17 @@ import org.mongodb.morphia.Datastore;
 import org.mongodb.morphia.Morphia;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
+import statistics.Statistic;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
+import javax.annotation.PostConstruct;
+import javax.ejb.EJB;
+import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
-
-import static db.interfaces.IGenericDao.DB_NAME;
+import java.util.Map;
 
 /**
  * This class have all methods for the access of DB
@@ -23,32 +32,68 @@ import static db.interfaces.IGenericDao.DB_NAME;
  * Before to call a methods you must use the method connectDB that connect the db
  * This method must be called only one time on the lifetime of the program
  */
-public final class MongoClientProvider {
+public class MongoClientProvider {
     private static MongoClient mc;
     private static Morphia morphia;
     private static Datastore datastore;
     private static SmartHomeManagerDAO managerDao;
     private static UserDAO userDAO;
+    private transient Logger logger;
+
+    @EJB
+    ConfigurationInterface configuration;   //  gives the configuration for the rest interface
 
     /**
      * Open DB connection
      */
-    public static boolean connectDB() {
+    public MongoClientProvider() {
+        this.logger = LogManager.getLogger(getClass());
+        init();
+    }
+
+
+    private void init(){
+
         try {
+            configuration = new Configuration();
+            Map<String,String> conf = configuration.getConfiguration("db");
 //            mc = new MongoClient(new MongoClientURI(DB_HOST));
-            mc = new MongoClient("localhost", 27017);
+            mc = new MongoClient(conf.get("hostname"), Integer.parseInt(conf.get("port")));
             morphia = new Morphia();
             morphia.map(SmarthomeManager.class);
             morphia.map(User.class);
-            datastore = morphia.createDatastore(mc, DB_NAME);
-//            datastore.ensureIndexes();
+            datastore = morphia.createDatastore(mc, conf.get("db_name"));
+            datastore.ensureIndexes();
             managerDao = new SmartHomeManagerDAO(SmarthomeManager.class, datastore);
             userDAO = new UserDAO(User.class, datastore);
         } catch (Exception e) {
-            return false;
+            logger.error(e);
         }
-        return true;
     }
+
+
+    /**
+     * Method to test connection: Open DB connection
+     */
+    public MongoClientProvider(Configuration configuration) {
+        try {
+
+            Map<String,String> conf = configuration.getConfiguration("db");
+//            mc = new MongoClient(new MongoClientURI(DB_HOST));
+            mc = new MongoClient(conf.get("hostname"), Integer.parseInt(conf.get("port")));
+            morphia = new Morphia();
+            morphia.map(SmarthomeManager.class);
+            morphia.map(User.class);
+            datastore = morphia.createDatastore(mc, conf.get("db_name"));
+            datastore.ensureIndexes();
+            managerDao = new SmartHomeManagerDAO(SmarthomeManager.class, datastore);
+            userDAO = new UserDAO(User.class, datastore);
+        } catch (Exception e) {
+            logger.error(e);
+        }
+    }
+
+
 
     /////MANAGER METHODS//////
 
@@ -58,7 +103,7 @@ public final class MongoClientProvider {
      * @param manager a {@link SmarthomeManager} class
      * @return the ObjectId of element on DB
      */
-    public static ObjectId writeManager(SmarthomeManager manager) {
+    public ObjectId writeManager(SmarthomeManager manager) {
         return (ObjectId) managerDao.save(manager).getId();
     }
 
@@ -68,7 +113,7 @@ public final class MongoClientProvider {
      * @param id the string of the key (ObjectId)
      * @return a {@link SmarthomeManager}
      */
-    public static SmarthomeManager getManagerById(String id) {
+    public SmarthomeManager getManagerById(String id) {
         return managerDao.get(new ObjectId(id));
     }
 
@@ -78,7 +123,7 @@ public final class MongoClientProvider {
      * @param username the username
      * @return a {@link SmarthomeManager}
      */
-    public static SmarthomeManager getManagerByUsername(String username) {
+    public SmarthomeManager getManagerByUsername(String username) {
         return managerDao.findOne(ISmartHomeManagerDAO.USERNAME, username);
     }
 
@@ -87,7 +132,7 @@ public final class MongoClientProvider {
      *
      * @return a list of {@link SmarthomeManager}
      */
-    public static List<SmarthomeManager> getAllManagers() {
+    public List<SmarthomeManager> getAllManagers() {
         return managerDao.find().asList();
     }
 
@@ -97,7 +142,7 @@ public final class MongoClientProvider {
      * @param username the username of Manager
      * @return true/false
      */
-    public static boolean deleteManager(String username) {
+    public boolean deleteManager(String username) {
         final Query<SmarthomeManager> query = datastore.createQuery(SmarthomeManager.class)
                 .filter(ISmartHomeManagerDAO.USERNAME, username);
         return managerDao.deleteByQuery(query).wasAcknowledged();
@@ -112,7 +157,7 @@ public final class MongoClientProvider {
      * @param user a {@link User} class
      * @return the ObjectId of element on DB
      */
-    public static ObjectId writeUser(User user) {
+    public ObjectId writeUser(User user) {
         return (ObjectId) userDAO.save(user).getId();
     }
 
@@ -122,7 +167,7 @@ public final class MongoClientProvider {
      * @param id the string of the key (ObjectId)
      * @return the ObjectId of element on DB
      */
-    public static User getUserById(String id) {
+    public User getUserById(String id) {
         return userDAO.get(new ObjectId(id));
     }
 
@@ -131,7 +176,7 @@ public final class MongoClientProvider {
      *
      * @return a list of {@link User}
      */
-    public static List<User> getAllUsers() {
+    public List<User> getAllUsers() {
         return userDAO.find().asList();
     }
 
@@ -141,7 +186,7 @@ public final class MongoClientProvider {
      * @param username a string of username
      * @return true/false
      */
-    public static boolean deleteUser(String username) {
+    public boolean deleteUser(String username) {
         final Query<User> query = datastore.createQuery(User.class)
                 .filter(IUserDAO.USERNAME, username);
         return userDAO.deleteByQuery(query).wasAcknowledged();
@@ -154,7 +199,7 @@ public final class MongoClientProvider {
      * @param username a sring of username
      * @return the {@link User} class
      */
-    public static User getUserByUsername(String username) {
+    public User getUserByUsername(String username) {
         final Query<User> query = datastore.createQuery(User.class).filter(IUserDAO.USERNAME, username);
         return userDAO.findOne(query);
     }
@@ -166,7 +211,7 @@ public final class MongoClientProvider {
      * @param password a sring of password
      * @return true/false
      */
-    public static boolean checkUserByUserAndPass(String username, String password) {
+    public boolean checkUserByUserAndPass(String username, String password) {
         final Query<User> query = datastore.createQuery(User.class).filter(IUserDAO.USERNAME, username)
                 .filter(IUserDAO.PASS, password);
         return userDAO.exists(query);
@@ -190,11 +235,20 @@ public final class MongoClientProvider {
      * @param value    the new value of the field
      * @return true/false
      */
-    public static boolean updateFieldOfUser(String username, String field, String value) {
+    public boolean updateFieldOfUser(String username, String field, String value) {
         final UpdateOperations<User> op = datastore.createUpdateOperations(User.class).set(field, value);
         final Query<User> query = datastore.createQuery(User.class).filter(IUserDAO.USERNAME, username);
         return userDAO.updateFirst(query, op).getUpdatedExisting();
 
+    }
+
+    /////////STATISTICS////////////
+
+    public List<Statistic> getStatistics(String dID, String action, Date startTime, Date endTime){
+        List<Statistic> st = new ArrayList<>();
+
+
+        return st;
     }
 
 
