@@ -544,7 +544,10 @@ public class SmarthomeManager extends MongoEntity implements Serializable {
             param.put("action", action);
             param.put("value", value);
 
-            param.put("timestamp", gson.toJson(timestamp));
+            if (trial)
+                param.put("timestamp", gson.toJson(new Date(System.currentTimeMillis())));
+            else
+                param.put("timestamp", gson.toJson(timestamp));
 
             try {
                 result = this.devices.get(name).setParam(param, trial, false);
