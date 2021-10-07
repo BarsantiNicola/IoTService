@@ -5,8 +5,10 @@ import config.beans.Configuration;
 import config.interfaces.ConfigurationInterface;
 import db.dao.SmartHomeManagerDAO;
 import db.dao.UserDAO;
+import db.interfaces.IGenericDao;
 import db.interfaces.ISmartHomeManagerDAO;
 import db.interfaces.IUserDAO;
+import iot.Action;
 import iot.SmarthomeManager;
 import iot.User;
 import org.bson.types.ObjectId;
@@ -14,17 +16,19 @@ import org.mongodb.morphia.Datastore;
 import org.mongodb.morphia.Morphia;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
+import org.mongodb.morphia.aggregation.*;
+
+import static org.mongodb.morphia.aggregation.Group.grouping;
+import static org.mongodb.morphia.aggregation.Group.*;
+
 import statistics.Statistic;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import statistics.Statistics;
 
-import javax.annotation.PostConstruct;
 import javax.ejb.EJB;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * This class have all methods for the access of DB
@@ -51,18 +55,30 @@ public class MongoClientProvider {
         init();
     }
 
-
-    private void init(){
-
+    //TODO: vedi per conf
+    private void init() {
         try {
-            configuration = new Configuration();
-            Map<String,String> conf = configuration.getConfiguration("db");
+            String db, hostname;
+            Integer port;
+
+//            configuration = new Configuration();
+//            Map<String,String> conf = configuration.getConfiguration("db");
+//            hostname = conf.get("hostname");
+//            port = Integer.parseInt(conf.get("port"));
+//            db =  conf.get("db_name");
+
 //            mc = new MongoClient(new MongoClientURI(DB_HOST));
-            mc = new MongoClient(conf.get("hostname"), Integer.parseInt(conf.get("port")));
+
+
+            hostname = IGenericDao.DB_HOST;
+            port = IGenericDao.DB_PORT;
+            db = IGenericDao.DB_NAME;
+
+            mc = new MongoClient(hostname, port);
             morphia = new Morphia();
             morphia.map(SmarthomeManager.class);
             morphia.map(User.class);
-            datastore = morphia.createDatastore(mc, conf.get("db_name"));
+            datastore = morphia.createDatastore(mc, db);
             datastore.ensureIndexes();
             managerDao = new SmartHomeManagerDAO(SmarthomeManager.class, datastore);
             userDAO = new UserDAO(User.class, datastore);
@@ -77,8 +93,8 @@ public class MongoClientProvider {
      */
     public MongoClientProvider(Configuration configuration) {
         try {
-
-            Map<String,String> conf = configuration.getConfiguration("db");
+            this.logger = LogManager.getLogger(getClass());
+            Map<String, String> conf = configuration.getConfiguration("db");
 //            mc = new MongoClient(new MongoClientURI(DB_HOST));
             mc = new MongoClient(conf.get("hostname"), Integer.parseInt(conf.get("port")));
             morphia = new Morphia();
@@ -89,10 +105,10 @@ public class MongoClientProvider {
             managerDao = new SmartHomeManagerDAO(SmarthomeManager.class, datastore);
             userDAO = new UserDAO(User.class, datastore);
         } catch (Exception e) {
+            assert logger != null;
             logger.error(e);
         }
     }
-
 
 
     /////MANAGER METHODS//////
@@ -244,12 +260,79 @@ public class MongoClientProvider {
 
     /////////STATISTICS////////////
 
-    public List<Statistic> getStatistics(String dID, String action, Date startTime, Date endTime){
-        List<Statistic> st = new ArrayList<>();
+    /**
+     * Return the statistics of a device by action and date range.
+     * If the action is Action.ONOFF, Action.OPENCLOSE or Action.LOCKUNLOCK for every statistic it will return 3 samples
+     * shifted by 5 second( {@link Action} )
+     *
+     * @param dID       the id of the device
+     * @param action    the action that do you want the statistics
+     * @param startTime start time of range
+     * @param endTime   end time of range
+     * @return The {@link Statistics} that it contains a sorted list of {@link Statistic}
+     */
+    public Statistics getStatistics(String dID, String action, Date startTime, Date endTime) {
+        Statistics statistics = new Statistics();
+        Statistic tempStat;
+        Statistic tempStatPre;
+        Statistic tempStatpost;
 
+        try {
+            Query<SmarthomeManager> query = datastore.getQueryFactory().createQuery(datastore);
+            query.field("_id").greaterThanOrEq(startTime);
+            query.field("_id").lessThanOrEq(endTime);
+            query.field("values.action").equal(action);
 
-        return st;
+            Projection devicesProjection = Projection.expression("devices", new BasicDBObject("$objectToArray", "$devices"));
+            Projection operationsProjection = Projection.expression("operations", new BasicDBObject("$objectToArray", "$devices.v.historical"));
+            Projection yProjection = Projection.expression("y", new BasicDBObject("$arrayElemAt", new Object[]{"$values.value", 0}));
+
+            Iterator<Statistic> aggregate = datastore.createAggregation(SmarthomeManager.class)
+                    .project(devicesProjection)
+                    .unwind("devices")
+                    .match(datastore.getQueryFactory().createQuery(datastore).field("devices.k").equal(dID))
+                    .project(operationsProjection)
+                    .unwind("operations")
+                    .group("operations.v.date", grouping("values", addToSet("operations.v")))
+                    .match(query)
+                    .project(Projection.projection("_id").suppress(), Projection.projection("x", "_id"), yProjection)
+                    .out(Statistic.class);
+
+            while (aggregate.hasNext()) {
+                tempStat = aggregate.next();
+                if (action.matches(Action.ONOFF + "|" + Action.OPENCLOSE + "|" + Action.LOCKUNLOCK)) {
+                    tempStatPre = new Statistic(shiftDateBackwards(tempStat.getX()), tempStat.getY());
+                    tempStatpost = new Statistic(shiftDateForward(tempStat.getX()), tempStat.getY());
+                    statistics.addStatistic(tempStatPre);
+                    statistics.addStatistic(tempStatpost);
+                }
+                statistics.addStatistic(tempStat);
+            }
+            return statistics;
+        } catch (Exception e) {
+            logger.error(e);
+        }
+        return statistics;
     }
 
+    private Date shiftDateForward(Date d) {
+        Calendar calendar = dateToCalendar(d);
+        calendar.add(Calendar.SECOND, 5);
+        return calendar.getTime();
+    }
 
+    private Date shiftDateBackwards(Date d) {
+        Calendar calendar = dateToCalendar(d);
+        calendar.add(Calendar.SECOND, -5);
+        return calendar.getTime();
+    }
+
+    //Convert Date to Calendar
+    private Calendar dateToCalendar(Date date) {
+
+        Calendar calendar = Calendar.getInstance();
+        calendar.setTime(date);
+        return calendar;
+
+    }
 }

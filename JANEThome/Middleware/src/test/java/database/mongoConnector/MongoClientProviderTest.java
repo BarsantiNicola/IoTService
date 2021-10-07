@@ -7,6 +7,7 @@ import iot.*;
 import org.bson.types.ObjectId;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+import statistics.Statistics;
 
 import java.util.*;
 import java.util.concurrent.ThreadLocalRandom;
@@ -20,7 +21,7 @@ class mongoClientProviderTest {
 
     @BeforeAll
     static void setUp() {
-        try{
+        try {
             Configuration configuration = new Configuration();
             mongoClientProvider = new MongoClientProvider(configuration);
             user = new User("pluto", "federico", "lapenna", "f.lapenna@studenti.unipi.it", "test");
@@ -31,7 +32,8 @@ class mongoClientProviderTest {
             initStatisticsTest(SmarthomeDevice.DeviceType.CONDITIONER);
 
             user.setHomeManager(manager);
-        }catch (Exception e){}
+        } catch (Exception e) {
+        }
 //        mongoClientProvider.connectDB();
     }
 
@@ -164,13 +166,105 @@ class mongoClientProviderTest {
     @Test
     void testGetStatistics() {
         mongoClientProvider.writeManager(manager);
+
+        String id;
+        Calendar calendar = Calendar.getInstance();
+        calendar.set(2020, 1, 1);
+
+        Date startDate = calendar.getTime();
+        Date endDate = new Date();
+        String action;
+        String type;
+
+        // TEST ONOFF of FAN
+        action = Action.ONOFF;
+        type = Action.FAN_ACTION;
+        id = getRandomIdByType(type, manager);
+        if (id != null) {
+            assertNotNull(mongoClientProvider.getStatistics(id, action, startDate, endDate));
+        } else {
+            System.out.print("id null FAN ONOFF");
+        }
+
+
+        // TEST FANSPEED of FAN
+        action = Action.FANSPEED;
+        type = Action.FAN_ACTION;
+        id = getRandomIdByType(type, manager);
+        if (id != null) {
+            assertNotNull(mongoClientProvider.getStatistics(id, action, startDate, endDate));
+        } else {
+            System.out.print("id null FAN SPEED");
+        }
+
+
+        // TEST OPENCLOSE of DOOR
+        action = Action.OPENCLOSE;
+        type = Action.DOOR_ACTION;
+        id = getRandomIdByType(type, manager);
+        if (id != null) {
+            assertNotNull(mongoClientProvider.getStatistics(id, action, startDate, endDate));
+        } else {
+            System.out.print("id null DOOR OPEN");
+        }
+
+
+        // TEST ONOFF of THERM
+        action = Action.ONOFF;
+        type = Action.AC_ACTION;
+        id = getRandomIdByType(type, manager);
+        if (id != null) {
+            assertNotNull(mongoClientProvider.getStatistics(id, action, startDate, endDate));
+        } else {
+            System.out.print("id null AC ONOFF");
+        }
+
+
+        // TEST TEMPERATURE of THERN
+        action = Action.TEMPSET;
+        type = Action.AC_ACTION;
+        id = getRandomIdByType(type, manager);
+        if (id != null) {
+            assertNotNull(mongoClientProvider.getStatistics(id, action, startDate, endDate));
+        } else {
+            System.out.print("id null AC TEMP SET");
+        }
+
+
+        // TEST TEMPERATURE of THERN
+        action = Action.TEMPSET;
+        type = Action.THERM_ACTION;
+        id = getRandomIdByType(type, manager);
+        if (id != null) {
+            assertNotNull(mongoClientProvider.getStatistics(id, action, startDate, endDate));
+        } else {
+            System.out.print("id null THERM TEMPSET");
+        }
+
         mongoClientProvider.deleteManager(manager.getUsername());
+    }
+
+    private String getRandomIdByType(String type, SmarthomeManager manager) {
+        for (SmarthomeLocation l : manager.getLocations()) {
+            for (SmarthomeSublocation s : l.getSublocations().values()) {
+                for (SmarthomeWebDevice d : s.getDevices()) {
+                    if (d.getType() == type) {
+                        return d.getId();
+                    }
+                }
+            }
+        }
+        return null;
     }
 
     private static void initStatisticsTest(SmarthomeDevice.DeviceType ty) {
         String type = SmarthomeDevice.DeviceType.typeToString(ty);
         List<String> devices = getNameDev(type);
-        Date startDate = new GregorianCalendar(2020, Calendar.JANUARY, 1).getGregorianChange();
+
+        Calendar calendar = Calendar.getInstance();
+        calendar.set(2020, 1, 1);
+
+        Date startDate = calendar.getTime();
         Date endDate = new Date();
         int numTest = 10;
 

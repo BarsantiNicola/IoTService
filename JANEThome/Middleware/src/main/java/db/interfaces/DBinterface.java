@@ -21,6 +21,6 @@ public interface DBinterface {
     
     SmarthomeManager getSmarthome( String email );
     boolean changePassword( String email, String new_password );
-    List<Statistic> getStatistics(String dID, String action, Date startTime, Date endTime );
+    Statistics getStatistics(String dID, String action, Date startTime, Date endTime );
 
 }

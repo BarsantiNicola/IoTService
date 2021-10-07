@@ -21,7 +21,6 @@ public class databaseConnector implements DBinterface {
     @PostConstruct
     public void connectDB() {
         mongoClientProvider = new MongoClientProvider();
-//        mongoClientProvider.connectDB();
     }
 
     @Override
@@ -45,9 +44,8 @@ public class databaseConnector implements DBinterface {
     }
 
     @Override
-    public List<Statistic> getStatistics(String dID, String action, Date startTime, Date endTime) {
-
-        return Statistics.buildTestEnvironment();
+    public Statistics getStatistics(String dID, String action, Date startTime, Date endTime) {
+        return mongoClientProvider.getStatistics(dID,action,startTime,endTime);
 
     }
 
