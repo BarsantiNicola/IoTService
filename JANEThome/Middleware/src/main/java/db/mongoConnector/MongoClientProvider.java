@@ -69,7 +69,6 @@ public class MongoClientProvider {
 
 //            mc = new MongoClient(new MongoClientURI(DB_HOST));
 
-
             hostname = IGenericDao.DB_HOST;
             port = IGenericDao.DB_PORT;
             db = IGenericDao.DB_NAME;
@@ -301,8 +300,8 @@ public class MongoClientProvider {
             while (aggregate.hasNext()) {
                 tempStat = aggregate.next();
                 if (action.matches(Action.ONOFF + "|" + Action.OPENCLOSE + "|" + Action.LOCKUNLOCK)) {
-                    tempStatPre = new Statistic(shiftDateBackwards(tempStat.getX()), tempStat.getY());
-                    tempStatpost = new Statistic(shiftDateForward(tempStat.getX()), tempStat.getY());
+                    tempStatPre = new Statistic(shiftDateBackwards(tempStat.getX()), "0");
+                    tempStatpost = new Statistic(shiftDateForward(tempStat.getX()), "0");
                     statistics.addStatistic(tempStatPre);
                     statistics.addStatistic(tempStatpost);
                 }

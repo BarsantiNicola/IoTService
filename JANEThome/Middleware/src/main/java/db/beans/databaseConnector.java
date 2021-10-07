@@ -5,13 +5,11 @@ import db.interfaces.IUserDAO;
 import db.mongoConnector.MongoClientProvider;
 import iot.SmarthomeManager;
 import iot.User;
-import statistics.Statistic;
 import statistics.Statistics;
 
 import javax.annotation.PostConstruct;
 import javax.ejb.Stateless;
 import java.util.Date;
-import java.util.List;
 
 @Stateless
 public class databaseConnector implements DBinterface {
