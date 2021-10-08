@@ -3,17 +3,14 @@ package rest.out.beans;
 import config.interfaces.ConfigurationInterface;
 import config.interfaces.GeneratorInterface;
 import iot.SmarthomeDevice;
-import iot.SmarthomeWebDevice;
 import rabbit.msg.DeviceUpdate;
 import rabbit.msg.DeviceUpdateMessage;
 import rabbit.msg.InvalidMessageException;
 import rabbit.out.interfaces.SenderInterface;
 import rest.out.interfaces.RESTinterface;
-
 import javax.annotation.PostConstruct;
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
-import javax.ws.rs.PUT;
 import javax.ws.rs.core.Response;
 import java.util.Date;
 import java.util.HashMap;
@@ -27,23 +24,22 @@ import java.util.logging.Logger;
 import java.util.logging.SimpleFormatter;
 
 @Stateless
-@SuppressWarnings( "unused" )
 public class DeviceCommandSender implements RESTinterface {
 
 
     @EJB
-    private SenderInterface notifier;
+    private SenderInterface notifier;           //  component to update all the elements of the service
 
     private Logger logger;
-    private HashMap<String,String> conf;
+    private HashMap<String,String> conf;        //  configuration of the service
 
     @EJB
     private ConfigurationInterface configuration;   //  gives the configuration for the rest interface
 
     @EJB
-    GeneratorInterface idGenerator;
+    GeneratorInterface idGenerator;             //  generates unique identifiers for the resource of the service
 
-    private final ExecutorService executors = Executors.newCachedThreadPool();
+    private final static ExecutorService executors = Executors.newCachedThreadPool(); //  shared pool of executors to send rest messages
 
     public DeviceCommandSender(){
         this.initializeLogger();
@@ -76,7 +72,7 @@ public class DeviceCommandSender implements RESTinterface {
 
     }
 
-    //  adds a new location to the user's smartHome. In case of success it automatically forward the update to all the involved components.
+    //  adds a new location to the user's smartHome. In case of success it automatically forwards the update to all the involved components.
     //  The locID information will be automatically generated and linked with the update forwarded to all the components
     //  Parameters:
     //      - username: email of the user
@@ -106,27 +102,29 @@ public class DeviceCommandSender implements RESTinterface {
         try {
 
             while( true ){
+
                 Response result = this.sendCommand( ipAddr, Integer.parseInt(this.conf.get("control_port")), "/location/"+locID, RESTsender.REQ_TYPE.PUT, data ).get();
                 if( result != null ) {
 
                     switch (result.getStatus()) {
-                        case 200:
-                            DeviceUpdateMessage message = new DeviceUpdateMessage(username, from);
-                            message.addUpdates(DeviceUpdate.buildAddLocation(new Date(System.currentTimeMillis()), location, locID, ipAddr, port));
-                            return this.notifier.sendMessage(message) > 0;
 
-                        case 409:
+                        case 200:  //  if command correctly done, we notify it to all the involved components
+                            DeviceUpdateMessage message = new DeviceUpdateMessage(username, from);
+                            message.addUpdates( DeviceUpdate.buildAddLocation( new Date(System.currentTimeMillis()), location, locID, ipAddr, port ));
+                            return this.notifier.sendMessage( message ) > 0;
+
+                        case 400:  //  in stable version cannot happen
+                            logger.severe("Error, bad ADD_LOCATION request");
+                            break;
+
+                        case 409:  //  TODO to be splitted into future updates into two errors: duplicate port / duplicate locID
                             logger.severe("Error, duplicated port or locID");
-                            if( tentative++ == 3 )
+                            if( tentative++ == 3 )  //  TODO to be removed when duplicate locID response well defined
                                 return false;
                             locID = idGenerator.generateLID();
                             continue;
 
-                        case 400:
-                            logger.severe("Error, bad ADD_LOCATION request");
-                            break;
-
-                        case 500:
+                        case 500:  //  an error has occurred inside the erlang network
                             logger.warning( "Error, internal server error of erlang network");
                             break;
 
@@ -144,7 +142,7 @@ public class DeviceCommandSender implements RESTinterface {
     }
 
 
-    //  change the location name identified by its locID. In case of success it automatically forward the update to all the involved components.
+    //  changes the location name of a location. In case of success it automatically forwards the update to all the involved components.
     //  Parameters:
     //      - username: email of the user
     //      - from: an identifier of the component which made the request. Prevent duplicated updates
@@ -169,12 +167,12 @@ public class DeviceCommandSender implements RESTinterface {
             if (result != null) {
 
                 switch (result.getStatus()) {
-                    case 200:
+                    case 200:  //  if command correctly done, we notify it to all the involved components
                         DeviceUpdateMessage message = new DeviceUpdateMessage(username, from);
                         message.addUpdates(DeviceUpdate.buildRenameLocation(new Date(System.currentTimeMillis()), newName, newName));
                         return this.notifier.sendMessage(message) > 0;
 
-                    case 400:
+                    case 400:  //  in stable version cannot happen
                         logger.severe("Error, bad CHANGE_LOCATION_NAME request");
                         break;
 
@@ -216,12 +214,12 @@ public class DeviceCommandSender implements RESTinterface {
             if (result != null) {
 
                 switch (result.getStatus()) {
-                    case 200:
+                    case 200:  //  if command correctly done, we notify it to all the involved components
                         DeviceUpdateMessage message = new DeviceUpdateMessage(username, from);
                         message.addUpdates( DeviceUpdate.buildRemoveLocation( new Date(System.currentTimeMillis()), name ));
                         return this.notifier.sendMessage(message) > 0;
 
-                    case 400:
+                    case 400:  //  in stable version cannot happen
                         logger.severe("Error, bad REMOVE_LOCATION request");
                         break;
 
@@ -273,12 +271,12 @@ public class DeviceCommandSender implements RESTinterface {
             if (result != null) {
 
                 switch (result.getStatus()) {
-                    case 200:
+                    case 200:  //  if command correctly done, we notify it to all the involved components
                         DeviceUpdateMessage message = new DeviceUpdateMessage(username, from);
                         message.addUpdates( DeviceUpdate.buildAddSubLocation( new Date(System.currentTimeMillis()), location, sublocation, sublocID ));
                         return this.notifier.sendMessage(message) > 0;
 
-                    case 400:
+                    case 400:  //  in stable version cannot happen
                         logger.severe("Error, bad ADD_SUBLOCATION request");
                         break;
 
@@ -330,12 +328,12 @@ public class DeviceCommandSender implements RESTinterface {
             if (result != null) {
 
                 switch (result.getStatus()) {
-                    case 200:
+                    case 200:  //  if command correctly done, we notify it to all the involved components
                         DeviceUpdateMessage message = new DeviceUpdateMessage(username, from);
                         message.addUpdates( DeviceUpdate.buildRenameSubLocation( new Date(System.currentTimeMillis()), location, sublocation, newName ));
                         return this.notifier.sendMessage(message) > 0;
 
-                    case 400:
+                    case 400:  //  in stable version cannot happen
                         logger.severe("Error, bad CHANGE_SUBLOCATION_NAME request");
                         break;
 
@@ -381,13 +379,13 @@ public class DeviceCommandSender implements RESTinterface {
             if (result != null) {
 
                 switch (result.getStatus()) {
-                    case 200:
+                    case 200:  //  if command correctly done, we notify it to all the involved components
                         DeviceUpdateMessage message = new DeviceUpdateMessage(username, from);
                         message.addUpdates(DeviceUpdate.buildRemoveSubLocation( new Date(System.currentTimeMillis()), location, sublocation ));
                         return this.notifier.sendMessage(message) > 0;
 
-                    case 400:
-                        logger.severe("Error, bad ADD_SUBLOCATION request");
+                    case 400:  //  in stable version cannot happen
+                        logger.severe("Error, bad REMOVE_SUBLOCATION request");
                         break;
 
                     case 409:
@@ -433,8 +431,6 @@ public class DeviceCommandSender implements RESTinterface {
         HashMap<String,String> data = new HashMap<>();  //  message to be forwarded
         int tentative = 0;
 
-        String locID = idGenerator.generateLID();
-
         data.put( "subloc_id" , sublocID );
         data.put( "name", name );
         data.put( "type", type.toString() );
@@ -447,10 +443,14 @@ public class DeviceCommandSender implements RESTinterface {
                 if( result != null ) {
 
                     switch (result.getStatus()) {
-                        case 200:
+                        case 200:  //  if command is correctly done, we notify it to all the involved components
                             DeviceUpdateMessage message = new DeviceUpdateMessage(username, from);
                             message.addUpdates(DeviceUpdate.buildAddDevice( new Date(System.currentTimeMillis()), location, sublocation, dID, name, type ));
                             return this.notifier.sendMessage(message) > 0;
+
+                        case 400:  //  in stable version cannot happen
+                            logger.severe("Error, bad ADD_DEVICE request");
+                            break;
 
                         case 409:
                             if( tentative++ == 10 )
@@ -458,9 +458,7 @@ public class DeviceCommandSender implements RESTinterface {
                             dID = idGenerator.generateDID();
                             continue;
 
-                        case 400:
-                            logger.severe("Error, bad ADD_DEVICE request");
-                            break;
+
 
                         case 500:
                             logger.warning( "Error, internal server error of erlang network");
@@ -504,16 +502,16 @@ public class DeviceCommandSender implements RESTinterface {
 
         try {
 
-            Response result = this.sendCommand( ipAddr, port, "/device/" + dID, RESTsender.REQ_TYPE.POST, null ).get();
+            Response result = this.sendCommand( ipAddr, port, "/device/" + dID, RESTsender.REQ_TYPE.POST, data ).get();
             if (result != null) {
 
                 switch (result.getStatus()) {
-                    case 200:
+                    case 200: //  if command correctly done, we notify it to all the involved components
                         DeviceUpdateMessage message = new DeviceUpdateMessage(username, from);
                         message.addUpdates(DeviceUpdate.buildChangeDeviceSubLocation( new Date(System.currentTimeMillis()), location, dID, name, newSubLocation ));
                         return this.notifier.sendMessage(message) > 0;
 
-                    case 400:
+                    case 400:  //  in stable version cannot happen
                         logger.severe("Error, bad CHANGE_DEVICE_SUBLOCATION request");
                         break;
 
@@ -565,13 +563,13 @@ public class DeviceCommandSender implements RESTinterface {
             if (result != null) {
 
                 switch (result.getStatus()) {
-                    case 200:
+                    case 200: //  if command correctly done, we notify it to all the involved components
                         DeviceUpdateMessage message = new DeviceUpdateMessage(username, from);
                         message.addUpdates(DeviceUpdate.buildRenameDevice( new Date(System.currentTimeMillis()), dID, oldName, newName ));
                         return this.notifier.sendMessage(message) > 0;
 
-                    case 400:
-                        logger.severe("Error, bad CHANGE_SUBLOCATION_NAME request");
+                    case 400:  //  in stable version cannot happen
+                        logger.severe("Error, bad CHANGE_DEVICE_NAME request");
                         break;
 
                     case 404:
@@ -617,13 +615,13 @@ public class DeviceCommandSender implements RESTinterface {
             if (result != null) {
 
                 switch (result.getStatus()) {
-                    case 200:
+                    case 200:  //  if command correctly done, we notify it to all the involved components
                         DeviceUpdateMessage message = new DeviceUpdateMessage(username, from);
                         message.addUpdates( DeviceUpdate.buildRemoveDevice( new Date(System.currentTimeMillis()), dID, name ));
                         return this.notifier.sendMessage(message) > 0;
 
-                    case 400:
-                        logger.severe("Error, bad CHANGE_SUBLOCATION_NAME request");
+                    case 400:  //  in stable version cannot happen
+                        logger.severe("Error, bad REMOVE_DEVICE request");
                         break;
 
                     case 404:

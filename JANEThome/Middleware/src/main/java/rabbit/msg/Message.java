@@ -18,7 +18,7 @@ public abstract class Message implements Serializable {
         if( destination == null || destination.length() == 0 )
             throw new InvalidMessageException();
 
-        if( destination.compareTo("db") != 0 && !destination.contains("@"))
+        if( !destination.contains("@"))
             throw new InvalidMessageException();
 
         if( from == null || from.length() == 0 )
