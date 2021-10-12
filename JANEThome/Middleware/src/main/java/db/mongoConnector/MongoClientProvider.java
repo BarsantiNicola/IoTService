@@ -93,13 +93,13 @@ public class MongoClientProvider {
     public MongoClientProvider(Configuration configuration) {
         try {
             this.logger = LogManager.getLogger(getClass());
-            Map<String, String> conf = configuration.getConfiguration("db");
+            Properties conf = configuration.getConfiguration("db");
 //            mc = new MongoClient(new MongoClientURI(DB_HOST));
-            mc = new MongoClient(conf.get("hostname"), Integer.parseInt(conf.get("port")));
+            mc = new MongoClient(conf.getProperty("hostname"), Integer.parseInt(conf.getProperty("port")));
             morphia = new Morphia();
             morphia.map(SmarthomeManager.class);
             morphia.map(User.class);
-            datastore = morphia.createDatastore(mc, conf.get("db_name"));
+            datastore = morphia.createDatastore(mc, conf.getProperty("db_name"));
             datastore.ensureIndexes();
             managerDao = new SmartHomeManagerDAO(SmarthomeManager.class, datastore);
             userDAO = new UserDAO(User.class, datastore);

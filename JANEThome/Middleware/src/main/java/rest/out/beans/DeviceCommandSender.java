@@ -14,6 +14,7 @@ import javax.ejb.Stateless;
 import javax.ws.rs.core.Response;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.Properties;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -31,7 +32,7 @@ public class DeviceCommandSender implements RESTinterface {
     private SenderInterface notifier;           //  component to update all the elements of the service
 
     private Logger logger;
-    private HashMap<String,String> conf;        //  configuration of the service
+    private Properties conf;        //  configuration of the service
 
     @EJB
     private ConfigurationInterface configuration;   //  gives the configuration for the rest interface
@@ -103,7 +104,7 @@ public class DeviceCommandSender implements RESTinterface {
 
             while( true ){
 
-                Response result = this.sendCommand( ipAddr, Integer.parseInt(this.conf.get("control_port")), "/location/"+locID, RESTsender.REQ_TYPE.PUT, data ).get();
+                Response result = this.sendCommand( ipAddr, Integer.parseInt(this.conf.getProperty("control_port")), "/location/"+locID, RESTsender.REQ_TYPE.PUT, data ).get();
                 if( result != null ) {
 
                     switch (result.getStatus()) {
@@ -163,7 +164,7 @@ public class DeviceCommandSender implements RESTinterface {
 
         try {
 
-            Response result = this.sendCommand(ipAddr, Integer.parseInt(conf.get("control_port")), "/location/" + locID, RESTsender.REQ_TYPE.POST, data).get();
+            Response result = this.sendCommand(ipAddr, Integer.parseInt(conf.getProperty("control_port")), "/location/" + locID, RESTsender.REQ_TYPE.POST, data).get();
             if (result != null) {
 
                 switch (result.getStatus()) {
@@ -210,7 +211,7 @@ public class DeviceCommandSender implements RESTinterface {
 
         try {
 
-            Response result = this.sendCommand(ipAddr, Integer.parseInt(conf.get("control_port")), "/location/" + locID, RESTsender.REQ_TYPE.DELETE, null).get();
+            Response result = this.sendCommand(ipAddr, Integer.parseInt(conf.getProperty("control_port")), "/location/" + locID, RESTsender.REQ_TYPE.DELETE, null).get();
             if (result != null) {
 
                 switch (result.getStatus()) {
@@ -324,7 +325,7 @@ public class DeviceCommandSender implements RESTinterface {
 
         try {
 
-            Response result = this.sendCommand(ipAddr, Integer.parseInt(conf.get("control_port")), "/location/" + locID + "/" + sublocID, RESTsender.REQ_TYPE.POST, data ).get();
+            Response result = this.sendCommand(ipAddr, Integer.parseInt(conf.getProperty("control_port")), "/location/" + locID + "/" + sublocID, RESTsender.REQ_TYPE.POST, data ).get();
             if (result != null) {
 
                 switch (result.getStatus()) {
@@ -559,7 +560,7 @@ public class DeviceCommandSender implements RESTinterface {
 
         try {
 
-            Response result = this.sendCommand(ipAddr, Integer.parseInt(conf.get("control_port")), "/device/"+dID, RESTsender.REQ_TYPE.POST, data ).get();
+            Response result = this.sendCommand(ipAddr, Integer.parseInt(conf.getProperty("control_port")), "/device/"+dID, RESTsender.REQ_TYPE.POST, data ).get();
             if (result != null) {
 
                 switch (result.getStatus()) {

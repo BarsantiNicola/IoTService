@@ -1,48 +1,47 @@
 package config.beans;
 
-import com.google.gson.Gson;
-import com.google.gson.reflect.TypeToken;
 import config.interfaces.ConfigurationInterface;
 
 import javax.ejb.Singleton;
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Paths;
+import java.io.*;
 import java.util.*;
+import java.io.IOException;
+
 
 @Singleton
 public class Configuration implements ConfigurationInterface {
+    private final HashMap<String, Properties> configurations = new HashMap<>();
+    private static final String[] files = {"db.properties", "rabbit.properties", "rest.properties", "mail.properties", "tokens.properties"};
+    private static final String config = "rabbit.properties";
 
-    private final HashMap<String, HashMap<String, String>> conf = new HashMap<>();
-    private static final String[] files = {"db.conf","rabbit.conf", "rest.conf", "mail.conf", "tokens.conf"};
 
-    public Configuration() {
+    public Configuration() throws IOException {
+        Properties prop;
 
-        Gson gson = new Gson();
-        try {
-
-            for (String file : files) {
-                String path = Objects.requireNonNull(this.getClass().getClassLoader().getResource("META-INF/" + file)).getPath();
-                if (path != null)
-                    conf.put(file.replace(".conf", ""), gson.fromJson(new String(Files.readAllBytes(Paths.get(path))), new TypeToken<HashMap<String, String>>() {
-                    }.getType()));
+        for (String file : files) {
+            InputStream inputStream = getClass().getClassLoader().getResourceAsStream(file);
+            if (inputStream != null) {
+                prop = new Properties();
+                prop.load(inputStream);
+                configurations.put(file.replace(".properties", ""), prop);
+            } else {
+                throw new FileNotFoundException("property file '" + config + "' not found in the classpath");
             }
-
-        } catch (IOException e) {
-            e.printStackTrace();
         }
+
+
     }
 
     @Override
     public String getParameter(String conf_file, String parameter) {
-        if (this.conf.containsKey(conf_file))
-            return this.conf.get(conf_file).get(parameter);
+        if (configurations.containsKey(conf_file))
+            return configurations.get(conf_file).getProperty(parameter);
         return null;
     }
 
-    public HashMap<String, String> getConfiguration(String conf_file) {
-        if (this.conf.containsKey(conf_file))
-            return this.conf.get(conf_file);
+    public Properties getConfiguration(String conf_file) {
+        if (configurations.containsKey(conf_file))
+            return configurations.get(conf_file);
         return null;
     }
 

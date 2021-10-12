@@ -4,6 +4,8 @@ import java.util.HashMap;
 import java.io.IOException;
 import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.Connection;
+
+import java.util.Properties;
 import java.util.concurrent.TimeoutException;
 import com.rabbitmq.client.ConnectionFactory;
 import config.interfaces.ConfigurationInterface;
@@ -22,7 +24,7 @@ public class EndPoint{
     //  other extended classes(EJB object, in particular ConfigurationInterface isn't available into constructors)
     protected boolean inizialize( ConfigurationInterface configuration ){
 
-        HashMap<String,String> rabbitConf = configuration.getConfiguration("rabbit");
+        Properties rabbitConf = configuration.getConfiguration("rabbit");
         ConnectionFactory factory = new ConnectionFactory();
 
         //  rabbitMQ will automatically close the clients which not receive messages for some times, inserting an heartbeat
@@ -37,16 +39,16 @@ public class EndPoint{
         if( rabbitConf != null ){
 
             if( rabbitConf.containsKey("username"))
-                factory.setUsername( rabbitConf.get( "username" ));
+                factory.setUsername( rabbitConf.getProperty( "username" ));
 
             if( rabbitConf.containsKey("password"))
-                factory.setPassword( rabbitConf.get( "password" ));
+                factory.setPassword( rabbitConf.getProperty( "password" ));
 
             if( rabbitConf.containsKey("hostname"))
-                factory.setHost( rabbitConf.get( "hostname" ));
+                factory.setHost( rabbitConf.getProperty( "hostname" ));
 
             if( rabbitConf.containsKey("port"))
-                factory.setPort( Integer.parseInt(rabbitConf.get( "port" )));
+                factory.setPort( Integer.parseInt(rabbitConf.getProperty( "port" )));
         }
 
         try {

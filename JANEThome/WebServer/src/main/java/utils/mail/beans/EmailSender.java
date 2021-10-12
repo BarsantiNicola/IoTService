@@ -12,6 +12,7 @@ import javax.mail.*;
 import javax.mail.internet.*;
 
 import java.util.HashMap;
+import java.util.Properties;
 import java.util.logging.ConsoleHandler;
 import java.util.logging.Handler;
 import java.util.logging.Logger;
@@ -114,14 +115,14 @@ public class EmailSender implements EmailServiceLocal {
         //  generates a redirection link for the registration and from it generates the email to be send
         private String createEmailRegistrationContent( String email, String token ){
 
-            HashMap<String,String> conf = null;
+            Properties conf = null;
             if( configuration != null )
                 conf = configuration.getConfiguration( "mail" );
 
             String URL;
             if( conf != null && conf.containsKey("secure") && conf.containsKey( "hostname") && conf.containsKey( "port" )) {
 
-                URL = Integer.parseInt(conf.get("secure")) == 1 ? "https" : "http";
+                URL = Integer.parseInt(conf.getProperty("secure")) == 1 ? "https" : "http";
                 URL = URL + "://" + conf.get("hostname") + ":" + conf.get("port") + "/WebServer/registration?token=" + token;
                 logger.info( "Redirection link correctly generated: " + URL );
 
@@ -136,14 +137,14 @@ public class EmailSender implements EmailServiceLocal {
         //  generates a redirection link for the password change and from it generates the email to be send
         private String createEmailPasswordContent( String email, String token ){
 
-            HashMap<String,String> conf = null;
+            Properties conf = null;
             if( configuration != null )
                 conf = configuration.getConfiguration( "mail" );
 
             String URL;
             if( conf != null && conf.containsKey("secure") && conf.containsKey( "hostname") && conf.containsKey( "port" )) {
 
-                URL = Integer.parseInt(conf.get("secure")) == 1 ? "https" : "http";
+                URL = Integer.parseInt(conf.getProperty("secure")) == 1 ? "https" : "http";
                 URL = URL + "://" + conf.get("hostname") + ":" + conf.get("port") + "/WebServer/password.jsp?state=1&auth=" + token;
                 logger.info( "Redirection link correctly generated: " + URL );
 
