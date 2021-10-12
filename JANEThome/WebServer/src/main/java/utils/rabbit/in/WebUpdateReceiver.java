@@ -57,6 +57,7 @@ public class WebUpdateReceiver extends EndPoint implements Consumer{
             try {
 
                 request = (DeviceUpdateMessage) SerializationUtils.deserialize( delivery.getBody() );
+
                 for( DeviceUpdate message : request.getAllDeviceUpdate()) {
                     switch (message.getUpdateType()) {
 

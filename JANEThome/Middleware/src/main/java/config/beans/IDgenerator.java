@@ -1,18 +1,15 @@
 package config.beans;
 
-import com.google.gson.Gson;
-import com.google.gson.reflect.TypeToken;
+import config.interfaces.ConfigurationInterface;
 import config.interfaces.GeneratorInterface;
 
 import javax.annotation.PostConstruct;
+import javax.ejb.EJB;
 import javax.ejb.Lock;
 import javax.ejb.LockType;
 import javax.ejb.Singleton;
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.util.HashMap;
-import java.util.Objects;
+import java.util.Properties;
 import java.util.logging.ConsoleHandler;
 import java.util.logging.Handler;
 import java.util.logging.Logger;
@@ -24,15 +21,14 @@ public class IDgenerator implements GeneratorInterface {
     private HashMap<String, String> tokens;
     private Logger logger;
 
+    @EJB
+    ConfigurationInterface configuration;
+
     private void saveData(){
 
-        Gson gson = new Gson();
-        String path = Objects.requireNonNull(this.getClass().getClassLoader().getResource("META-INF/tokens.conf")).getPath();
-        try {
-            Files.write(Paths.get(path), gson.toJson(this.tokens).getBytes());
-        }catch( IOException e ){
-            e.printStackTrace();
-        }
+        Properties generatorConf = configuration.getConfiguration("tokens");
+        generatorConf.setProperty("dID", this.tokens.get("dID"));
+        generatorConf.setProperty("lID", this.tokens.get("lID"));
 
     }
 
@@ -57,28 +53,21 @@ public class IDgenerator implements GeneratorInterface {
 
     @PostConstruct
     private void init(){
-        Gson gson = new Gson();
+
         this.initializeLogger();
         try{
 
-            String path = Objects.requireNonNull(this.getClass().getClassLoader().getResource("META-INF/tokens.conf")).getPath();
-            if (path != null){
-                this.tokens = gson.fromJson(new String(Files.readAllBytes(Paths.get(path))), new TypeToken<HashMap<String, String>>() {}.getType());
+            Properties generatorConf = configuration.getConfiguration("tokens");
 
-                if( this.tokens == null )
-                    this.tokens = new HashMap<>();
+            if( this.tokens == null )
+                this.tokens = new HashMap<>();
 
-                if( !this.tokens.containsKey( "dID") || !this.tokens.containsKey( "lID") ){
+            this.tokens.put("dID", generatorConf.getProperty("dID"));
+            this.tokens.put( "lID", generatorConf.getProperty("lID"));
 
-                    this.tokens.put("dID", "0" );
-                    this.tokens.put( "lID", "0" );
-                    this.saveData();
-
-                }
-            }
             this.logger.info( "Token data correctly generated" );
 
-        }catch( IOException | NullPointerException e ){
+        }catch( NullPointerException e ){
 
             this.logger.severe( "Error, unable to find the data" );
             this.tokens = new HashMap<>();
@@ -101,6 +90,7 @@ public class IDgenerator implements GeneratorInterface {
         String value =  this.tokens.get( "dID" );
         this.tokens.replace( "dID" , String.valueOf(Integer.parseInt(value)+1));
         this.logger.info( "Generation of new DID completed: " + value );
+        this.saveData();
         return value;
 
     }
@@ -117,6 +107,7 @@ public class IDgenerator implements GeneratorInterface {
         String value =  this.tokens.get( "lID" );
         this.tokens.replace( "lID" , String.valueOf(Integer.parseInt(value)+1));
         this.logger.info( "Generation of new LID completed: " + value );
+        this.saveData();
         return value;
 
     }
