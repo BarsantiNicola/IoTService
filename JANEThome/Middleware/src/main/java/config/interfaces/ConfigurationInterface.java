@@ -6,6 +6,9 @@ import java.util.Properties;
 @Remote
 public interface ConfigurationInterface {
 
-    String getParameter( String conf_file, String parameter );
-    Properties getConfiguration(String conf_file );
+    String getParameter(String conf_file, String parameter);
+
+    Properties getConfiguration(String conf_file);
+
+    boolean setParameter(String configFile, String param, String value);
 }
