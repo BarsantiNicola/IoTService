@@ -8,10 +8,12 @@ import rabbit.msg.DeviceUpdateMessage;
 import rabbit.msg.InvalidMessageException;
 import rabbit.out.interfaces.SenderInterface;
 import rest.out.interfaces.RESTinterface;
+
 import javax.annotation.PostConstruct;
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.ws.rs.core.Response;
+import java.io.IOException;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Properties;
@@ -42,21 +44,21 @@ public class DeviceCommandSender implements RESTinterface {
 
     private final static ExecutorService executors = Executors.newCachedThreadPool(); //  shared pool of executors to send rest messages
 
-    public DeviceCommandSender(){
+    public DeviceCommandSender() {
         this.initializeLogger();
     }
 
     @PostConstruct
-    private void initialization(){
-        this.conf = configuration.getConfiguration( "rest" );
+    private void initialization() {
+        this.conf = configuration.getConfiguration("rest");
     }
 
-    private void initializeLogger(){
+    private void initializeLogger() {
 
-        this.logger = Logger.getLogger( getClass().getName() );
+        this.logger = Logger.getLogger(getClass().getName());
 
         //  verification of the number of instantiated handlers
-        if( logger.getHandlers().length == 0 ){ //  first time the logger is created we generate its handler
+        if (logger.getHandlers().length == 0) { //  first time the logger is created we generate its handler
 
             Handler consoleHandler = new ConsoleHandler();
             consoleHandler.setFormatter(new SimpleFormatter());
@@ -67,9 +69,9 @@ public class DeviceCommandSender implements RESTinterface {
 
 
     //  sends a command to the device REST server
-    private Future<Response> sendCommand(String address, int port, String path, RESTsender.REQ_TYPE reqType, HashMap<String, String> request ){
+    private Future<Response> sendCommand(String address, int port, String path, RESTsender.REQ_TYPE reqType, HashMap<String, String> request) {
 
-        return executors.submit(new RESTsender(address, port, path, reqType, request ));
+        return executors.submit(new RESTsender(address, port, path, reqType, request));
 
     }
 
@@ -89,30 +91,30 @@ public class DeviceCommandSender implements RESTinterface {
     //      "port" : "...."
     //  }
     @Override
-    public boolean addLocation( String username, String from, String location, String ipAddr, int port ) {
+    public boolean addLocation(String username, String from, String location, String ipAddr, int port) {
 
-        HashMap<String,String> data = new HashMap<>();  //  message to be forwarded
+        HashMap<String, String> data = new HashMap<>();  //  message to be forwarded
         int tentative = 0;
 
         String locID = idGenerator.generateLID();
 
-        data.put( "name" , location );
-        data.put( "user", username );
-        data.put( "port", String.valueOf( port ));
+        data.put("name", location);
+        data.put("user", username);
+        data.put("port", String.valueOf(port));
 
         try {
 
-            while( true ){
+            while (true) {
 
-                Response result = this.sendCommand( ipAddr, Integer.parseInt(this.conf.getProperty("control_port")), "/location/"+locID, RESTsender.REQ_TYPE.PUT, data ).get();
-                if( result != null ) {
+                Response result = this.sendCommand(ipAddr, Integer.parseInt(this.conf.getProperty("control_port")), "/location/" + locID, RESTsender.REQ_TYPE.PUT, data).get();
+                if (result != null) {
 
                     switch (result.getStatus()) {
 
                         case 200:  //  if command correctly done, we notify it to all the involved components
                             DeviceUpdateMessage message = new DeviceUpdateMessage(username, from);
-                            message.addUpdates( DeviceUpdate.buildAddLocation( new Date(System.currentTimeMillis()), location, locID, ipAddr, port ));
-                            return this.notifier.sendMessage( message ) > 0;
+                            message.addUpdates(DeviceUpdate.buildAddLocation(new Date(System.currentTimeMillis()), location, locID, ipAddr, port));
+                            return this.notifier.sendMessage(message) > 0;
 
                         case 400:  //  in stable version cannot happen
                             logger.severe("Error, bad ADD_LOCATION request");
@@ -120,13 +122,13 @@ public class DeviceCommandSender implements RESTinterface {
 
                         case 409:  //  TODO to be splitted into future updates into two errors: duplicate port / duplicate locID
                             logger.severe("Error, duplicated port or locID");
-                            if( tentative++ == 3 )  //  TODO to be removed when duplicate locID response well defined
+                            if (tentative++ == 3)  //  TODO to be removed when duplicate locID response well defined
                                 return false;
                             locID = idGenerator.generateLID();
                             continue;
 
                         case 500:  //  an error has occurred inside the erlang network
-                            logger.warning( "Error, internal server error of erlang network");
+                            logger.warning("Error, internal server error of erlang network");
                             break;
 
                         default:
@@ -135,7 +137,7 @@ public class DeviceCommandSender implements RESTinterface {
                 return false;
             }
 
-        }catch( InvalidMessageException | InterruptedException | ExecutionException e ){
+        } catch (InvalidMessageException | InterruptedException | ExecutionException e) {
             e.printStackTrace();
             return false;
         }
@@ -157,10 +159,10 @@ public class DeviceCommandSender implements RESTinterface {
     //      "name" : "...."
     //  }
     @Override
-    public boolean changeLocationName( String username, String from, String locID, String oldName, String newName, String ipAddr ) {
+    public boolean changeLocationName(String username, String from, String locID, String oldName, String newName, String ipAddr) {
 
-        HashMap<String,String> data = new HashMap<>();  //  message to be forwarded
-        data.put( "name" , newName );
+        HashMap<String, String> data = new HashMap<>();  //  message to be forwarded
+        data.put("name", newName);
 
         try {
 
@@ -191,7 +193,7 @@ public class DeviceCommandSender implements RESTinterface {
 
             return false;
 
-        }catch( InvalidMessageException | InterruptedException | ExecutionException e ){
+        } catch (InvalidMessageException | InterruptedException | ExecutionException e) {
             e.printStackTrace();
             return false;
         }
@@ -207,7 +209,7 @@ public class DeviceCommandSender implements RESTinterface {
     //
     //  MESSAGE   [path: /location/{locID} DELETE ]
     @Override
-    public boolean removeLocation( String username, String from, String name, String locID, String ipAddr ){
+    public boolean removeLocation(String username, String from, String name, String locID, String ipAddr) {
 
         try {
 
@@ -217,7 +219,7 @@ public class DeviceCommandSender implements RESTinterface {
                 switch (result.getStatus()) {
                     case 200:  //  if command correctly done, we notify it to all the involved components
                         DeviceUpdateMessage message = new DeviceUpdateMessage(username, from);
-                        message.addUpdates( DeviceUpdate.buildRemoveLocation( new Date(System.currentTimeMillis()), name ));
+                        message.addUpdates(DeviceUpdate.buildRemoveLocation(new Date(System.currentTimeMillis()), name));
                         return this.notifier.sendMessage(message) > 0;
 
                     case 400:  //  in stable version cannot happen
@@ -238,7 +240,7 @@ public class DeviceCommandSender implements RESTinterface {
 
             return false;
 
-        }catch( InvalidMessageException | InterruptedException | ExecutionException e ){
+        } catch (InvalidMessageException | InterruptedException | ExecutionException e) {
             e.printStackTrace();
             return false;
         }
@@ -261,20 +263,20 @@ public class DeviceCommandSender implements RESTinterface {
     //     "name" : "...."
     //  }
     @Override
-    public boolean addSubLocation( String username, String from, String location, String sublocation, String sublocID, String ipAddr, int port ) {
+    public boolean addSubLocation(String username, String from, String location, String sublocation, String sublocID, String ipAddr, int port) {
 
-        HashMap<String,String> data = new HashMap<>();  //  message to be forwarded
-        data.put( "name" , sublocation );
+        HashMap<String, String> data = new HashMap<>();  //  message to be forwarded
+        data.put("name", sublocation);
 
         try {
 
-            Response result = this.sendCommand( ipAddr, port, "/sublocation/" + sublocID, RESTsender.REQ_TYPE.PUT, data ).get();
+            Response result = this.sendCommand(ipAddr, port, "/sublocation/" + sublocID, RESTsender.REQ_TYPE.PUT, data).get();
             if (result != null) {
 
                 switch (result.getStatus()) {
                     case 200:  //  if command correctly done, we notify it to all the involved components
                         DeviceUpdateMessage message = new DeviceUpdateMessage(username, from);
-                        message.addUpdates( DeviceUpdate.buildAddSubLocation( new Date(System.currentTimeMillis()), location, sublocation, sublocID ));
+                        message.addUpdates(DeviceUpdate.buildAddSubLocation(new Date(System.currentTimeMillis()), location, sublocation, sublocID));
                         return this.notifier.sendMessage(message) > 0;
 
                     case 400:  //  in stable version cannot happen
@@ -295,7 +297,7 @@ public class DeviceCommandSender implements RESTinterface {
 
             return false;
 
-        }catch( InvalidMessageException | InterruptedException | ExecutionException e ){
+        } catch (InvalidMessageException | InterruptedException | ExecutionException e) {
             e.printStackTrace();
             return false;
         }
@@ -318,20 +320,20 @@ public class DeviceCommandSender implements RESTinterface {
     //     "name" : "...."
     //  }
     @Override
-    public boolean changeSubLocationName( String username, String from, String location, String sublocation, String locID, String sublocID, String newName, String ipAddr ) {
+    public boolean changeSubLocationName(String username, String from, String location, String sublocation, String locID, String sublocID, String newName, String ipAddr) {
 
-        HashMap<String,String> data = new HashMap<>();  //  message to be forwarded
-        data.put( "name" , newName );
+        HashMap<String, String> data = new HashMap<>();  //  message to be forwarded
+        data.put("name", newName);
 
         try {
 
-            Response result = this.sendCommand(ipAddr, Integer.parseInt(conf.getProperty("control_port")), "/location/" + locID + "/" + sublocID, RESTsender.REQ_TYPE.POST, data ).get();
+            Response result = this.sendCommand(ipAddr, Integer.parseInt(conf.getProperty("control_port")), "/location/" + locID + "/" + sublocID, RESTsender.REQ_TYPE.POST, data).get();
             if (result != null) {
 
                 switch (result.getStatus()) {
                     case 200:  //  if command correctly done, we notify it to all the involved components
                         DeviceUpdateMessage message = new DeviceUpdateMessage(username, from);
-                        message.addUpdates( DeviceUpdate.buildRenameSubLocation( new Date(System.currentTimeMillis()), location, sublocation, newName ));
+                        message.addUpdates(DeviceUpdate.buildRenameSubLocation(new Date(System.currentTimeMillis()), location, sublocation, newName));
                         return this.notifier.sendMessage(message) > 0;
 
                     case 400:  //  in stable version cannot happen
@@ -352,7 +354,7 @@ public class DeviceCommandSender implements RESTinterface {
 
             return false;
 
-        }catch( InvalidMessageException | InterruptedException | ExecutionException e ){
+        } catch (InvalidMessageException | InterruptedException | ExecutionException e) {
             e.printStackTrace();
             return false;
         }
@@ -372,17 +374,17 @@ public class DeviceCommandSender implements RESTinterface {
     //
     //  MESSAGE   [path: /sublocation/{subLocID} DELETE ]
     @Override
-    public boolean removeSubLocation( String username, String from, String location, String sublocation, String sublocID, String ipAddr, int port ) {
+    public boolean removeSubLocation(String username, String from, String location, String sublocation, String sublocID, String ipAddr, int port) {
 
         try {
 
-            Response result = this.sendCommand( ipAddr, port, "/sublocation/" + sublocID, RESTsender.REQ_TYPE.DELETE, null ).get();
+            Response result = this.sendCommand(ipAddr, port, "/sublocation/" + sublocID, RESTsender.REQ_TYPE.DELETE, null).get();
             if (result != null) {
 
                 switch (result.getStatus()) {
                     case 200:  //  if command correctly done, we notify it to all the involved components
                         DeviceUpdateMessage message = new DeviceUpdateMessage(username, from);
-                        message.addUpdates(DeviceUpdate.buildRemoveSubLocation( new Date(System.currentTimeMillis()), location, sublocation ));
+                        message.addUpdates(DeviceUpdate.buildRemoveSubLocation(new Date(System.currentTimeMillis()), location, sublocation));
                         return this.notifier.sendMessage(message) > 0;
 
                     case 400:  //  in stable version cannot happen
@@ -403,7 +405,7 @@ public class DeviceCommandSender implements RESTinterface {
 
             return false;
 
-        }catch( InvalidMessageException | InterruptedException | ExecutionException e ){
+        } catch (InvalidMessageException | InterruptedException | ExecutionException e) {
             e.printStackTrace();
             return false;
         }
@@ -427,26 +429,26 @@ public class DeviceCommandSender implements RESTinterface {
     //     "type" : "..."
     //  }
     @Override
-    public boolean addDevice( String username, String from, String name, String location, String sublocation, String sublocID, SmarthomeDevice.DeviceType type, String ipAddr, int port ) {
+    public boolean addDevice(String username, String from, String name, String location, String sublocation, String sublocID, SmarthomeDevice.DeviceType type, String ipAddr, int port) {
 
-        HashMap<String,String> data = new HashMap<>();  //  message to be forwarded
+        HashMap<String, String> data = new HashMap<>();  //  message to be forwarded
         int tentative = 0;
 
-        data.put( "subloc_id" , sublocID );
-        data.put( "name", name );
-        data.put( "type", type.toString() );
+        data.put("subloc_id", sublocID);
+        data.put("name", name);
+        data.put("type", type.toString());
         String dID = idGenerator.generateDID();
 
         try {
 
-            while( true ){
-                Response result = this.sendCommand( ipAddr, port, "/device/"+dID, RESTsender.REQ_TYPE.PUT, data ).get();
-                if( result != null ) {
+            while (true) {
+                Response result = this.sendCommand(ipAddr, port, "/device/" + dID, RESTsender.REQ_TYPE.PUT, data).get();
+                if (result != null) {
 
                     switch (result.getStatus()) {
                         case 200:  //  if command is correctly done, we notify it to all the involved components
                             DeviceUpdateMessage message = new DeviceUpdateMessage(username, from);
-                            message.addUpdates(DeviceUpdate.buildAddDevice( new Date(System.currentTimeMillis()), location, sublocation, dID, name, type ));
+                            message.addUpdates(DeviceUpdate.buildAddDevice(new Date(System.currentTimeMillis()), location, sublocation, dID, name, type));
                             return this.notifier.sendMessage(message) > 0;
 
                         case 400:  //  in stable version cannot happen
@@ -454,15 +456,14 @@ public class DeviceCommandSender implements RESTinterface {
                             break;
 
                         case 409:
-                            if( tentative++ == 10 )
+                            if (tentative++ == 10)
                                 return false;
                             dID = idGenerator.generateDID();
                             continue;
 
 
-
                         case 500:
-                            logger.warning( "Error, internal server error of erlang network");
+                            logger.warning("Error, internal server error of erlang network");
                             break;
 
                         default:
@@ -471,7 +472,7 @@ public class DeviceCommandSender implements RESTinterface {
                 return false;
             }
 
-        }catch( InvalidMessageException | InterruptedException | ExecutionException e ){
+        } catch (InvalidMessageException | InterruptedException | ExecutionException e) {
             e.printStackTrace();
             return false;
         }
@@ -495,21 +496,21 @@ public class DeviceCommandSender implements RESTinterface {
     //     "subloc_id" : "..."
     //  }
     @Override
-    public boolean changeDeviceSublocation( String username, String from, String dID, String name, String location, String subLocation, String newSubLocation, String sublocID, String ipAddr, int port ){
+    public boolean changeDeviceSublocation(String username, String from, String dID, String name, String location, String subLocation, String newSubLocation, String sublocID, String ipAddr, int port) {
 
-        HashMap<String,String> data = new HashMap<>();  //  message to be forwarded
-        data.put( "subloc_id" , sublocID );
+        HashMap<String, String> data = new HashMap<>();  //  message to be forwarded
+        data.put("subloc_id", sublocID);
 
 
         try {
 
-            Response result = this.sendCommand( ipAddr, port, "/device/" + dID, RESTsender.REQ_TYPE.POST, data ).get();
+            Response result = this.sendCommand(ipAddr, port, "/device/" + dID, RESTsender.REQ_TYPE.POST, data).get();
             if (result != null) {
 
                 switch (result.getStatus()) {
                     case 200: //  if command correctly done, we notify it to all the involved components
                         DeviceUpdateMessage message = new DeviceUpdateMessage(username, from);
-                        message.addUpdates(DeviceUpdate.buildChangeDeviceSubLocation( new Date(System.currentTimeMillis()), location, dID, name, newSubLocation ));
+                        message.addUpdates(DeviceUpdate.buildChangeDeviceSubLocation(new Date(System.currentTimeMillis()), location, dID, name, newSubLocation));
                         return this.notifier.sendMessage(message) > 0;
 
                     case 400:  //  in stable version cannot happen
@@ -530,7 +531,7 @@ public class DeviceCommandSender implements RESTinterface {
 
             return false;
 
-        }catch( InvalidMessageException | InterruptedException | ExecutionException e ){
+        } catch (InvalidMessageException | InterruptedException | ExecutionException e) {
             e.printStackTrace();
             return false;
         }
@@ -553,20 +554,20 @@ public class DeviceCommandSender implements RESTinterface {
     //     "name" : "...."
     //  }
     @Override
-    public boolean changeDeviceName( String username, String from, String dID, String oldName, String newName, String ipAddr ) {
+    public boolean changeDeviceName(String username, String from, String dID, String oldName, String newName, String ipAddr) {
 
-        HashMap<String,String> data = new HashMap<>();  //  message to be forwarded
-        data.put( "name" , newName );
+        HashMap<String, String> data = new HashMap<>();  //  message to be forwarded
+        data.put("name", newName);
 
         try {
 
-            Response result = this.sendCommand(ipAddr, Integer.parseInt(conf.getProperty("control_port")), "/device/"+dID, RESTsender.REQ_TYPE.POST, data ).get();
+            Response result = this.sendCommand(ipAddr, Integer.parseInt(conf.getProperty("control_port")), "/device/" + dID, RESTsender.REQ_TYPE.POST, data).get();
             if (result != null) {
 
                 switch (result.getStatus()) {
                     case 200: //  if command correctly done, we notify it to all the involved components
                         DeviceUpdateMessage message = new DeviceUpdateMessage(username, from);
-                        message.addUpdates(DeviceUpdate.buildRenameDevice( new Date(System.currentTimeMillis()), dID, oldName, newName ));
+                        message.addUpdates(DeviceUpdate.buildRenameDevice(new Date(System.currentTimeMillis()), dID, oldName, newName));
                         return this.notifier.sendMessage(message) > 0;
 
                     case 400:  //  in stable version cannot happen
@@ -587,7 +588,7 @@ public class DeviceCommandSender implements RESTinterface {
 
             return false;
 
-        }catch( InvalidMessageException | InterruptedException | ExecutionException e ){
+        } catch (InvalidMessageException | InterruptedException | ExecutionException e) {
             e.printStackTrace();
             return false;
         }
@@ -608,17 +609,17 @@ public class DeviceCommandSender implements RESTinterface {
     //
     //  MESSAGE   [path: /device/{dID} REMOVE ]
     @Override
-    public boolean removeDevice( String username, String from, String dID, String name, String ipAddr, int port ) {
+    public boolean removeDevice(String username, String from, String dID, String name, String ipAddr, int port) {
 
         try {
 
-            Response result = this.sendCommand(ipAddr, port, "/device/"+dID, RESTsender.REQ_TYPE.DELETE, null ).get();
+            Response result = this.sendCommand(ipAddr, port, "/device/" + dID, RESTsender.REQ_TYPE.DELETE, null).get();
             if (result != null) {
 
                 switch (result.getStatus()) {
                     case 200:  //  if command correctly done, we notify it to all the involved components
                         DeviceUpdateMessage message = new DeviceUpdateMessage(username, from);
-                        message.addUpdates( DeviceUpdate.buildRemoveDevice( new Date(System.currentTimeMillis()), dID, name ));
+                        message.addUpdates(DeviceUpdate.buildRemoveDevice(new Date(System.currentTimeMillis()), dID, name));
                         return this.notifier.sendMessage(message) > 0;
 
                     case 400:  //  in stable version cannot happen
@@ -639,7 +640,7 @@ public class DeviceCommandSender implements RESTinterface {
 
             return false;
 
-        }catch( InvalidMessageException | InterruptedException | ExecutionException e ){
+        } catch (InvalidMessageException | InterruptedException | ExecutionException e) {
             e.printStackTrace();
             return false;
         }
@@ -647,15 +648,15 @@ public class DeviceCommandSender implements RESTinterface {
 
     @Override
     //  executes the given command to the specified device of the user's smartHome
-    public boolean execCommand( String username, String from, String dID, String action, String value, String ipAddr, int port ) {
+    public boolean execCommand(String username, String from, String dID, String action, String value, String ipAddr, int port) {
 
-        try{
+        try {
 
-            DeviceUpdateMessage message = new DeviceUpdateMessage( username, from );
-            message.addUpdates( DeviceUpdate.buildDeviceUpdate( new Date(System.currentTimeMillis()), dID, action, value ));
-            return this.notifier.sendMessage( message ) > 0;
+            DeviceUpdateMessage message = new DeviceUpdateMessage(username, from);
+            message.addUpdates(DeviceUpdate.buildDeviceUpdate(new Date(System.currentTimeMillis()), dID, action, value));
+            return this.notifier.sendMessage(message) > 0;
 
-        }catch( InvalidMessageException e ){
+        } catch (InvalidMessageException e) {
 
             e.printStackTrace();
             return false;

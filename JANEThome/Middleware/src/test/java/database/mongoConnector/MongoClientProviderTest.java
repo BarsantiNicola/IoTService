@@ -7,7 +7,7 @@ import iot.*;
 import org.bson.types.ObjectId;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
-import statistics.Statistics;
+import rabbit.msg.DeviceUpdate;
 
 import java.util.*;
 import java.util.concurrent.ThreadLocalRandom;
@@ -32,9 +32,11 @@ class mongoClientProviderTest {
             initStatisticsTest(SmarthomeDevice.DeviceType.CONDITIONER);
 
             user.setHomeManager(manager);
+            mongoClientProvider.deleteUser(user.getUsername());
+            mongoClientProvider.deleteManager(manager.getUsername());
+
         } catch (Exception e) {
         }
-//        mongoClientProvider.connectDB();
     }
 
     @Test
@@ -47,6 +49,146 @@ class mongoClientProviderTest {
     void testWriteManager() {
         assertNotNull(mongoClientProvider.writeManager(manager));
         mongoClientProvider.deleteManager(manager.getUsername());
+    }
+
+    @Test
+    void testModifyManager() {
+        mongoClientProvider.writeManager(manager);
+        mongoClientProvider.writeUser(user);
+
+        SmarthomeSublocation sublocation = null;
+
+        SmarthomeLocation location = manager.getLocations().iterator().next();
+        if (location == null) {
+            return;
+        }
+
+        for (SmarthomeSublocation sb : location.getSublocations().values()) {
+            if (!sb.getSubLocation().matches("default")) {
+                sublocation = sb;
+                break;
+            }
+        }
+        if (sublocation == null) {
+            return;
+        }
+
+        String locations = location.getLocation();
+        String subloc = sublocation.getSubLocation();
+        String device = sublocation.getDevices().iterator().next().giveDeviceName();
+
+        //rename device
+        assertNotNull(mongoClientProvider.renameElementManager(user.getEmail(), DeviceUpdate.UpdateType.RENAME_DEVICE,
+                device, "pluto", locations));
+        //rename sublocation
+        assertNotNull(mongoClientProvider.renameElementManager(user.getEmail(), DeviceUpdate.UpdateType.RENAME_SUB_LOCATION,
+                subloc, "pippo", locations));
+        //rename location
+        assertNotNull(mongoClientProvider.renameElementManager(user.getEmail(), DeviceUpdate.UpdateType.RENAME_LOCATION,
+                locations, "paperino", locations));
+
+        mongoClientProvider.deleteManager(manager.getUsername());
+        mongoClientProvider.deleteUser(user.getUsername());
+    }
+
+    @Test
+    void testAddManager() {
+        mongoClientProvider.writeManager(manager);
+        mongoClientProvider.writeUser(user);
+
+        String address = "168.456.78";
+        int port = 7897;
+
+        SmarthomeSublocation sublocation = null;
+
+        SmarthomeLocation location = manager.getLocations().iterator().next();
+        if (location == null) {
+            return;
+        }
+
+        for (SmarthomeSublocation sb : location.getSublocations().values()) {
+            if (!sb.getSubLocation().matches("default")) {
+                sublocation = sb;
+                break;
+            }
+        }
+        if (sublocation == null) {
+            return;
+        }
+
+        String locations = location.getLocation();
+        String subloc = sublocation.getSubLocation();
+
+        //add device
+        assertNotNull(mongoClientProvider.addElementManager(user.getEmail(), DeviceUpdate.UpdateType.ADD_DEVICE,
+                "qwer", locations, address, port, subloc, "pippo", SmarthomeDevice.DeviceType.CONDITIONER));
+        //add subLocation
+        assertNotNull(mongoClientProvider.addElementManager(user.getEmail(), DeviceUpdate.UpdateType.ADD_SUB_LOCATION,
+                "asdf", locations, address, port, "pluto", "pippo", SmarthomeDevice.DeviceType.CONDITIONER));
+        //add location
+        assertNotNull(mongoClientProvider.addElementManager(user.getEmail(), DeviceUpdate.UpdateType.ADD_LOCATION,
+                "poio", "lol", address, port, "pluto", "pippo", SmarthomeDevice.DeviceType.CONDITIONER));
+
+        mongoClientProvider.deleteManager(manager.getUsername());
+        mongoClientProvider.deleteUser(user.getUsername());
+    }
+
+    @Test
+    void testRemoveElementManager() {
+        mongoClientProvider.writeManager(manager);
+        mongoClientProvider.writeUser(user);
+
+        SmarthomeSublocation sublocation = null;
+
+        SmarthomeLocation location = manager.getLocations().iterator().next();
+        if (location == null) {
+            return;
+        }
+
+        for (SmarthomeSublocation sb : location.getSublocations().values()) {
+            if (!sb.getSubLocation().matches("default")) {
+                sublocation = sb;
+                break;
+            }
+        }
+        if (sublocation == null) {
+            return;
+        }
+
+        String locations = location.getLocation();
+        String subloc = sublocation.getSubLocation();
+        String device = sublocation.getDevices().iterator().next().giveDeviceName();
+
+        //remove device
+        assertNotNull(mongoClientProvider.removeElementIntoManager(user.getEmail(), DeviceUpdate.UpdateType.REMOVE_DEVICE,
+                device, locations));
+        //remove sublocation
+        assertNotNull(mongoClientProvider.removeElementIntoManager(user.getEmail(), DeviceUpdate.UpdateType.REMOVE_SUB_LOCATION,
+                subloc, locations));
+        //remove location
+        assertNotNull(mongoClientProvider.removeElementIntoManager(user.getEmail(), DeviceUpdate.UpdateType.REMOVE_LOCATION,
+                locations, locations));
+
+        mongoClientProvider.deleteManager(manager.getUsername());
+        mongoClientProvider.deleteUser(user.getUsername());
+    }
+
+    @Test
+    void testPerformAction() {
+        mongoClientProvider.writeManager(manager);
+        mongoClientProvider.writeUser(user);
+
+        String action = Action.ONOFF;
+        String type = Action.FAN_ACTION;
+        String id ;
+        id = getRandomIdByType(type, manager);
+        if (id != null) {
+            assertNotNull(mongoClientProvider.performAction(user.getEmail(), id,action,"1"));
+        } else {
+            System.out.print("id null FAN SPEED");
+        }
+        mongoClientProvider.deleteManager(manager.getUsername());
+        mongoClientProvider.deleteUser(user.getUsername());
     }
 
     @Test
@@ -146,7 +288,7 @@ class mongoClientProviderTest {
     void testMailPresent() {
         mongoClientProvider.writeManager(manager);
         mongoClientProvider.writeUser(user);
-        assertTrue(mongoClientProvider.mailPresent(user.getEmail()));
+        assertTrue(MongoClientProvider.mailPresent(user.getEmail()));
         mongoClientProvider.deleteUser(user.getUsername());
         mongoClientProvider.deleteManager(manager.getUsername());
     }
@@ -169,7 +311,7 @@ class mongoClientProviderTest {
 
         String id;
         Calendar calendar = Calendar.getInstance();
-        calendar.set(2020, 1, 1);
+        calendar.set(2020, Calendar.FEBRUARY, 1);
 
         Date startDate = calendar.getTime();
         Date endDate = new Date();
@@ -248,8 +390,20 @@ class mongoClientProviderTest {
         for (SmarthomeLocation l : manager.getLocations()) {
             for (SmarthomeSublocation s : l.getSublocations().values()) {
                 for (SmarthomeWebDevice d : s.getDevices()) {
-                    if (d.getType() == type) {
+                    if (d.getType().equals(type)) {
                         return d.getId();
+                    }
+                }
+            }
+        }
+        return null;
+    }
+    private String getRandomNameByType(String type, SmarthomeManager manager) {
+        for (SmarthomeLocation l : manager.getLocations()) {
+            for (SmarthomeSublocation s : l.getSublocations().values()) {
+                for (SmarthomeWebDevice d : s.getDevices()) {
+                    if (d.getType().equals(type)) {
+                        return d.getName().get("name");
                     }
                 }
             }
@@ -262,7 +416,7 @@ class mongoClientProviderTest {
         List<String> devices = getNameDev(type);
 
         Calendar calendar = Calendar.getInstance();
-        calendar.set(2020, 1, 1);
+        calendar.set(2020, Calendar.FEBRUARY, 1);
 
         Date startDate = calendar.getTime();
         Date endDate = new Date();

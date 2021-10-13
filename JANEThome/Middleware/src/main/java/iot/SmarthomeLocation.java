@@ -61,7 +61,7 @@ public class SmarthomeLocation implements Serializable {
     public SmarthomeLocation() {
     }
 
-    SmarthomeLocation(String location, String locID, String address, int port ){
+    public SmarthomeLocation(String location, String locID, String address, int port ){
 
         this.location = location;
         this.ipAddress = address;
@@ -273,7 +273,7 @@ public class SmarthomeLocation implements Serializable {
 
     /////// GETTERS
 
-    String getLocation(){ return location; }
+    public String getLocation(){ return location; }
 
     // returns the port used by the location component
     int getPort(){ return port; }

@@ -1,6 +1,5 @@
 package db.dao;
 
-import com.mongodb.WriteResult;
 import db.interfaces.ISmartHomeManagerDAO;
 import iot.SmarthomeManager;
 import org.bson.types.ObjectId;

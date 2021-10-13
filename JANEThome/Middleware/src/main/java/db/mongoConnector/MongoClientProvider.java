@@ -5,12 +5,9 @@ import config.beans.Configuration;
 import config.interfaces.ConfigurationInterface;
 import db.dao.SmartHomeManagerDAO;
 import db.dao.UserDAO;
-import db.interfaces.IGenericDao;
 import db.interfaces.ISmartHomeManagerDAO;
 import db.interfaces.IUserDAO;
-import iot.Action;
-import iot.SmarthomeManager;
-import iot.User;
+import iot.*;
 import org.bson.types.ObjectId;
 import org.mongodb.morphia.Datastore;
 import org.mongodb.morphia.Morphia;
@@ -21,14 +18,15 @@ import org.mongodb.morphia.aggregation.*;
 import static org.mongodb.morphia.aggregation.Group.grouping;
 import static org.mongodb.morphia.aggregation.Group.*;
 
+import rabbit.msg.DeviceUpdate;
 import statistics.Statistic;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import statistics.Statistics;
 
-import javax.ejb.EJB;
 import java.util.*;
+import java.util.concurrent.Semaphore;
 
 /**
  * This class have all methods for the access of DB
@@ -44,40 +42,23 @@ public class MongoClientProvider {
     private static UserDAO userDAO;
     private transient Logger logger;
 
-    @EJB
-    ConfigurationInterface configuration;   //  gives the configuration for the rest interface
-
     /**
      * Open DB connection
      */
-    public MongoClientProvider() {
+    public MongoClientProvider(ConfigurationInterface configuration) {
         this.logger = LogManager.getLogger(getClass());
-        init();
+        init(configuration);
     }
 
-    //TODO: vedi per conf
-    private void init() {
+    private void init(ConfigurationInterface configuration) {
         try {
-            String db, hostname;
-            Integer port;
+            Properties properties = configuration.getConfiguration("db");
 
-//            configuration = new Configuration();
-//            Map<String,String> conf = configuration.getConfiguration("db");
-//            hostname = conf.get("hostname");
-//            port = Integer.parseInt(conf.get("port"));
-//            db =  conf.get("db_name");
-
-//            mc = new MongoClient(new MongoClientURI(DB_HOST));
-
-            hostname = IGenericDao.DB_HOST;
-            port = IGenericDao.DB_PORT;
-            db = IGenericDao.DB_NAME;
-
-            mc = new MongoClient(hostname, port);
+            mc = new MongoClient(properties.getProperty("hostname"), Integer.parseInt(properties.getProperty("port")));
             morphia = new Morphia();
             morphia.map(SmarthomeManager.class);
             morphia.map(User.class);
-            datastore = morphia.createDatastore(mc, db);
+            datastore = morphia.createDatastore(mc, properties.getProperty("db_name"));
             datastore.ensureIndexes();
             managerDao = new SmartHomeManagerDAO(SmarthomeManager.class, datastore);
             userDAO = new UserDAO(User.class, datastore);
@@ -120,6 +101,186 @@ public class MongoClientProvider {
      */
     public ObjectId writeManager(SmarthomeManager manager) {
         return (ObjectId) managerDao.save(manager).getId();
+    }
+
+    /**
+     * Update element on Manager
+     *
+     * @param username the username of manager
+     * @param field    the field to change
+     * @param value    the value of field
+     * @return a {@link Boolean}
+     */
+    public boolean updateManager(String username, String field, String value) {
+        final Query<SmarthomeManager> query = datastore.createQuery(SmarthomeManager.class).filter(ISmartHomeManagerDAO.USERNAME, username);
+        UpdateOperations<SmarthomeManager> ops = datastore.createUpdateOperations(SmarthomeManager.class).set(field, value);
+        return datastore.update(query, ops).getUpdatedExisting();
+    }
+
+    /**
+     * Rename element on Manager
+     *
+     * @param username the username of manager
+     * @param op       It is the operation to perform (see {@link DeviceUpdate.UpdateType})
+     * @param oldName  old name of element
+     * @param newName  new name of element
+     * @param location name of location if want change sub location name
+     * @return a {@link ObjectId}
+     */
+    public ObjectId renameElementManager(String username, DeviceUpdate.UpdateType op, String oldName, String newName,
+                                         String location) {
+        SmarthomeManager manager = getManagerByUser(username);
+        if (manager == null) {
+            return null;
+        }
+        manager.setSmartHomeMutex(new Semaphore(1));
+        switch (op) {
+            case RENAME_LOCATION:
+                manager.changeLocationName(oldName, newName, false);
+                break;
+
+            case RENAME_DEVICE:
+                manager.changeDeviceName(oldName, newName, false);
+                break;
+
+            case RENAME_SUB_LOCATION:
+                manager.changeSublocationName(location, oldName, newName, false);
+                break;
+
+            default:
+                return null;
+        }
+        return writeManager(manager);
+    }
+
+    /**
+     * Move a device from a sub location to the other
+     *
+     * @param username    the username of manager
+     * @param location    The location name
+     * @param sublocation The sublocation name
+     * @param device      new name of device
+     * @return a {@link ObjectId}
+     */
+    public ObjectId moveDevice(String username, String location, String sublocation,
+                               String device) {
+        SmarthomeManager manager = managerDao.findOne(ISmartHomeManagerDAO.USERNAME, username);
+        if (manager == null) {
+            return null;
+        }
+        manager.setSmartHomeMutex(new Semaphore(1));
+        manager.changeDeviceSubLocation(location, sublocation, device, false);
+        return writeManager(manager);
+    }
+
+    /**
+     * Update element on Manager
+     *
+     * @param username    The username of manager
+     * @param op          It is the operation to perform (see {@link DeviceUpdate.UpdateType})
+     * @param id          The id of element
+     * @param location    The location name
+     * @param address     The address of element
+     * @param port        The port of element
+     * @param subLocation The subLocation name
+     * @param device      The device name
+     * @param device_type The device type {@link SmarthomeDevice.DeviceType}
+     * @return a {@link ObjectId}
+     */
+    public ObjectId addElementManager(String username, DeviceUpdate.UpdateType op, String id, String location,
+                                      String address, int port, String subLocation, String device,
+                                      SmarthomeDevice.DeviceType device_type) {
+        SmarthomeManager manager = getManagerByUser(username);
+        if (manager == null) {
+            return null;
+        }
+        manager.setSmartHomeMutex(new Semaphore(1));
+
+        switch (op) {
+            case ADD_LOCATION:
+                manager.addLocation(location, id, address, port, false);
+                break;
+
+            case ADD_DEVICE:
+                manager.addDevice(location, subLocation, id, device, device_type, false);
+                break;
+
+            case ADD_SUB_LOCATION:
+                manager.addSubLocation(location, subLocation, id, false);
+                break;
+
+            default:
+                return null;
+        }
+        return writeManager(manager);
+    }
+
+    /**
+     * Update element on Manager
+     *
+     * @param username   The username of manager
+     * @param type       It is the operation to perform (see {@link DeviceUpdate.UpdateType})
+     * @param removeName The name of element to remove
+     * @param location   The name of Lacation where find the subLocation
+     * @return a {@link ObjectId}
+     */
+    public ObjectId removeElementIntoManager(String username, DeviceUpdate.UpdateType type, String removeName, String location) {
+        SmarthomeManager manager = getManagerByUser(username);
+        if (manager == null) {
+            return null;
+        }
+        manager.setSmartHomeMutex(new Semaphore(1));
+        switch (type) {
+            case REMOVE_LOCATION:
+                manager.removeLocation(removeName, false);
+                break;
+
+            case REMOVE_DEVICE:
+                manager.removeDevice(removeName, false);
+                break;
+
+            case REMOVE_SUB_LOCATION:
+                manager.removeSublocation(location, removeName, false);
+                break;
+
+            default:
+                return null;
+        }
+        return writeManager(manager);
+    }
+
+    /**
+     * add a action on device
+     *
+     * @param username the username of manager
+     * @param device   the name of the device
+     * @param action   the action to perform
+     * @param value    the value of field
+     * @return a {@link ObjectId}
+     */
+    public ObjectId performAction(String username, String device, String action, String value) {
+        SmarthomeManager manager = getManagerByUser(username);
+        if (manager == null) {
+            return null;
+        }
+        setExpires(manager);
+
+        manager.setSmartHomeMutex(new Semaphore(1));
+        manager.performAction(device, action, value, new Date(), false);
+        return writeManager(manager);
+    }
+
+    private void setExpires(SmarthomeManager manager) {
+        for (SmarthomeLocation location : manager.getLocations()) {
+            for (SmarthomeSublocation sb : location.getSublocations().values()) {
+                for (SmarthomeWebDevice dv : sb.getDevices()) {
+                    dv.setExpires(new HashMap<>());
+                }
+            }
+        }
+        for (SmarthomeWebDevice d : manager.getDevices().values()) {
+            d.setExpires(new HashMap<>());
+        }
     }
 
     /**
@@ -334,4 +495,11 @@ public class MongoClientProvider {
         return calendar;
 
     }
+
+    private SmarthomeManager getManagerByUser(String mail) {
+        final Query<User> query = datastore.createQuery(User.class).filter(IUserDAO.EMAIL, mail);
+        User user = userDAO.findOne(query);
+        return user.getHomeManager();
+    }
+
 }

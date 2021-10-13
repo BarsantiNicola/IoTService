@@ -20,7 +20,7 @@ public class SmarthomeWebDevice extends SmarthomeDevice {
     @Expose
     private boolean connectivity;
     @Expose
-    private HashMap<Date, Operation> historical = new HashMap<>();
+    private final HashMap<Date, Operation> historical = new HashMap<>();
     private transient Logger logger;
     private transient HashMap<String, Date> expires; //  set of timestamp associated with each trait to discard old updates
 
@@ -134,7 +134,7 @@ public class SmarthomeWebDevice extends SmarthomeDevice {
     //// UTILITY FUNCTIONS
 
     //  updates the last change happened to the device to prevent to previous late updates to be applied
-    private void setExpires(HashMap<String, Date> expires) {
+    public void setExpires(HashMap<String, Date> expires) {
 
         this.expires = expires;
 
@@ -302,7 +302,7 @@ public class SmarthomeWebDevice extends SmarthomeDevice {
         //add value on historical list
         if (param.containsKey("timestamp")) {
             historical.put(gson.fromJson(param.get("timestamp"), Date.class), new Operation(param.get("action"),
-                    param.get("value"),gson.fromJson(param.get("timestamp"), Date.class)));
+                    param.get("value"), gson.fromJson(param.get("timestamp"), Date.class)));
             System.out.print(param.get("device_name") + "-->" + param.get("timestamp"));
         }
 

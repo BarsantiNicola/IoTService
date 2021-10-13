@@ -118,6 +118,10 @@ public class SmarthomeManager extends MongoEntity implements Serializable {
         }
     }
 
+    public void setSmartHomeMutex(Semaphore smartHomeMutex) {
+        this.smartHomeMutex = smartHomeMutex;
+    }
+
     //  releases the mutual exclusion from the smarthome resources
     private void releaseSmarthomeMutex() {
         this.smartHomeMutex.release();
@@ -736,5 +740,9 @@ public class SmarthomeManager extends MongoEntity implements Serializable {
         this.releaseSmarthomeMutex(); //  release of mutual exclusion
 
         return result;
+    }
+
+    public HashMap<String, SmarthomeWebDevice> getDevices() {
+        return devices;
     }
 }
