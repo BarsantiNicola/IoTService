@@ -12,7 +12,6 @@ import java.util.logging.Handler;
 import java.util.logging.Logger;
 import java.util.logging.SimpleFormatter;
 
-
 @Singleton
 public class Configuration implements ConfigurationInterface {
     private final HashMap<String, Properties> configurations = new HashMap<>();
