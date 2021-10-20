@@ -63,7 +63,7 @@ public class LoginServlet extends HttpServlet {
 
                 logger.info( "Received request from [" + req.getRemoteAddr() + "] of type LOGIN_REQ. Email: " + parameters.get( "email" ));
 
-                if( db.login( parameters.get( "email" ), parameters.get( "password" ))){
+                if( db.login( parameters.get( "email" ), parameters.get( "password" )) ){
 
                     //  creation of credential cookies to enable auto login and authorize each request from now on
                     logger.info( "Login succeded, email: " + parameters.get( "email" ));
