@@ -205,6 +205,7 @@ public class MongoClientProvider {
                 break;
 
             case ADD_SUB_LOCATION:
+                manager.giveNextSublocID(location);
                 manager.addSubLocation(location, subLocation, id, false);
                 break;
 
