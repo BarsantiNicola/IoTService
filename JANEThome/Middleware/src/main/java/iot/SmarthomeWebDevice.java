@@ -5,8 +5,6 @@ import com.google.gson.GsonBuilder;
 import com.google.gson.annotations.Expose;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-
-import java.security.SecureRandom;
 import java.util.*;
 import java.util.Date;
 
@@ -23,123 +21,56 @@ public class SmarthomeWebDevice extends SmarthomeDevice {
     @Expose
     private final HashMap<Date, Operation> historical = new HashMap<>();
     private transient Logger logger;
-    private transient HashMap<String, Date> expires; //  set of timestamp associated with each trait to discard old updates
+    private transient HashMap<String, Date> expires = new HashMap<>(); //  set of timestamp associated with each trait to discard old updates
 
-    //////  TODO To be removed only for testing purpose
-    private final static transient Random random = new SecureRandom();
-    protected transient static final char[] allAllowed = "abcdefghijklmnopqrstuvwxyzABCDEFGJKLMNPRSTUVWXYZ0123456789".toCharArray();
+    //// CONSTRUCTORS
 
-    private static String createRandomString() {
 
-        StringBuilder token = new StringBuilder();
-        for (int i = 0; i < 10; i++)
-            token.append(allAllowed[random.nextInt(allAllowed.length)]);
-
-        return token.toString().toLowerCase();
-
+    public SmarthomeWebDevice() {
+        initializeLogger();
     }
 
-    public static List<SmarthomeWebDevice> createTestingEnvironment(String location, String sub_location) {
-
-        List<SmarthomeWebDevice> devices = new ArrayList<>();
-        int nDevices = random.nextInt(5) + 2;
-
-        for (int a = 0; a < nDevices; a++) {
-            String name = createRandomString();
-            devices.add(setParameters(new SmarthomeWebDevice(name, name, location, sub_location, DeviceType.values()[new Random().nextInt(DeviceType.values().length - 1)])));
-        }
-        return devices;
-
+    public SmarthomeWebDevice(String id, String name, String location, String sub_location, DeviceType type) {
+        super(id, name, location, sub_location, type);
+        this.connectivity = true;
+        this.initializeLogger();
     }
 
-    public static SmarthomeWebDevice setParameters(SmarthomeWebDevice device) {
-        HashMap<String, String> param = new HashMap<>();
-        HashMap<String, Date> exp = new HashMap<>();
-        Date last = new Date(System.currentTimeMillis());
-        switch (SmarthomeDevice.convertType(device.getType())) {
-            case LIGHT:
-                param.put("action", Action.ONOFF);
-                param.put("device_name", device.giveDeviceName());
-                param.put("value", "0");
-                device.setParam(param, false, true);
-                param.replace("action", Action.BRIGHNESS);
-                device.setParam(param, false, true);
-                param.replace("action", Action.COLORSET);
-                param.replace("value", "#ECFF00");
-                device.setParam(param, false, true);
-                exp.put(Action.ONOFF, last);
-                exp.put(Action.BRIGHNESS, last);
-                exp.put(Action.COLORSET, last);
-                break;
+    ////// SETTERS
 
-            case FAN:
-                param.put("action", Action.ONOFF);
-                param.put("device_name", device.giveDeviceName());
-                param.put("value", "0");
-                device.setParam(param, false, true);
-                param.replace("action", Action.FANSPEED);
-                device.setParam(param, false, true);
-                exp.put(Action.ONOFF, last);
-                exp.put(Action.FANSPEED, last);
-                break;
-
-            case DOOR:
-                param.put("action", Action.LOCKUNLOCK);
-                param.put("device_name", device.giveDeviceName());
-                param.put("value", "0");
-                device.setParam(param, false, true);
-                param.replace("action", Action.OPENCLOSE);
-                device.setParam(param, false, true);
-                exp.put(Action.LOCKUNLOCK, last);
-                exp.put(Action.OPENCLOSE, last);
-                break;
-
-            case CONDITIONER:
-                param.put("action", Action.ONOFF);
-                param.put("device_name", device.giveDeviceName());
-                param.put("value", "0");
-                device.setParam(param, false, true);
-                param.replace("action", Action.FANSPEED);
-                device.setParam(param, false, true);
-                param.replace("action", Action.TEMPSET);
-                param.replace("value", "6.0");
-                device.setParam(param, false, true);
-                exp.put(Action.ONOFF, last);
-                exp.put(Action.FANSPEED, last);
-                exp.put(Action.TEMPSET, last);
-                break;
-
-            case THERMOSTAT:
-                param.put("action", Action.TEMPSET);
-                param.put("device_name", device.giveDeviceName());
-                param.put("value", "6.0");
-                device.setParam(param, false, true);
-                param.put("action", Action.TEMP);
-                param.put("device_name", device.giveDeviceName());
-                param.put("value", "7.0");
-                device.setParam(param, false, true);
-                exp.put(Action.TEMP, last);
-                exp.put(Action.TEMPSET, last);
-                break;
-
-            default:
-        }
-
-        exp.put(Action.CONNECT, last);
-        device.setExpires(exp);
-        return device;
+    public void setConnectivity( boolean connectivity ){
+        this.connectivity = connectivity;
     }
 
-    ///////
+    public void setParam( HashMap<String, String> param ){
+        this.param.putAll(param);
+    }
 
-    //// UTILITY FUNCTIONS
+    public void setHistorical( HashMap<Date,Operation> historical ){
+        this.historical.putAll(historical);
+    }
 
-    //  updates the last change happened to the device to prevent to previous late updates to be applied
     public void setExpires(HashMap<String, Date> expires) {
 
         this.expires = expires;
 
     }
+
+    ////// GETTERS
+
+    public HashMap<String, String> getParam() {
+        return param;
+    }
+
+    public boolean getConnectivity(){
+        return this.connectivity;
+    }
+
+    public HashMap<Date,Operation> getHistorical(){
+        return this.historical;
+    }
+
+    //// UTILITY FUNCTIONS
 
     //  verifies if the update can be applied or is. With force enabled the system will be always updated but
     //  no expire will updated
@@ -192,23 +123,6 @@ public class SmarthomeWebDevice extends SmarthomeDevice {
 
     }
 
-    //////
-
-    // Constructor
-
-
-    public SmarthomeWebDevice() {
-    }
-
-    public SmarthomeWebDevice(String id, String name, String location, String sub_location, DeviceType type) {
-        super(id, name, location, sub_location, type);
-        this.expires = new HashMap<>();
-        this.connectivity = true;
-        this.initializeLogger();
-    }
-
-    ////// UTILITY FUNCTIONS
-
     //  Singleton function to obtain a logger preventing the usage of more than one logger handler.
     private void initializeLogger() {
 
@@ -232,7 +146,7 @@ public class SmarthomeWebDevice extends SmarthomeDevice {
     //       - param: contains the param to make the action
     //       - trial: useful for operation testing, not apply any modification just verify if it is possible
     //       - force: useful for device initialization, force the system to update its status not considering the expire
-    public boolean setParam(HashMap<String, String> param, boolean trial, boolean force) {
+    public boolean executeAction(HashMap<String, String> param, boolean trial, boolean force) {
 
         this.initializeLogger();
         Gson gson = new Gson();
@@ -316,10 +230,7 @@ public class SmarthomeWebDevice extends SmarthomeDevice {
 
     }
 
-    //  returns back the hashmap of all the device's parameters
-    public HashMap<String, String> getParam() {
-        return param;
-    }
+
 
     //  verification of a value for a given action. The function returns true if the given value can be used
     //  as a parameter for the given action, otherwise if the value is not accepted or the action isn't recognized it
@@ -420,28 +331,6 @@ public class SmarthomeWebDevice extends SmarthomeDevice {
     }
 
 
-    // GETTERS
 
-    public boolean getConnectivity(){
-        return this.connectivity;
-    }
-
-    public HashMap<Date,Operation> getHistorical(){
-        return this.historical;
-    }
-
-    //  SETTERS
-
-    public void setConnectivity( boolean connectivity ){
-        this.connectivity = connectivity;
-    }
-
-    public void setParam( HashMap<String, String> param ){
-        this.param.putAll(param);
-    }
-
-    public void setHistorical( HashMap<Date,Operation> historical ){
-        this.historical.putAll(historical);
-    }
 
 }

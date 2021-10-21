@@ -1,7 +1,6 @@
 package iot;
 
 import java.io.Serializable;
-import java.security.SecureRandom;
 import java.util.*;
 import java.util.logging.ConsoleHandler;
 import java.util.logging.Handler;
@@ -14,61 +13,27 @@ import java.util.logging.SimpleFormatter;
 public class SmarthomeLocation implements Serializable {
 
     private String locId;
-    private final HashMap<String,SmarthomeSublocation> sublocations = new HashMap<>();   //  list of all the sublocations
     private String location;                           //  location name
     private String ipAddress;                          //  ip address used by the location
     private int port;                                  //  the port used by the location
     private int maxSublocID;
+    private final HashMap<String,SmarthomeSublocation> sublocations = new HashMap<>();   //  list of all the sublocations
     private transient Logger logger;
-
-
-    ////////  TODO To be removed only for testing purpose
-    protected transient static final char[] allAllowed = "abcdefghijklmnopqrstuvwxyzABCDEFGJKLMNPRSTUVWXYZ0123456789".toCharArray();
-    private final static transient Random random = new SecureRandom();
-
-    private static String createRandomString(){
-
-        StringBuilder token = new StringBuilder();
-        Random random = new SecureRandom();
-        for (int i = 0; i < 15; i++)
-            token.append(allAllowed[random.nextInt(allAllowed.length)]);
-
-        return token.toString().toLowerCase();
-
-    }
-
-    static List<SmarthomeLocation> createTestingEnvironment(){
-
-        List<SmarthomeLocation> locations = new ArrayList<>();
-        int nLocations = random.nextInt(3)+1;
-        for( int a = 0;a<nLocations; a++) {
-            String name = createRandomString();
-            locations.add( new SmarthomeLocation(
-                    name,
-                    String.valueOf(a+1),
-                    "8.8.8.8",
-                    Math.abs(random.nextInt()),
-                    SmarthomeSublocation.createTestingEnvironment(name)));
-        }
-        return locations;
-    }
-
-    ////////
 
     /////// CONSTRUCTORS
 
-
     public SmarthomeLocation() {
+        initializeLogger();
     }
 
     public SmarthomeLocation(String location, String locID, String address, int port ){
 
+        initializeLogger();
         this.location = location;
         this.ipAddress = address;
         this.port = port;
         this.locId = locID;
         this.maxSublocID = 1;
-        initializeLogger();
         this.sublocations.put("default",new SmarthomeSublocation("default", "0" ));
 
     }
@@ -78,6 +43,50 @@ public class SmarthomeLocation implements Serializable {
         this( name, locID, address, port );
         sublocations.forEach(subLocation -> this.sublocations.put( subLocation.getSubLocation(), subLocation ));
 
+    }
+
+    /////// SETTERS
+
+    public void setLocId(String locId) { this.locId = locId; }
+
+    public void setLocation( String location ){
+        this.location = location;
+    }
+
+    public void setIpAddress(String ip){
+        this.ipAddress = ip;
+    }
+
+    public void setPort(int port){
+        this.port = port;
+    }
+
+    public void setMaxSublocID( int maxSublocID ){
+        this.maxSublocID = maxSublocID;
+    }
+
+    public void setSublocations( HashMap<String, SmarthomeSublocation> sublocations ){
+        this.sublocations.putAll(sublocations);
+    }
+
+    /////// GETTERS
+
+    public String getLocId() {
+        return locId;
+    }
+
+    public String getLocation(){ return location; }
+
+    public String getIpAddress(){ return ipAddress; }
+
+    public int getPort(){ return port; }
+
+    public int getMaxSublocID() {
+        return maxSublocID;
+    }
+
+    public HashMap<String, SmarthomeSublocation> getSublocations() {
+        return sublocations;
     }
 
     /////// UTILITY FUNCTIONS
@@ -182,7 +191,7 @@ public class SmarthomeLocation implements Serializable {
             return false;
 
         //  getting the device from the old sub-location
-        SmarthomeWebDevice device = this.sublocations.get( old_sublocation ).getDevice( name );
+        SmarthomeWebDevice device = this.sublocations.get( old_sublocation ).giveDevice( name );
 
         //  removing the device from the old sub-location
         if( this.sublocations.get( old_sublocation ).removeDevice( name, trial )){
@@ -205,7 +214,7 @@ public class SmarthomeLocation implements Serializable {
     }
 
     //  gives all the devices stored into the location
-    List<SmarthomeWebDevice> getDevices(){
+    List<SmarthomeWebDevice> giveDevices(){
 
         ArrayList<SmarthomeWebDevice> devs = new ArrayList<>();
 
@@ -216,7 +225,7 @@ public class SmarthomeLocation implements Serializable {
     }
 
     //  if present gives all the devices stored into the subLocation deployed inside the current location
-    List<SmarthomeWebDevice> getDevices( String subLocation ){
+    List<SmarthomeWebDevice> giveDevices( String subLocation ){
 
         ArrayList<SmarthomeWebDevice> devs = new ArrayList<>();
 
@@ -251,52 +260,5 @@ public class SmarthomeLocation implements Serializable {
     boolean isPresent( String subLocation ){
         return this.sublocations.containsKey(subLocation);
     }
-    /////// SETTERS
 
-    //  changes the location name
-    void setLocation( String location ){
-        this.location = location;
-    }
-
-    //  changes the port used by the location component
-    void setPort(int port){
-        this.port = port;
-    }
-
-    void setIpAddress(String ip){
-        this.ipAddress = ip;
-    }
-
-    public void setLocId(String locId) {
-        this.locId = locId;
-    }
-
-    public void setSublocations( HashMap<String, SmarthomeSublocation> sublocations ){
-        this.sublocations.putAll(sublocations);
-    }
-
-    public void setMaxSublocID( int maxSublocID ){
-        this.maxSublocID = maxSublocID;
-    }
-
-    /////// GETTERS
-
-    public String getLocation(){ return location; }
-
-    // returns the port used by the location component
-    int getPort(){ return port; }
-
-    public String getLocId() {
-        return locId;
-    }
-
-    String getIpAddress(){ return ipAddress; }
-
-    public HashMap<String, SmarthomeSublocation> getSublocations() {
-        return sublocations;
-    }
-
-    public int getMaxSublocID() {
-        return maxSublocID;
-    }
 }

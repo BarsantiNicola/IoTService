@@ -164,7 +164,8 @@ public class RegistrationServlet extends HttpServlet {
                     user.setHomeManager(manager);
                     if( db.addUser( user ))
                         resp.sendRedirect( "registration.jsp?state=2" );
-                    else if (db.deleteManager(manager.getKey())){
+                    else{
+                        db.deleteManager(manager.getKey());
                         resp.sendRedirect("registration.jsp?state=3");
                     }
 

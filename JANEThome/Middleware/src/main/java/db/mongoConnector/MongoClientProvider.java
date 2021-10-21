@@ -133,7 +133,7 @@ public class MongoClientProvider {
         if (manager == null) {
             return null;
         }
-        manager.setSmartHomeMutex(new Semaphore(1));
+        manager.addSmartHomeMutex(new Semaphore(1));
         switch (op) {
             case RENAME_LOCATION:
                 manager.changeLocationName(oldName, newName, false);
@@ -168,7 +168,7 @@ public class MongoClientProvider {
         if (manager == null) {
             return null;
         }
-        manager.setSmartHomeMutex(new Semaphore(1));
+        manager.addSmartHomeMutex(new Semaphore(1));
         manager.changeDeviceSubLocation(location, sublocation, device, false);
         return writeManager(manager);
     }
@@ -194,7 +194,7 @@ public class MongoClientProvider {
         if (manager == null) {
             return null;
         }
-        manager.setSmartHomeMutex(new Semaphore(1));
+        manager.addSmartHomeMutex(new Semaphore(1));
 
         switch (op) {
             case ADD_LOCATION:
@@ -229,7 +229,7 @@ public class MongoClientProvider {
         if (manager == null) {
             return null;
         }
-        manager.setSmartHomeMutex(new Semaphore(1));
+        manager.addSmartHomeMutex(new Semaphore(1));
         switch (type) {
             case REMOVE_LOCATION:
                 manager.removeLocation(removeName, false);
@@ -265,13 +265,13 @@ public class MongoClientProvider {
         }
         setExpires(manager);
 
-        manager.setSmartHomeMutex(new Semaphore(1));
+        manager.addSmartHomeMutex(new Semaphore(1));
         manager.performAction(device, action, value, new Date(), false);
         return writeManager(manager);
     }
 
     private void setExpires(SmarthomeManager manager) {
-        for (SmarthomeLocation location : manager.getLocations()) {
+        for (SmarthomeLocation location : manager.giveLocations()) {
             for (SmarthomeSublocation sb : location.getSublocations().values()) {
                 for (SmarthomeWebDevice dv : sb.giveDevices()) {
                     dv.setExpires(new HashMap<>());

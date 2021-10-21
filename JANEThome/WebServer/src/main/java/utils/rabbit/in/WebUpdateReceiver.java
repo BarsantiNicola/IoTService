@@ -202,7 +202,7 @@ public class WebUpdateReceiver extends EndPoint implements Consumer{
 
                             if (message.areSet("dID", "action", "value")) {
 
-                                String name = this.smarthome.getDeviceNameById(message.getData("dID"));
+                                String name = this.smarthome.giveDeviceNameById(message.getData("dID"));
                                 if (this.smarthome.performAction(name, message.getData("action"), message.getData("value"), message.giveConvertedTimestamp(), false)) {
 
                                     data.put("device_name", name);

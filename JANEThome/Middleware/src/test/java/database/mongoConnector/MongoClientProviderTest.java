@@ -25,7 +25,7 @@ class mongoClientProviderTest {
             Configuration configuration = new Configuration();
             mongoClientProvider = new MongoClientProvider(configuration);
             user = new User("pluto", "federico", "lapenna", "f.lapenna@studenti.unipi.it", "test");
-            manager = SmarthomeManager.createTestingEnvironment("test", true, configuration);
+            //manager = SmarthomeManager.createTestingEnvironment("test", true, configuration);
             initStatisticsTest(SmarthomeDevice.DeviceType.DOOR);
             initStatisticsTest(SmarthomeDevice.DeviceType.FAN);
             initStatisticsTest(SmarthomeDevice.DeviceType.THERMOSTAT);
@@ -64,7 +64,7 @@ class mongoClientProviderTest {
 
         SmarthomeSublocation sublocation = null;
 
-        SmarthomeLocation location = manager.getLocations().iterator().next();
+        SmarthomeLocation location = manager.giveLocations().iterator().next();
         if (location == null) {
             return;
         }
@@ -107,7 +107,7 @@ class mongoClientProviderTest {
 
         SmarthomeSublocation sublocation = null;
 
-        SmarthomeLocation location = manager.getLocations().iterator().next();
+        SmarthomeLocation location = manager.giveLocations().iterator().next();
         if (location == null) {
             return;
         }
@@ -146,7 +146,7 @@ class mongoClientProviderTest {
 
         SmarthomeSublocation sublocation = null;
 
-        SmarthomeLocation location = manager.getLocations().iterator().next();
+        SmarthomeLocation location = manager.giveLocations().iterator().next();
         if (location == null) {
             return;
         }
@@ -393,7 +393,7 @@ class mongoClientProviderTest {
     }
 
     private String getRandomIdByType(String type, SmarthomeManager manager) {
-        for (SmarthomeLocation l : manager.getLocations()) {
+        for (SmarthomeLocation l : manager.giveLocations()) {
             for (SmarthomeSublocation s : l.getSublocations().values()) {
                 for (SmarthomeWebDevice d : s.giveDevices()) {
                     if (d.getType().equals(type)) {
@@ -405,7 +405,7 @@ class mongoClientProviderTest {
         return null;
     }
     private String getRandomNameByType(String type, SmarthomeManager manager) {
-        for (SmarthomeLocation l : manager.getLocations()) {
+        for (SmarthomeLocation l : manager.giveLocations()) {
             for (SmarthomeSublocation s : l.getSublocations().values()) {
                 for (SmarthomeWebDevice d : s.giveDevices()) {
                     if (d.getType().equals(type)) {
@@ -484,7 +484,7 @@ class mongoClientProviderTest {
 
     private static List<String> getNameDev(String type) {
         List<String> dev = new ArrayList<>();
-        for (SmarthomeLocation sm : manager.getLocations()) {
+        for (SmarthomeLocation sm : manager.giveLocations()) {
             for (SmarthomeSublocation sublocation : sm.getSublocations().values()) {
                 for (SmarthomeWebDevice d : sublocation.giveDevices()) {
                     if (type.compareTo(d.getType()) == 0)

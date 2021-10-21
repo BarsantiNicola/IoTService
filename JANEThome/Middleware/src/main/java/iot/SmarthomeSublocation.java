@@ -4,45 +4,18 @@ import java.util.*;
 import java.io.Serializable;
 import java.util.logging.Logger;
 import java.util.logging.Handler;
-import java.security.SecureRandom;
 import java.util.logging.ConsoleHandler;
 import java.util.logging.SimpleFormatter;
 
 //  Class used to generate the structure of the smarthome, in particular to define a sublocation.
 //  A sublocation is a container for devices and has to be deployed into a location
+@SuppressWarnings("unused")
 public class SmarthomeSublocation implements Serializable {
 
     private String subLocId;
     private String subLocation;        //  sublocation name
     private transient Logger logger;
-
     private final HashMap<String,SmarthomeWebDevice> devices = new HashMap<>();  //  deployed devices
-
-    ////////  TODO To be removed only for testing purpose
-    private final static transient Random random = new SecureRandom();
-    protected transient static final char[] allAllowed = "abcdefghijklmnopqrstuvwxyzABCDEFGJKLMNPRSTUVWXYZ0123456789".toCharArray();
-
-    private static String createRandomString(){
-
-        StringBuilder token = new StringBuilder();
-        for (int i = 0; i < 15; i++)
-            token.append(allAllowed[random.nextInt(allAllowed.length)]);
-
-        return token.toString().toLowerCase();
-
-    }
-
-    public static List<SmarthomeSublocation> createTestingEnvironment(String location){
-
-        List<SmarthomeSublocation> sublocations = new ArrayList<>();
-        int nSublocations = random.nextInt(2)+1;
-        for( int a = 0;a<nSublocations; a++) {
-            String name = createRandomString();
-            sublocations.add(new SmarthomeSublocation( name, String.valueOf(a+1), SmarthomeWebDevice.createTestingEnvironment(location, name)));
-        }
-        return sublocations;
-    }
-    ///////
 
     //////// CONSTRUCTORS
 
@@ -62,6 +35,41 @@ public class SmarthomeSublocation implements Serializable {
     }
 
     public SmarthomeSublocation() {
+        initializeLogger();
+    }
+
+    /////// GETTERS
+
+    //  returns the sublocation name
+    public String getSubLocation(){
+        return this.subLocation;
+    }
+
+    public String getSubLocId() {
+        return subLocId;
+    }
+
+    //  returns the list of all the sublocation's devices
+    public HashMap<String,SmarthomeWebDevice> getDevices(){ return this.devices; }
+
+    /////// SETTERS
+
+    // changes the sublocation's name
+    public void setSubLocation(String subLocation){
+
+        this.subLocation = subLocation;
+
+        //  changing all the devices information to link to the new subLocation
+        this.devices.values().forEach( device -> device.setRoomHint( subLocation ));
+
+    }
+
+    public void setSubLocId(String subLocId) {
+        this.subLocId = subLocId;
+    }
+
+    public void setDevices( HashMap<String,SmarthomeWebDevice> devices ){
+        this.devices.putAll(devices);
     }
 
     /////// UTILITY FUNCTIONS
@@ -88,7 +96,7 @@ public class SmarthomeSublocation implements Serializable {
     //  PUBLIC FUNCTIONS
 
     //  returns a device if it is present into the sublocation's devices otherwise null
-    public SmarthomeWebDevice getDevice(String name){
+    public SmarthomeWebDevice giveDevice(String name){
         return this.devices.get(name);
     }
 
@@ -137,37 +145,5 @@ public class SmarthomeSublocation implements Serializable {
     }
 
     public Collection<SmarthomeWebDevice> giveDevices(){ return this.devices.values(); }
-    // GETTERS
 
-    //  returns the sublocation name
-    public String getSubLocation(){
-        return this.subLocation;
-    }
-
-    public String getSubLocId() {
-        return subLocId;
-    }
-
-    //  returns the list of all the sublocation's devices
-    public HashMap<String,SmarthomeWebDevice> getDevices(){ return this.devices; }
-
-    // SETTERS
-
-    // changes the sublocation's name
-    public void setSubLocation(String subLocation){
-
-        this.subLocation = subLocation;
-
-        //  changing all the devices information to link to the new subLocation
-        this.devices.values().forEach( device -> device.setRoomHint( subLocation ));
-
-    }
-
-    public void setSubLocId(String subLocId) {
-        this.subLocId = subLocId;
-    }
-
-    public void setDevices( HashMap<String,SmarthomeWebDevice> devices ){
-        this.devices.putAll(devices);
-    }
 }
