@@ -195,7 +195,6 @@ public class MongoClientProvider {
             return null;
         }
         manager.addSmartHomeMutex(new Semaphore(1));
-
         switch (op) {
             case ADD_LOCATION:
                 manager.addLocation(location, id, address, port, false);

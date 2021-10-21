@@ -70,6 +70,8 @@ public class SmarthomeWebDevice extends SmarthomeDevice {
         return this.historical;
     }
 
+    public HashMap<String,Date> getExpires(){ return this.expires; }
+
     //// UTILITY FUNCTIONS
 
     //  verifies if the update can be applied or is. With force enabled the system will be always updated but

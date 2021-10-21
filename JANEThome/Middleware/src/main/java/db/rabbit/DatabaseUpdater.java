@@ -53,7 +53,6 @@ public class DatabaseUpdater extends EndPoint implements Consumer {
                 DeviceUpdateMessage request;
 
                 try {
-                    System.out.println("Message received!");
                     request = (DeviceUpdateMessage) SerializationUtils.deserialize(delivery.getBody());
 
                     for (DeviceUpdate message : request.getAllDeviceUpdate()) {
@@ -83,7 +82,7 @@ public class DatabaseUpdater extends EndPoint implements Consumer {
 
                                 if (message.areSet(LOCATION, SUBLOCATION, NAME, TYPE, DID) || request.getDestination() != null)
                                     dB.addElementManager(request.getDestination(),
-                                            DeviceUpdate.UpdateType.ADD_LOCATION, message.getData(DID),
+                                            DeviceUpdate.UpdateType.ADD_DEVICE, message.getData(DID),
                                             message.getData(LOCATION), null, 0, message.getData(SUBLOCATION),
                                             message.getData(NAME),
                                             SmarthomeDevice.DeviceType.StringToType(message.getData(TYPE)));
