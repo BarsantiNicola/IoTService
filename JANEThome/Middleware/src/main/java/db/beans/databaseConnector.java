@@ -48,6 +48,11 @@ public class databaseConnector implements DBinterface {
     }
 
     @Override
+    public boolean deleteManager(ObjectId objectId){
+        return mongoClientProvider.deleteManager(objectId);
+    }
+
+    @Override
     public ObjectId renameElementManager(String username, DeviceUpdate.UpdateType op, String oldName, String newName, String location) {
         return mongoClientProvider.renameElementManager(username, op, oldName, newName, location);
     }

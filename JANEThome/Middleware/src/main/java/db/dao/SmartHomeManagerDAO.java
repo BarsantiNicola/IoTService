@@ -1,5 +1,6 @@
 package db.dao;
 
+import com.mongodb.WriteResult;
 import db.interfaces.ISmartHomeManagerDAO;
 import iot.SmarthomeManager;
 import org.bson.types.ObjectId;
@@ -14,6 +15,10 @@ public class SmartHomeManagerDAO extends BasicDAO<SmarthomeManager, String> impl
 
     public SmarthomeManager get(ObjectId objectId) {
         return this.ds.get(this.entityClazz, objectId);
+    }
+
+    public WriteResult deleteById(ObjectId id) {
+        return this.ds.delete(this.entityClazz, id);
     }
 
 }
