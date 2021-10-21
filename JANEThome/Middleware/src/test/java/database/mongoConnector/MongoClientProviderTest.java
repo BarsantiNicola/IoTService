@@ -75,7 +75,7 @@ class mongoClientProviderTest {
 
         String locations = location.getLocation();
         String subloc = sublocation.getSubLocation();
-        String device = sublocation.getDevices().iterator().next().giveDeviceName();
+        String device = sublocation.giveDevices().iterator().next().giveDeviceName();
 
         //rename device
         assertNotNull(mongoClientProvider.renameElementManager(user.getEmail(), DeviceUpdate.UpdateType.RENAME_DEVICE,
@@ -157,7 +157,7 @@ class mongoClientProviderTest {
 
         String locations = location.getLocation();
         String subloc = sublocation.getSubLocation();
-        String device = sublocation.getDevices().iterator().next().giveDeviceName();
+        String device = sublocation.giveDevices().iterator().next().giveDeviceName();
 
         //remove device
         assertNotNull(mongoClientProvider.removeElementIntoManager(user.getEmail(), DeviceUpdate.UpdateType.REMOVE_DEVICE,
@@ -389,7 +389,7 @@ class mongoClientProviderTest {
     private String getRandomIdByType(String type, SmarthomeManager manager) {
         for (SmarthomeLocation l : manager.getLocations()) {
             for (SmarthomeSublocation s : l.getSublocations().values()) {
-                for (SmarthomeWebDevice d : s.getDevices()) {
+                for (SmarthomeWebDevice d : s.giveDevices()) {
                     if (d.getType().equals(type)) {
                         return d.getId();
                     }
@@ -401,7 +401,7 @@ class mongoClientProviderTest {
     private String getRandomNameByType(String type, SmarthomeManager manager) {
         for (SmarthomeLocation l : manager.getLocations()) {
             for (SmarthomeSublocation s : l.getSublocations().values()) {
-                for (SmarthomeWebDevice d : s.getDevices()) {
+                for (SmarthomeWebDevice d : s.giveDevices()) {
                     if (d.getType().equals(type)) {
                         return d.getName().get("name");
                     }
@@ -480,7 +480,7 @@ class mongoClientProviderTest {
         List<String> dev = new ArrayList<>();
         for (SmarthomeLocation sm : manager.getLocations()) {
             for (SmarthomeSublocation sublocation : sm.getSublocations().values()) {
-                for (SmarthomeWebDevice d : sublocation.getDevices()) {
+                for (SmarthomeWebDevice d : sublocation.giveDevices()) {
                     if (type.compareTo(d.getType()) == 0)
                         dev.add(d.getName().get("name"));
                 }

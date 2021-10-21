@@ -273,7 +273,7 @@ public class MongoClientProvider {
     private void setExpires(SmarthomeManager manager) {
         for (SmarthomeLocation location : manager.getLocations()) {
             for (SmarthomeSublocation sb : location.getSublocations().values()) {
-                for (SmarthomeWebDevice dv : sb.getDevices()) {
+                for (SmarthomeWebDevice dv : sb.giveDevices()) {
                     dv.setExpires(new HashMap<>());
                 }
             }

@@ -136,6 +136,7 @@ public class SmarthomeSublocation implements Serializable {
 
     }
 
+    public Collection<SmarthomeWebDevice> giveDevices(){ return this.devices.values(); }
     // GETTERS
 
     //  returns the sublocation name
@@ -143,9 +144,12 @@ public class SmarthomeSublocation implements Serializable {
         return this.subLocation;
     }
 
-    //  returns the list of all the sublocation's devices
-    public Collection<SmarthomeWebDevice> getDevices(){ return this.devices.values(); }
+    public String getSubLocId() {
+        return subLocId;
+    }
 
+    //  returns the list of all the sublocation's devices
+    public HashMap<String,SmarthomeWebDevice> getDevices(){ return this.devices; }
 
     // SETTERS
 
@@ -159,11 +163,11 @@ public class SmarthomeSublocation implements Serializable {
 
     }
 
-    public String getSubLocId() {
-        return subLocId;
-    }
-
     public void setSubLocId(String subLocId) {
         this.subLocId = subLocId;
+    }
+
+    public void setDevices( HashMap<String,SmarthomeWebDevice> devices ){
+        this.devices.putAll(devices);
     }
 }

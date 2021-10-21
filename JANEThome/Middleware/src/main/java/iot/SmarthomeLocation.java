@@ -210,7 +210,7 @@ public class SmarthomeLocation implements Serializable {
         ArrayList<SmarthomeWebDevice> devs = new ArrayList<>();
 
         //  getting all the devices from all the subLocations
-        this.sublocations.values().forEach( sublocation -> devs.addAll(sublocation.getDevices()) );
+        this.sublocations.values().forEach( sublocation -> devs.addAll(sublocation.giveDevices()) );
         return devs;
 
     }
@@ -222,7 +222,7 @@ public class SmarthomeLocation implements Serializable {
 
         //  verification of subLocation presence
         if( this.sublocations.containsKey( subLocation ))
-            devs.addAll( this.sublocations.get( subLocation ).getDevices() );
+            devs.addAll( this.sublocations.get( subLocation ).giveDevices() );
 
         return devs;
 
@@ -271,6 +271,14 @@ public class SmarthomeLocation implements Serializable {
         this.locId = locId;
     }
 
+    public void setSublocations( HashMap<String, SmarthomeSublocation> sublocations ){
+        this.sublocations.putAll(sublocations);
+    }
+
+    public void setMaxSublocID( int maxSublocID ){
+        this.maxSublocID = maxSublocID;
+    }
+
     /////// GETTERS
 
     public String getLocation(){ return location; }
@@ -286,5 +294,9 @@ public class SmarthomeLocation implements Serializable {
 
     public HashMap<String, SmarthomeSublocation> getSublocations() {
         return sublocations;
+    }
+
+    public int getMaxSublocID() {
+        return maxSublocID;
     }
 }

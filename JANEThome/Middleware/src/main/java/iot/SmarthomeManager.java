@@ -119,6 +119,10 @@ public class SmarthomeManager extends MongoEntity implements Serializable {
         }
     }
 
+    public void connect( ConfigurationInterface configuration ){
+        this.updater = new SmarthomeUpdater(username, this, configuration);
+    }
+
     public void setSmartHomeMutex(Semaphore smartHomeMutex) {
         this.smartHomeMutex = smartHomeMutex;
     }
@@ -597,6 +601,23 @@ public class SmarthomeManager extends MongoEntity implements Serializable {
         return gson.toJson(response);
 
     }
+
+
+    ////// SETTERS
+
+    public void setUsername( String username ){
+        this.username = username;
+    }
+
+    public void setLocations( List<SmarthomeLocation> locs ){
+        locs.forEach(location -> {
+            this.locations.put(location.getLocation(), location);
+            location.getDevices().forEach(device -> this.devices.put(device.giveDeviceName(), device));
+        });
+    }
+
+    public void setDevices( List<SmarthomeDevice> devices ){}
+
 
     ////// GETTERS
 

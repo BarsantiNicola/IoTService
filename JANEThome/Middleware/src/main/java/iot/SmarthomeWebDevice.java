@@ -13,6 +13,7 @@ import java.util.Date;
 
 //  Class derived from SmarthomeDevice to add actions to devices and maintain their states
 //  The class is used by the WebServer to store information about the user devices
+@SuppressWarnings("unused")
 public class SmarthomeWebDevice extends SmarthomeDevice {
 
     @Expose
@@ -417,4 +418,30 @@ public class SmarthomeWebDevice extends SmarthomeDevice {
 
         return result;
     }
+
+
+    // GETTERS
+
+    public boolean getConnectivity(){
+        return this.connectivity;
+    }
+
+    public HashMap<Date,Operation> getHistorical(){
+        return this.historical;
+    }
+
+    //  SETTERS
+
+    public void setConnectivity( boolean connectivity ){
+        this.connectivity = connectivity;
+    }
+
+    public void setParam( HashMap<String, String> param ){
+        this.param.putAll(param);
+    }
+
+    public void setHistorical( HashMap<Date,Operation> historical ){
+        this.historical.putAll(historical);
+    }
+
 }
