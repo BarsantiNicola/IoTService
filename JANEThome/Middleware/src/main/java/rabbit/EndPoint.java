@@ -76,9 +76,9 @@ public class EndPoint{
 
                 this.channel.close();
 
-            }catch(TimeoutException | IOException e){
+            }catch(IllegalStateException | TimeoutException | IOException e){
 
-                e.printStackTrace();
+                return;
 
             }
 

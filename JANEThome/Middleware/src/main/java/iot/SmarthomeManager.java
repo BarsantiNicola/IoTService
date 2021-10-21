@@ -53,6 +53,7 @@ public class SmarthomeManager extends MongoEntity implements Serializable {
     /////// CONSTRUCTORS
 
     public SmarthomeManager() {
+        this.smartHomeMutex = new Semaphore( 1 );
         this.setKey(new ObjectId());
     }
 

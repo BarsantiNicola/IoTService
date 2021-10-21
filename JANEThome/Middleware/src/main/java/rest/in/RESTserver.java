@@ -1,6 +1,7 @@
 package rest.in;
 
 import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import rabbit.msg.DeviceUpdate;
 import rabbit.msg.DeviceUpdateMessage;
 import rabbit.msg.InvalidMessageException;
@@ -49,7 +50,8 @@ public class RESTserver{
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.TEXT_PLAIN)
     public Response UpdateDevice(List<UpdateRequest> data){
-        Gson gson = new Gson();
+
+        Gson gson = new GsonBuilder().setDateFormat( "yyyy-MM-dd'T'HH:mm:ss.SSS" ).create();
         int state = 0;
         List<StateResponse> responses = new ArrayList<>();
         try {

@@ -1,6 +1,7 @@
 package weblogic.login.servlets;
 
 import db.interfaces.DBinterface;
+import iot.SmarthomeManager;
 import iot.User;
 import utils.mail.interfaces.EmailServiceLocal;
 import weblogic.login.beans.UserData;
@@ -157,10 +158,17 @@ public class RegistrationServlet extends HttpServlet {
                     }
 
                     context.unbind("ejb:module/registration_" + parameters.get("token"));
-                    if( db.addUser( new User( data.getEmail(), data.getFirstName(), data.getLastName(), data.getEmail(), data.getPassword())))
+                    SmarthomeManager manager = new SmarthomeManager(data.getEmail(), false, null);
+                    db.addManager(manager);
+                    User user = new User( data.getEmail(), data.getFirstName(), data.getLastName(), data.getEmail(), data.getPassword());
+                    user.setHomeManager(manager);
+                    if( db.addUser( user ))
                         resp.sendRedirect( "registration.jsp?state=2" );
-                    else
-                        resp.sendRedirect( "registration.jsp?state=3" );
+                    else {
+                        //  todo remove Manager
+                        resp.sendRedirect("registration.jsp?state=3");
+                    }
+
                     break;
 
                 default:  //  requesting the registration page
