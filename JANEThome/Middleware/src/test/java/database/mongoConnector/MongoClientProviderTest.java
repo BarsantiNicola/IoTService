@@ -1,6 +1,7 @@
 package database.mongoConnector;
 
 import config.beans.Configuration;
+import config.interfaces.ConfigurationInterface;
 import db.interfaces.IUserDAO;
 import db.mongoConnector.MongoClientProvider;
 import iot.*;
@@ -9,6 +10,7 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import rabbit.msg.DeviceUpdate;
 
+import java.security.SecureRandom;
 import java.util.*;
 import java.util.concurrent.ThreadLocalRandom;
 
@@ -25,7 +27,7 @@ class mongoClientProviderTest {
             Configuration configuration = new Configuration();
             mongoClientProvider = new MongoClientProvider(configuration);
             user = new User("pluto", "federico", "lapenna", "f.lapenna@studenti.unipi.it", "test");
-            //manager = SmarthomeManager.createTestingEnvironment("test", true, configuration);
+            manager = createTestingEnvironmentManager("test", true, configuration);
             initStatisticsTest(SmarthomeDevice.DeviceType.DOOR);
             initStatisticsTest(SmarthomeDevice.DeviceType.FAN);
             initStatisticsTest(SmarthomeDevice.DeviceType.THERMOSTAT);
@@ -503,5 +505,141 @@ class mongoClientProviderTest {
                 .nextLong(startMillis, endMillis);
 
         return new Date(randomMillisSinceEpoch);
+    }
+
+
+    ///////TEST ENV////////
+
+    public static SmarthomeManager createTestingEnvironmentManager(String username, boolean connected, ConfigurationInterface configuration) {
+        return new SmarthomeManager(username, connected, configuration, createTestingEnvironmentLocation());
+    }
+
+    static List<SmarthomeLocation> createTestingEnvironmentLocation(){
+        Random random = new SecureRandom();
+        List<SmarthomeLocation> locations = new ArrayList<>();
+        int nLocations = random.nextInt(3)+1;
+        for( int a = 0;a<nLocations; a++) {
+            String name = createRandomString();
+            locations.add( new SmarthomeLocation(
+                    name,
+                    String.valueOf(a+1),
+                    "8.8.8.8",
+                    Math.abs(random.nextInt()),
+                    createTestingEnvironmentSubLoc(name)));
+        }
+        return locations;
+    }
+
+    public static List<SmarthomeSublocation> createTestingEnvironmentSubLoc(String location){
+        Random random = new SecureRandom();
+        List<SmarthomeSublocation> sublocations = new ArrayList<>();
+        int nSublocations = random.nextInt(2)+1;
+        for( int a = 0;a<nSublocations; a++) {
+            String name = createRandomString();
+            sublocations.add(new SmarthomeSublocation( name, String.valueOf(a+1), createTestingEnvironmentDevice(location, name)));
+        }
+        return sublocations;
+    }
+
+    private static List<SmarthomeWebDevice> createTestingEnvironmentDevice(String location, String sub_location) {
+        Random random = new SecureRandom();
+        List<SmarthomeWebDevice> devices = new ArrayList<>();
+        int nDevices = random.nextInt(5) + 2;
+
+        for (int a = 0; a < nDevices; a++) {
+            String name = createRandomString();
+            devices.add(setParameters(new SmarthomeWebDevice(name, name, location, sub_location, SmarthomeDevice.DeviceType.values()[new Random().nextInt(SmarthomeDevice.DeviceType.values().length - 1)])));
+        }
+        return devices;
+
+    }
+
+    private static String createRandomString() {
+        Random random = new SecureRandom();
+        char[] allAllowed = "abcdefghijklmnopqrstuvwxyzABCDEFGJKLMNPRSTUVWXYZ0123456789".toCharArray();
+        StringBuilder token = new StringBuilder();
+        for (int i = 0; i < 10; i++)
+            token.append(allAllowed[random.nextInt(allAllowed.length)]);
+
+        return token.toString().toLowerCase();
+
+    }
+
+    private static SmarthomeWebDevice setParameters(SmarthomeWebDevice device) {
+        HashMap<String, String> param = new HashMap<>();
+        HashMap<String, Date> exp = new HashMap<>();
+        Date last = new Date(System.currentTimeMillis());
+        switch (SmarthomeDevice.convertType(device.getType())) {
+            case LIGHT:
+                param.put("action", Action.ONOFF);
+                param.put("device_name", device.giveDeviceName());
+                param.put("value", "0");
+                device.setParam(param);
+                param.replace("action", Action.BRIGHNESS);
+                device.setParam(param);
+                param.replace("action", Action.COLORSET);
+                param.replace("value", "#ECFF00");
+                device.setParam(param);
+                exp.put(Action.ONOFF, last);
+                exp.put(Action.BRIGHNESS, last);
+                exp.put(Action.COLORSET, last);
+                break;
+
+            case FAN:
+                param.put("action", Action.ONOFF);
+                param.put("device_name", device.giveDeviceName());
+                param.put("value", "0");
+                device.setParam(param);
+                param.replace("action", Action.FANSPEED);
+                device.setParam(param);
+                exp.put(Action.ONOFF, last);
+                exp.put(Action.FANSPEED, last);
+                break;
+
+            case DOOR:
+                param.put("action", Action.LOCKUNLOCK);
+                param.put("device_name", device.giveDeviceName());
+                param.put("value", "0");
+                device.setParam(param);
+                param.replace("action", Action.OPENCLOSE);
+                device.setParam(param);
+                exp.put(Action.LOCKUNLOCK, last);
+                exp.put(Action.OPENCLOSE, last);
+                break;
+
+            case CONDITIONER:
+                param.put("action", Action.ONOFF);
+                param.put("device_name", device.giveDeviceName());
+                param.put("value", "0");
+                device.setParam(param);
+                param.replace("action", Action.FANSPEED);
+                device.setParam(param);
+                param.replace("action", Action.TEMPSET);
+                param.replace("value", "6.0");
+                device.setParam(param);
+                exp.put(Action.ONOFF, last);
+                exp.put(Action.FANSPEED, last);
+                exp.put(Action.TEMPSET, last);
+                break;
+
+            case THERMOSTAT:
+                param.put("action", Action.TEMPSET);
+                param.put("device_name", device.giveDeviceName());
+                param.put("value", "6.0");
+                device.setParam(param);
+                param.put("action", Action.TEMP);
+                param.put("device_name", device.giveDeviceName());
+                param.put("value", "7.0");
+                device.setParam(param);
+                exp.put(Action.TEMP, last);
+                exp.put(Action.TEMPSET, last);
+                break;
+
+            default:
+        }
+
+        exp.put(Action.CONNECT, last);
+        device.setExpires(exp);
+        return device;
     }
 }

@@ -38,7 +38,7 @@ public class SmarthomeLocation implements Serializable {
 
     }
 
-    SmarthomeLocation(String name, String locID, String address, int port, List<SmarthomeSublocation> sublocations){
+    public SmarthomeLocation(String name, String locID, String address, int port, List<SmarthomeSublocation> sublocations){
 
         this( name, locID, address, port );
         sublocations.forEach(subLocation -> this.sublocations.put( subLocation.getSubLocation(), subLocation ));

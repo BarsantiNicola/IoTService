@@ -27,7 +27,7 @@ public class SmarthomeSublocation implements Serializable {
 
     }
 
-    SmarthomeSublocation( String subLocation, String sublocID, List<SmarthomeWebDevice> devices ){
+    public SmarthomeSublocation( String subLocation, String sublocID, List<SmarthomeWebDevice> devices ){
 
         this( subLocation, sublocID );
         devices.forEach(device -> this.devices.put(device.giveDeviceName(), device));
