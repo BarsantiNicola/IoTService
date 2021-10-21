@@ -61,6 +61,9 @@ public class SmarthomeSublocation implements Serializable {
 
     }
 
+    public SmarthomeSublocation() {
+    }
+
     /////// UTILITY FUNCTIONS
 
     //  Singleton function to obtain a logger preventing the usage of more than one logger handler.
