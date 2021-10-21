@@ -51,8 +51,11 @@ public class DatabaseUpdater extends EndPoint implements Consumer {
 
             DeliverCallback deliverCallback = (consumerTag, delivery) -> {
                 DeviceUpdateMessage request;
+
                 try {
+                    System.out.println("Message received!");
                     request = (DeviceUpdateMessage) SerializationUtils.deserialize(delivery.getBody());
+
                     for (DeviceUpdate message : request.getAllDeviceUpdate()) {
                         switch (message.getUpdateType()) {
 
