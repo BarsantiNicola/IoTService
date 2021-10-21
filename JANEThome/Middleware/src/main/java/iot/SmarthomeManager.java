@@ -96,8 +96,10 @@ public class SmarthomeManager extends MongoEntity implements Serializable {
         return this.locations;
     }
 
-    public HashMap<String, SmarthomeWebDevice> getDevices() {
-        return devices;
+    //  getter used by the mongodb database.
+    //  To prevent replication of device information into the database we give back an empty hashmap(see giveDevices)
+    public HashMap<String,SmarthomeLocation> getDevices() {
+        return new HashMap<>();
     }
 
     public Collection<SmarthomeLocation> giveLocations() {
@@ -141,6 +143,17 @@ public class SmarthomeManager extends MongoEntity implements Serializable {
             return true;
 
         }
+    }
+
+
+    public HashMap<String, SmarthomeWebDevice> giveDevices() {
+        return devices;
+    }
+
+    public void relink(){
+
+        this.devices.clear();
+        this.locations.forEach( (key, location) -> location.giveDevices().forEach( device -> this.devices.put( device.giveDeviceName(), device)));
     }
 
     public void connect( ConfigurationInterface configuration ){

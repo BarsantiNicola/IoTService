@@ -146,8 +146,8 @@ public class DatabaseUpdater extends EndPoint implements Consumer {
 
                             case UPDATE:
 
-                                if (message.areSet(DEVICE_NAME, ACTION, VALUE) || request.getDestination() != null)
-                                    dB.performAction(request.getDestination(), message.getData(DEVICE_NAME),
+                                if (message.areSet(DID, ACTION, VALUE) || request.getDestination() != null)
+                                    dB.performAction(request.getDestination(), message.getData(DID),
                                             message.getData(ACTION), message.getData(VALUE));
                                 break;
 

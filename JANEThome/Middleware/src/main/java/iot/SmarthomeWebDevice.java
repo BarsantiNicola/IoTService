@@ -21,7 +21,8 @@ public class SmarthomeWebDevice extends SmarthomeDevice {
     @Expose
     private final HashMap<Date, Operation> historical = new HashMap<>();
     private transient Logger logger;
-    private transient HashMap<String, Date> expires = new HashMap<>(); //  set of timestamp associated with each trait to discard old updates
+    @Expose
+    private HashMap<String, Date> expires = new HashMap<>(); //  set of timestamp associated with each trait to discard old updates
 
     //// CONSTRUCTORS
 
@@ -88,6 +89,7 @@ public class SmarthomeWebDevice extends SmarthomeDevice {
                 trait.compareTo("action.devices.traits.Temperature") != 0)
             return false;
 
+        trait = trait.substring( trait.lastIndexOf(".")+1);
         //  if there isn't a timestamp already setted every action is good
         if (!this.expires.containsKey(trait)) {
 

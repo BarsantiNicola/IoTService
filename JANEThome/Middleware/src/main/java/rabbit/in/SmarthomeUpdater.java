@@ -123,8 +123,8 @@ public class SmarthomeUpdater extends EndPoint implements Consumer{
 
                             case UPDATE:
 
-                                if (message.areSet("device_name", "action", "value"))
-                                    this.smarthome.performAction(message.getData("device_name"), message.getData("action"), message.getData("value"), message.giveConvertedTimestamp(), false);
+                                if (message.areSet("dID", "action", "value"))
+                                    this.smarthome.performAction(this.smarthome.giveDeviceNameById(message.getData("dID")), message.getData("action"), message.getData("value"), message.giveConvertedTimestamp(), false);
                                 break;
 
                             default:
