@@ -324,6 +324,16 @@ public class MongoClientProvider {
         return managerDao.deleteByQuery(query).wasAcknowledged();
     }
 
+    /**
+     * Delete a manager by the ObjectID
+     *
+     * @param objectId the id of Manager
+     * @return true/false
+     */
+    public boolean deleteManager(ObjectId objectId) {
+        return managerDao.deleteById(objectId).wasAcknowledged();
+    }
+
 
     ///////USER METHODS/////////
 

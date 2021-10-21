@@ -37,6 +37,8 @@ public interface DBinterface {
 
     boolean addUser(User user);
 
+    boolean deleteManager(ObjectId objectId);
+
     boolean emailPresent(String email);
 
     String[] getUserFirstAndLastName(String email);

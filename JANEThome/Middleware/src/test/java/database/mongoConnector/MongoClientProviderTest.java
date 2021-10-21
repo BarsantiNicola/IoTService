@@ -41,8 +41,14 @@ class mongoClientProviderTest {
 
     @Test
     void testDeleteManager() {
-        mongoClientProvider.writeManager(manager);
+        ObjectId id = mongoClientProvider.writeManager(manager);
         assertTrue(mongoClientProvider.deleteManager(manager.getUsername()));
+    }
+
+    @Test
+    void testDeleteManagerByID() {
+        mongoClientProvider.writeManager(manager);
+        assertTrue(mongoClientProvider.deleteManager(manager.getKey()));
     }
 
     @Test
