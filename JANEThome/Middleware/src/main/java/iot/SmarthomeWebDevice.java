@@ -22,7 +22,8 @@ public class SmarthomeWebDevice extends SmarthomeDevice {
     private final HashMap<Date, Operation> historical = new HashMap<>();
     private transient Logger logger;
     @Expose
-    private HashMap<String, Date> expires = new HashMap<>(); //  set of timestamp associated with each trait to discard old updates
+    private HashMap<String, Date> expiresForMongo = new HashMap<>();
+    private transient HashMap<String, Date> expires = new HashMap<>(); //  set of timestamp associated with each trait to discard old updates
 
     //// CONSTRUCTORS
 
@@ -39,39 +40,46 @@ public class SmarthomeWebDevice extends SmarthomeDevice {
 
     ////// SETTERS
 
-    public void setConnectivity( boolean connectivity ){
+    public void setConnectivity(boolean connectivity) {
         this.connectivity = connectivity;
     }
 
-    public void setParam( HashMap<String, String> param ){
+    public void setParam(HashMap<String, String> param) {
         this.param.putAll(param);
     }
 
-    public void setHistorical( HashMap<Date,Operation> historical ){
+    public void setHistorical(HashMap<Date, Operation> historical) {
         this.historical.putAll(historical);
     }
 
     public void setExpires(HashMap<String, Date> expires) {
-
         this.expires = expires;
-
     }
 
+    public void setExpiresForMongo(HashMap<String, Date> expiresForMongo) {
+        this.expiresForMongo = expiresForMongo;
+    }
     ////// GETTERS
 
     public HashMap<String, String> getParam() {
         return param;
     }
 
-    public boolean getConnectivity(){
+    public boolean getConnectivity() {
         return this.connectivity;
     }
 
-    public HashMap<Date,Operation> getHistorical(){
+    public HashMap<Date, Operation> getHistorical() {
         return this.historical;
     }
 
-    public HashMap<String,Date> getExpires(){ return this.expires; }
+    public HashMap<String, Date> getExpires() {
+        return this.expires;
+    }
+
+    public HashMap<String, Date> getExpiresForMongo() {
+        return expiresForMongo;
+    }
 
     //// UTILITY FUNCTIONS
 
@@ -89,7 +97,7 @@ public class SmarthomeWebDevice extends SmarthomeDevice {
                 trait.compareTo("action.devices.traits.Temperature") != 0)
             return false;
 
-        trait = trait.substring( trait.lastIndexOf(".")+1);
+        trait = trait.substring(trait.lastIndexOf(".") + 1);
         //  if there isn't a timestamp already setted every action is good
         if (!this.expires.containsKey(trait)) {
 
@@ -235,7 +243,6 @@ public class SmarthomeWebDevice extends SmarthomeDevice {
     }
 
 
-
     //  verification of a value for a given action. The function returns true if the given value can be used
     //  as a parameter for the given action, otherwise if the value is not accepted or the action isn't recognized it
     //  returns false
@@ -333,8 +340,5 @@ public class SmarthomeWebDevice extends SmarthomeDevice {
 
         return result;
     }
-
-
-
 
 }
