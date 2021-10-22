@@ -263,10 +263,10 @@ public class MongoClientProvider {
         if (manager == null) {
             return null;
         }
-        setExpires(manager);
-
+        //setExpires(manager);
+        manager.relink();
         manager.addSmartHomeMutex(new Semaphore(1));
-        manager.performAction(device, action, value, new Date(), false);
+        manager.performAction(manager.giveDeviceNameById(device), action, value, new Date(), false);
         return writeManager(manager);
     }
 
@@ -278,7 +278,7 @@ public class MongoClientProvider {
                 }
             }
         }
-        for (SmarthomeWebDevice d : manager.getDevices().values()) {
+        for (SmarthomeWebDevice d : manager.giveDevices().values()) {
             d.setExpires(new HashMap<>());
         }
     }
@@ -290,7 +290,9 @@ public class MongoClientProvider {
      * @return a {@link SmarthomeManager}
      */
     public SmarthomeManager getManagerById(String id) {
-        return managerDao.get(new ObjectId(id));
+        SmarthomeManager manager = managerDao.get(new ObjectId(id));
+        manager.relink();
+        return manager;
     }
 
     /**
@@ -300,7 +302,9 @@ public class MongoClientProvider {
      * @return a {@link SmarthomeManager}
      */
     public SmarthomeManager getManagerByUsername(String username) {
-        return managerDao.findOne(ISmartHomeManagerDAO.USERNAME, username);
+        SmarthomeManager manager = managerDao.findOne(ISmartHomeManagerDAO.USERNAME, username);
+        manager.relink();
+        return manager;
     }
 
     /**
@@ -309,7 +313,9 @@ public class MongoClientProvider {
      * @return a list of {@link SmarthomeManager}
      */
     public List<SmarthomeManager> getAllManagers() {
-        return managerDao.find().asList();
+        List<SmarthomeManager> managers = managerDao.find().asList();
+        managers.forEach(SmarthomeManager::relink);
+        return managers;
     }
 
     /**
@@ -509,7 +515,9 @@ public class MongoClientProvider {
     private SmarthomeManager getManagerByUser(String mail) {
         final Query<User> query = datastore.createQuery(User.class).filter(IUserDAO.EMAIL, mail);
         User user = userDAO.findOne(query);
-        return user.getHomeManager();
+        SmarthomeManager manager = user.getHomeManager();
+        manager.relink();
+        return manager;
     }
 
 }
