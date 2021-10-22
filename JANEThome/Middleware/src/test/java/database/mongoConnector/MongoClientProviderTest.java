@@ -202,7 +202,8 @@ class mongoClientProviderTest {
     @Test
     void testGetManagerById() {
         mongoClientProvider.writeManager(manager);
-        assertNotNull(mongoClientProvider.getManagerById(manager.getKey().toString()));
+        SmarthomeManager temp = mongoClientProvider.getManagerById(manager.getKey().toString());
+        assertNotNull(temp);
         mongoClientProvider.deleteManager(manager.getUsername());
     }
 

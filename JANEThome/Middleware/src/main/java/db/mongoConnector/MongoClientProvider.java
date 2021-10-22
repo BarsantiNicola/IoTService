@@ -100,6 +100,7 @@ public class MongoClientProvider {
      * @return the ObjectId of element on DB
      */
     public ObjectId writeManager(SmarthomeManager manager) {
+        manager.expiresDotToUnderscore();
         return (ObjectId) managerDao.save(manager).getId();
     }
 
@@ -130,9 +131,6 @@ public class MongoClientProvider {
     public ObjectId renameElementManager(String username, DeviceUpdate.UpdateType op, String oldName, String newName,
                                          String location) {
         SmarthomeManager manager = getManagerByUser(username);
-        if (manager == null) {
-            return null;
-        }
         manager.addSmartHomeMutex(new Semaphore(1));
         switch (op) {
             case RENAME_LOCATION:
@@ -174,7 +172,7 @@ public class MongoClientProvider {
     }
 
     /**
-     * Update element on Manager
+     * Add element on Manager
      *
      * @param username    The username of manager
      * @param op          It is the operation to perform (see {@link DeviceUpdate.UpdateType})
@@ -216,7 +214,7 @@ public class MongoClientProvider {
     }
 
     /**
-     * Update element on Manager
+     * Rename element on Manager
      *
      * @param username   The username of manager
      * @param type       It is the operation to perform (see {@link DeviceUpdate.UpdateType})
@@ -263,24 +261,12 @@ public class MongoClientProvider {
         if (manager == null) {
             return null;
         }
-        //setExpires(manager);
-        manager.relink();
+        manager.expiresUnderscoreToDot();
+
         manager.addSmartHomeMutex(new Semaphore(1));
         manager.performAction(manager.giveDeviceNameById(device), action, value, new Date(), false);
+        manager.expiresDotToUnderscore();
         return writeManager(manager);
-    }
-
-    private void setExpires(SmarthomeManager manager) {
-        for (SmarthomeLocation location : manager.giveLocations()) {
-            for (SmarthomeSublocation sb : location.getSublocations().values()) {
-                for (SmarthomeWebDevice dv : sb.giveDevices()) {
-                    dv.setExpires(new HashMap<>());
-                }
-            }
-        }
-        for (SmarthomeWebDevice d : manager.giveDevices().values()) {
-            d.setExpires(new HashMap<>());
-        }
     }
 
     /**
@@ -292,6 +278,7 @@ public class MongoClientProvider {
     public SmarthomeManager getManagerById(String id) {
         SmarthomeManager manager = managerDao.get(new ObjectId(id));
         manager.relink();
+        manager.expiresUnderscoreToDot();
         return manager;
     }
 
@@ -304,6 +291,7 @@ public class MongoClientProvider {
     public SmarthomeManager getManagerByUsername(String username) {
         SmarthomeManager manager = managerDao.findOne(ISmartHomeManagerDAO.USERNAME, username);
         manager.relink();
+        manager.expiresUnderscoreToDot();
         return manager;
     }
 
@@ -315,6 +303,7 @@ public class MongoClientProvider {
     public List<SmarthomeManager> getAllManagers() {
         List<SmarthomeManager> managers = managerDao.find().asList();
         managers.forEach(SmarthomeManager::relink);
+        managers.forEach(SmarthomeManager::expiresUnderscoreToDot);
         return managers;
     }
 
@@ -516,6 +505,9 @@ public class MongoClientProvider {
         final Query<User> query = datastore.createQuery(User.class).filter(IUserDAO.EMAIL, mail);
         User user = userDAO.findOne(query);
         SmarthomeManager manager = user.getHomeManager();
+        if (manager == null) {
+            return null;
+        }
         manager.relink();
         return manager;
     }

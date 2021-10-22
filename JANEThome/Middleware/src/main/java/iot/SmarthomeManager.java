@@ -108,6 +108,32 @@ public class SmarthomeManager extends MongoEntity implements Serializable {
 
     //////// UTILITY FUNCTIONS
 
+    public void expiresDotToUnderscore(){
+        HashMap<String,Date> temp;
+        HashMap<String,Date> tempEx;
+        for(SmarthomeWebDevice device: devices.values()){
+            temp = new HashMap<>();
+            tempEx = device.getExpires();
+            for (String key: tempEx.keySet()){
+                temp.put(key.replaceAll("\\.","_"),tempEx.get(key));
+            }
+            device.setExpiresForMongo(temp);
+        }
+    }
+
+    public void expiresUnderscoreToDot(){
+        HashMap<String,Date> temp;
+        HashMap<String,Date> tempEx;
+        for(SmarthomeWebDevice device: devices.values()){
+            temp = new HashMap<>();
+            tempEx = device.getExpiresForMongo();
+            for (String key: tempEx.keySet()){
+                temp.put(key.replaceAll("_","\\."),tempEx.get(key));
+            }
+            device.setExpires(temp);
+        }
+    }
+
     //  Singleton function to obtain a logger preventing the usage of more than one logger handler.
     private void initializeLogger() {
 
