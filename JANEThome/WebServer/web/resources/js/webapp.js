@@ -1561,56 +1561,58 @@ function createChart(id, name, data){
 
     document.getElementsByClassName("statistic_header")[id-1].textContent = name;
     let max = 0;
-    for( let info of data)
-        if( info.y>max)
-            max = info.y;
-    let minutes = Math.ceil((data[data.length-1].x-data[0].x )/ (1000 * 60));
-    let format;
-    if( minutes <= 60*24 )
-        format = "hh-mm";
-    else
-        format = "DD-MMM-hh-mm"
-    document.getElementById("chart_"+id).innerHTML = "";
-    let chart = new CanvasJS.Chart("chart_"+id,
-        {
-            height: 235,
-            width: 430,
+    try {
+        for (let info of data)
+            if (info.y > max)
+                max = info.y;
+        let minutes = Math.ceil((data[data.length - 1].x - data[0].x) / (1000 * 60));
+        let format;
+        if (minutes <= 60 * 24)
+            format = "hh-mm";
+        else
+            format = "DD-MMM-hh-mm"
+        document.getElementById("chart_" + id).innerHTML = "";
+        let chart = new CanvasJS.Chart("chart_" + id,
+            {
+                height: 235,
+                width: 430,
 
-            axisX:{
-                valueFormatString: format ,
-                interval: Math.floor(minutes/8),
-                intervalType: "minute",
-                labelAngle: -50,
-                labelFontColor: "#007bff",
-                minimum: data[0].x
-            },
-            axisY: {
-                valueFormatString: "#M,,.",
-                backgroundColor: "#333333",
-                labelFontColor: "#007bff",
-            },
-            data: [
-                {
-                    indexLabelFontColor: "darkSlateGray",
-                    type: "area",
-                    color: "#e0a800",
+                axisX: {
+                    valueFormatString: format,
+                    interval: Math.floor(minutes / 8),
+                    intervalType: "minute",
+                    labelAngle: -50,
+                    labelFontColor: "#007bff",
+                    minimum: data[0].x
+                },
+                axisY: {
+                    valueFormatString: "#M,,.",
+                    backgroundColor: "#333333",
+                    labelFontColor: "#007bff",
+                },
+                data: [
+                    {
+                        indexLabelFontColor: "darkSlateGray",
+                        type: "area",
+                        color: "#e0a800",
 
-                    markerType: "none",
-                    dataPoints: data
-                }
-            ]
-        });
+                        markerType: "none",
+                        dataPoints: data
+                    }
+                ]
+            });
 
-    chart.render();
+        chart.render();
 
-    let loader = document.getElementsByClassName("graph_loader")[id-1];
-    let graph = document.getElementsByClassName("graph")[id-1];
-    let cheater = document.getElementsByClassName("cheater")[id-1];
-    let node = document.getElementById("container_expand").getElementsByClassName("fa fa-search")[id-1];
-    loader.style.display = "none";
-    graph.style.display = "block";
-    cheater.style.display = "block";
-    node.className = "fa fa-search search_ok";
+        let loader = document.getElementsByClassName("graph_loader")[id - 1];
+        let graph = document.getElementsByClassName("graph")[id - 1];
+        let cheater = document.getElementsByClassName("cheater")[id - 1];
+        let node = document.getElementById("container_expand").getElementsByClassName("fa fa-search")[id - 1];
+        loader.style.display = "none";
+        graph.style.display = "block";
+        cheater.style.display = "block";
+        node.className = "fa fa-search search_ok";
+    }catch(e){}
 }
 //// STATIC ELEMENTS ACTION HANDLERS
 

@@ -290,6 +290,7 @@ function messageManager(update){
             deleteDeviceAct(update.data.name);
             break;
         case "STATISTIC":
+            alert(update.data.values);
             let data = JSON.parse(update.data.values);
             for( let a = 0; a<data.length; a++)
                 data[a].x = new Date(Date.parse(data[a].x));

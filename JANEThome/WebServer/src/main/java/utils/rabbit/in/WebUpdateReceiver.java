@@ -109,7 +109,6 @@ public class WebUpdateReceiver extends EndPoint implements Consumer{
 
                             if (message.areSet("old_name", "new_name") &&
                                     this.smarthome.changeLocationName(message.getData("old_name"), message.getData("new_name"), false)) {
-
                                 data.put("old_name", message.getData("old_name"));
                                 data.put("new_name", message.getData("new_name"));
                                 response.put("type", "RENAME_LOCATION");

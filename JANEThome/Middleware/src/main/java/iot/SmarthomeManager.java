@@ -275,12 +275,10 @@ public class SmarthomeManager extends MongoEntity implements Serializable {
         //  a request on the same smarthome(shared between websockets) can be done many times
         //  if the request is already satisfied by the smarthome status another copy of the request is already applied
         if (!trial && !this.locations.containsKey(old_name) && this.locations.containsKey(new_name)) {
-
             this.releaseSmarthomeMutex();
             return true;
 
         }
-
         //  verification of the old location presence and that the new name is not already assigned
         if (this.locations.containsKey(old_name) && !this.locations.containsKey(new_name)) {
 

@@ -172,7 +172,7 @@ public class DeviceCommandSender implements RESTinterface {
                 switch (result.getStatus()) {
                     case 200:  //  if command correctly done, we notify it to all the involved components
                         DeviceUpdateMessage message = new DeviceUpdateMessage(username, from);
-                        message.addUpdates(DeviceUpdate.buildRenameLocation(new Date(System.currentTimeMillis()), newName, newName));
+                        message.addUpdates(DeviceUpdate.buildRenameLocation(new Date(System.currentTimeMillis()), oldName, newName));
                         return this.notifier.sendMessage(message) > 0;
 
                     case 400:  //  in stable version cannot happen

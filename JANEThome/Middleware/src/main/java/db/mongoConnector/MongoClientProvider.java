@@ -240,7 +240,7 @@ public class MongoClientProvider {
                 break;
 
             case REMOVE_SUB_LOCATION:
-                manager.removeSublocation(location, removeName, false);
+                manager.removeSublocation(removeName, location, false);  //  TODO parametri invertiti, hot fix con scambio dei parametri
                 break;
 
             default:

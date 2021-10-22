@@ -385,10 +385,12 @@ public class WebappEndpoint {
                     //  TODO Request to the server for statistics
                     WebRequest req = gson.fromJson(message, WebRequest.class);
                     HashMap<String, String> data2 = new HashMap<>();
+                    System.out.println("START: " + gson2.fromJson( req.getData().get( "start" ).replace(":00:00.000Z", ""), Date.class).toString());
+                    System.out.println("STOP: " + req.getData().get( "stop" ).replace(":00:00.000Z", ""));
                     data2.put("device_name", req.getData().get("device_name"));
                     data2.put("statistic", req.getData().get("statistic"));
                     data2.put("values", gson.toJson(db.getStatistics(
-                            req.getData().get("device_name"),
+                            this.smarthome.giveDeviceIdByName(req.getData().get("device_name")),
                             req.getData().get("statistic"),
                             gson2.fromJson( req.getData().get( "start" ).replace(":00:00.000Z", ""), Date.class),
                             gson2.fromJson( req.getData().get( "stop" ).replace(":00:00.000Z", ""), Date.class)
@@ -400,6 +402,7 @@ public class WebappEndpoint {
                     }catch( IOException e){
                         e.printStackTrace();
                     }
+
                     break;
 
                 case UPDATE:
@@ -450,7 +453,8 @@ public class WebappEndpoint {
     @OnClose
     public void onClose(Session session) {
         logger.exiting("Session closed with id: %s%n", session.getId());
-        updater.close();
+        if( updater != null)
+            updater.close();
         updater = null;
     }
 

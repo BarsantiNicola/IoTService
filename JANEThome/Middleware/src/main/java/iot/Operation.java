@@ -1,8 +1,9 @@
 package iot;
 
+import java.io.Serializable;
 import java.util.Date;
 
-public class Operation {
+public class Operation implements Serializable {
     public String action;
     public String value;
     public Date date;
