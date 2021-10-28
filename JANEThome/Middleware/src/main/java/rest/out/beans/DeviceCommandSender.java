@@ -7,16 +7,15 @@ import rabbit.msg.DeviceUpdate;
 import rabbit.msg.DeviceUpdateMessage;
 import rabbit.msg.InvalidMessageException;
 import rabbit.out.interfaces.SenderInterface;
+import rest.msg.RESTMessage;
+import rest.msg.out.req.*;
 import rest.out.interfaces.RESTinterface;
 
 import javax.annotation.PostConstruct;
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.ws.rs.core.Response;
-import java.io.IOException;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.Properties;
+import java.util.*;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -44,6 +43,49 @@ public class DeviceCommandSender implements RESTinterface {
 
     private final static ExecutorService executors = Executors.newCachedThreadPool(); //  shared pool of executors to send rest messages
 
+
+    private static final String[] receivedTraits = {
+            "onOff",
+            "fanSpeed",
+            "brightness",
+            "color",
+            "openClose",
+            "lockUnlock",
+            "tempTarget",
+            "tempCurrent",
+            "connectivity"
+    };
+
+    private static final String[] convertedTraits = {
+            "action.devices.traits.OnOff",
+            "action.devices.traits.FanSpeed",
+            "action.devices.traits.Brightness",
+            "action.devices.traits.ColorSetting",
+            "action.devices.traits.OpenClose",
+            "action.devices.traits.LockUnlock",
+            "action.devices.traits.TemperatureSetting",
+            "action.devices.traits.Temperature",
+            "action.devices.traits.Connectivity"
+    };
+
+    private String bridgeTrait( String trait ){
+
+        int index = this.getIndex( trait );
+        if( index == -1 )
+            return "";
+        else
+            return DeviceCommandSender.convertedTraits[index];
+
+    }
+
+    private int getIndex( String trait ){
+
+        for( int a = 0; a<DeviceCommandSender.receivedTraits.length; a++ )
+            if( DeviceCommandSender.receivedTraits[a].compareTo(trait) == 0)
+                return a;
+        return -1;
+    }
+
     public DeviceCommandSender() {
         this.initializeLogger();
     }
@@ -69,7 +111,7 @@ public class DeviceCommandSender implements RESTinterface {
 
 
     //  sends a command to the device REST server
-    private Future<Response> sendCommand(String address, int port, String path, RESTsender.REQ_TYPE reqType, HashMap<String, String> request) {
+    private Future<Response> sendCommand(String address, int port, String path, RESTsender.REQ_TYPE reqType, RESTMessage request) {
 
         return executors.submit(new RESTsender(address, port, path, reqType, request));
 
@@ -88,53 +130,66 @@ public class DeviceCommandSender implements RESTinterface {
     //  {
     //      "name" : "....",
     //      "user" : "....",
-    //      "port" : "...."
+    //      "port" : "....",
+    //      "hostname" : "...."
     //  }
     @Override
-    public boolean addLocation(String username, String from, String location, String ipAddr, int port) {
-
-        HashMap<String, String> data = new HashMap<>();  //  message to be forwarded
-        int tentative = 0;
+    public boolean addLocation( String username, String from, String location, String ipAddr, int port ) {
 
         String locID = idGenerator.generateLID();
-
-        data.put("name", location);
-        data.put("user", username);
-        data.put("port", String.valueOf(port));
 
         try {
 
             while (true) {
 
-                Response result = this.sendCommand(ipAddr, Integer.parseInt(this.conf.getProperty("control_port")), "/location/" + locID, RESTsender.REQ_TYPE.PUT, data).get();
+                Response result = this.sendCommand(
+                        ipAddr,
+                        Integer.parseInt(this.conf.getProperty("control_port")),
+                        "/location/" + locID,
+                        RESTsender.REQ_TYPE.PUT,
+                        new AddLocationReq( location, username, port, ipAddr )).get();
+
                 if (result != null) {
 
                     switch (result.getStatus()) {
 
-                        case 200:  //  if command correctly done, we notify it to all the involved components
+                        case 201:  //  if command correctly done, we notify it to all the involved components
                             DeviceUpdateMessage message = new DeviceUpdateMessage(username, from);
                             message.addUpdates(DeviceUpdate.buildAddLocation(new Date(System.currentTimeMillis()), location, locID, ipAddr, port));
                             return this.notifier.sendMessage(message) > 0;
 
                         case 400:  //  in stable version cannot happen
                             logger.severe("Error, bad ADD_LOCATION request");
-                            break;
+                            return false;
+
+                        case 405: // in stable version cannot happen
+                            logger.severe( "Error, unsupported HTTP method on ADD_LOCATION");
+                            return false;
+
+                        case 406:
+                            logger.severe( "Error, hostname not valid into ADD_LOCATION");
+                            return false;
 
                         case 409:  //  TODO to be splitted into future updates into two errors: duplicate port / duplicate locID
-                            logger.severe("Error, duplicated port or locID");
-                            if (tentative++ == 3)  //  TODO to be removed when duplicate locID response well defined
-                                return false;
+                            logger.severe("Error, duplicated locID");
                             locID = idGenerator.generateLID();
-                            continue;
+                            break;
+
+                        case 412:
+                            logger.severe( "Error into ADD_LOCATION, port already assigned");
+                            return false;
+
+                        case 415:
+                            logger.severe( "Error into ADD_LOCATION, unsupported media type");
+                            return false;
 
                         case 500:  //  an error has occurred inside the erlang network
                             logger.warning("Error, internal server error of erlang network");
-                            break;
+                            return false;
 
                         default:
                     }
                 }
-                return false;
             }
 
         } catch (InvalidMessageException | InterruptedException | ExecutionException e) {
@@ -161,29 +216,34 @@ public class DeviceCommandSender implements RESTinterface {
     @Override
     public boolean changeLocationName(String username, String from, String locID, String oldName, String newName, String ipAddr) {
 
-        HashMap<String, String> data = new HashMap<>();  //  message to be forwarded
-        data.put("name", newName);
-
         try {
 
-            Response result = this.sendCommand(ipAddr, Integer.parseInt(conf.getProperty("control_port")), "/location/" + locID, RESTsender.REQ_TYPE.POST, data).get();
+            Response result = this.sendCommand(ipAddr, Integer.parseInt(conf.getProperty("control_port")), "/location/" + locID, RESTsender.REQ_TYPE.POST, new UpdateLocationReq( newName )).get();
             if (result != null) {
 
                 switch (result.getStatus()) {
-                    case 200:  //  if command correctly done, we notify it to all the involved components
+                    case 204:  //  if command correctly done, we notify it to all the involved components
                         DeviceUpdateMessage message = new DeviceUpdateMessage(username, from);
                         message.addUpdates(DeviceUpdate.buildRenameLocation(new Date(System.currentTimeMillis()), oldName, newName));
                         return this.notifier.sendMessage(message) > 0;
 
                     case 400:  //  in stable version cannot happen
-                        logger.severe("Error, bad CHANGE_LOCATION_NAME request");
+                        logger.severe("Error, bad UPDATE_LOCATION request");
                         break;
 
                     case 404:
-                        logger.severe("Error, locID not found");
+                        logger.severe( "Error, locID not found");
                         break;
 
-                    case 500:
+                    case 405: // in stable version cannot happen
+                        logger.severe( "Error, unsupported HTTP method on ADD_LOCATION");
+                        break;
+
+                    case 415:
+                        logger.severe( "Error into ADD_LOCATION, unsupported media type");
+                        break;
+
+                    case 500:  //  an error has occurred inside the erlang network
                         logger.warning("Error, internal server error of erlang network");
                         break;
 
@@ -217,7 +277,7 @@ public class DeviceCommandSender implements RESTinterface {
             if (result != null) {
 
                 switch (result.getStatus()) {
-                    case 200:  //  if command correctly done, we notify it to all the involved components
+                    case 204:  //  if command correctly done, we notify it to all the involved components
                         DeviceUpdateMessage message = new DeviceUpdateMessage(username, from);
                         message.addUpdates(DeviceUpdate.buildRemoveLocation(new Date(System.currentTimeMillis()), name));
                         return this.notifier.sendMessage(message) > 0;
@@ -228,6 +288,10 @@ public class DeviceCommandSender implements RESTinterface {
 
                     case 404:
                         logger.severe("Error, locID not found");
+                        break;
+
+                    case 405:
+                        logger.severe( "Error, unsupported HTTP method on REMOVE_LOCATION");
                         break;
 
                     case 500:
@@ -265,29 +329,36 @@ public class DeviceCommandSender implements RESTinterface {
     @Override
     public boolean addSubLocation(String username, String from, String location, String sublocation, String sublocID, String ipAddr, int port) {
 
-        HashMap<String, String> data = new HashMap<>();  //  message to be forwarded
-        data.put("name", sublocation);
+        AddSubLocationReq request = new AddSubLocationReq( sublocation );
 
         try {
 
-            Response result = this.sendCommand(ipAddr, port, "/sublocation/" + sublocID, RESTsender.REQ_TYPE.PUT, data).get();
+            Response result = this.sendCommand(ipAddr, port, "/sublocation/" + sublocID, RESTsender.REQ_TYPE.PUT, request).get();
             if (result != null) {
 
                 switch (result.getStatus()) {
-                    case 200:  //  if command correctly done, we notify it to all the involved components
+                    case 201:  //  if command correctly done, we notify it to all the involved components
                         DeviceUpdateMessage message = new DeviceUpdateMessage(username, from);
                         message.addUpdates(DeviceUpdate.buildAddSubLocation(new Date(System.currentTimeMillis()), location, sublocation, sublocID));
                         return this.notifier.sendMessage(message) > 0;
 
                     case 400:  //  in stable version cannot happen
-                        logger.severe("Error, bad ADD_SUBLOCATION request");
+                        logger.severe("Error, bad ADD_SUBLOC request");
                         break;
 
-                    case 409:
-                        logger.severe("Error, locID not found");
+                    case 404:
+                        logger.severe( "Error, locID not found");
                         break;
 
-                    case 500:
+                    case 405: // in stable version cannot happen
+                        logger.severe( "Error, unsupported HTTP method on ADD_SUBLOC");
+                        break;
+
+                    case 415:
+                        logger.severe( "Error into ADD_SUBLOC, unsupported media type");
+                        break;
+
+                    case 500:  //  an error has occurred inside the erlang network
                         logger.warning("Error, internal server error of erlang network");
                         break;
 
@@ -322,31 +393,39 @@ public class DeviceCommandSender implements RESTinterface {
     @Override
     public boolean changeSubLocationName(String username, String from, String location, String sublocation, String locID, String sublocID, String newName, String ipAddr) {
 
-        HashMap<String, String> data = new HashMap<>();  //  message to be forwarded
-        data.put("name", newName);
+        UpdateSubLocationReq request = new UpdateSubLocationReq( newName );
 
         try {
 
-            Response result = this.sendCommand(ipAddr, Integer.parseInt(conf.getProperty("control_port")), "/location/" + locID + "/" + sublocID, RESTsender.REQ_TYPE.POST, data).get();
+            Response result = this.sendCommand(ipAddr, Integer.parseInt(conf.getProperty("control_port")), "/location/" + locID + "/" + sublocID, RESTsender.REQ_TYPE.POST, request).get();
             if (result != null) {
 
                 switch (result.getStatus()) {
-                    case 200:  //  if command correctly done, we notify it to all the involved components
+                    case 204:  //  if command correctly done, we notify it to all the involved components
                         DeviceUpdateMessage message = new DeviceUpdateMessage(username, from);
                         message.addUpdates(DeviceUpdate.buildRenameSubLocation(new Date(System.currentTimeMillis()), location, sublocation, newName));
                         return this.notifier.sendMessage(message) > 0;
 
                     case 400:  //  in stable version cannot happen
-                        logger.severe("Error, bad CHANGE_SUBLOCATION_NAME request");
+                        logger.severe("Error, bad UPDATE_SUBLOCATION request");
                         break;
 
                     case 404:
-                        logger.severe("Error, locID/sublocID not found");
+                        logger.severe( "Error, {locID,sublID} not found");
                         break;
 
-                    case 500:
+                    case 405: // in stable version cannot happen
+                        logger.severe( "Error, unsupported HTTP method on UPDATE_SUBLOCATION");
+                        break;
+
+                    case 415:
+                        logger.severe( "Error into UPDATE_SUBLOCATION, unsupported media type");
+                        break;
+
+                    case 500:  //  an error has occurred inside the erlang network
                         logger.warning("Error, internal server error of erlang network");
                         break;
+
 
                     default:
                 }
@@ -382,17 +461,21 @@ public class DeviceCommandSender implements RESTinterface {
             if (result != null) {
 
                 switch (result.getStatus()) {
-                    case 200:  //  if command correctly done, we notify it to all the involved components
+                    case 204:  //  if command correctly done, we notify it to all the involved components
                         DeviceUpdateMessage message = new DeviceUpdateMessage(username, from);
                         message.addUpdates(DeviceUpdate.buildRemoveSubLocation(new Date(System.currentTimeMillis()), location, sublocation));
                         return this.notifier.sendMessage(message) > 0;
 
                     case 400:  //  in stable version cannot happen
-                        logger.severe("Error, bad REMOVE_SUBLOCATION request");
+                        logger.severe("Error, bad REMOVE_SUB_LOCATION request");
                         break;
 
-                    case 409:
+                    case 404:
                         logger.severe("Error, locID not found");
+                        break;
+
+                    case 405:
+                        logger.severe( "Error, unsupported HTTP method on REMOVE_SUB_LOCATION");
                         break;
 
                     case 500:
@@ -431,45 +514,48 @@ public class DeviceCommandSender implements RESTinterface {
     @Override
     public boolean addDevice(String username, String from, String name, String location, String sublocation, String sublocID, SmarthomeDevice.DeviceType type, String ipAddr, int port) {
 
-        HashMap<String, String> data = new HashMap<>();  //  message to be forwarded
-        int tentative = 0;
-
-        data.put("subloc_id", sublocID);
-        data.put("name", name);
-        data.put("type", type.toString());
         String dID = idGenerator.generateDID();
 
         try {
-
             while (true) {
-                Response result = this.sendCommand(ipAddr, port, "/device/" + dID, RESTsender.REQ_TYPE.PUT, data).get();
+
+                Response result = this.sendCommand(ipAddr, port, "/device/" + dID, RESTsender.REQ_TYPE.PUT, new AddDeviceReq(Integer.parseInt(dID), name, type.toString().replace("action.devices.types.", ""), ipAddr)).get();
                 if (result != null) {
 
                     switch (result.getStatus()) {
                         case 200:  //  if command is correctly done, we notify it to all the involved components
                             DeviceUpdateMessage message = new DeviceUpdateMessage(username, from);
                             message.addUpdates(DeviceUpdate.buildAddDevice(new Date(System.currentTimeMillis()), location, sublocation, dID, name, type));
+                            //  TODO ADD INIT UPDATES
                             return this.notifier.sendMessage(message) > 0;
 
                         case 400:  //  in stable version cannot happen
                             logger.severe("Error, bad ADD_DEVICE request");
-                            break;
+                            return false;
+
+                        case 404:
+                            logger.severe("Error, {locID,sublocID} not found");
+                            return false;
+
+                        case 405:
+                            logger.severe( "Error, unsupported HTTP method on ADD_DEVICE");
+                            return false;
+
+                        case 406:
+                            logger.severe( "Error, hostname not allowed");
+                            return false;
 
                         case 409:
-                            if (tentative++ == 10)
-                                return false;
                             dID = idGenerator.generateDID();
-                            continue;
-
+                            break;
 
                         case 500:
                             logger.warning("Error, internal server error of erlang network");
-                            break;
+                            return false;
 
                         default:
                     }
                 }
-                return false;
             }
 
         } catch (InvalidMessageException | InterruptedException | ExecutionException e) {
@@ -498,30 +584,34 @@ public class DeviceCommandSender implements RESTinterface {
     @Override
     public boolean changeDeviceSublocation(String username, String from, String dID, String name, String location, String subLocation, String newSubLocation, String sublocID, String ipAddr, int port) {
 
-        HashMap<String, String> data = new HashMap<>();  //  message to be forwarded
-        data.put("subloc_id", sublocID);
-
-
         try {
 
-            Response result = this.sendCommand(ipAddr, port, "/device/" + dID, RESTsender.REQ_TYPE.POST, data).get();
+            Response result = this.sendCommand(ipAddr, port, "/device/" + dID, RESTsender.REQ_TYPE.POST, new UpdateDeviceSubLocReq( sublocID )).get();
             if (result != null) {
 
                 switch (result.getStatus()) {
-                    case 200: //  if command correctly done, we notify it to all the involved components
+                    case 204: //  if command correctly done, we notify it to all the involved components
                         DeviceUpdateMessage message = new DeviceUpdateMessage(username, from);
                         message.addUpdates(DeviceUpdate.buildChangeDeviceSubLocation(new Date(System.currentTimeMillis()), location, dID, name, newSubLocation));
                         return this.notifier.sendMessage(message) > 0;
 
                     case 400:  //  in stable version cannot happen
-                        logger.severe("Error, bad CHANGE_DEVICE_SUBLOCATION request");
+                        logger.severe("Error, bad UPDATE_DEVICE_SUB_LOC request");
                         break;
 
                     case 404:
-                        logger.severe("Error, locID not found");
+                        logger.severe( "Error, dID not found");
                         break;
 
-                    case 500:
+                    case 405: // in stable version cannot happen
+                        logger.severe( "Error, unsupported HTTP method on UPDATE_DEVICE_SUB_LOC");
+                        break;
+
+                    case 415:
+                        logger.severe( "Error into UPDATE_DEVICE_SUB_LOC, unsupported media type");
+                        break;
+
+                    case 500:  //  an error has occurred inside the erlang network
                         logger.warning("Error, internal server error of erlang network");
                         break;
 
@@ -556,12 +646,11 @@ public class DeviceCommandSender implements RESTinterface {
     @Override
     public boolean changeDeviceName(String username, String from, String dID, String oldName, String newName, String ipAddr) {
 
-        HashMap<String, String> data = new HashMap<>();  //  message to be forwarded
-        data.put("name", newName);
+        UpdateDeviceNameReq request = new UpdateDeviceNameReq( newName );
 
         try {
 
-            Response result = this.sendCommand(ipAddr, Integer.parseInt(conf.getProperty("control_port")), "/device/" + dID, RESTsender.REQ_TYPE.POST, data).get();
+            Response result = this.sendCommand(ipAddr, Integer.parseInt(conf.getProperty("control_port")), "/device/" + dID, RESTsender.REQ_TYPE.POST, request).get();
             if (result != null) {
 
                 switch (result.getStatus()) {
@@ -571,18 +660,24 @@ public class DeviceCommandSender implements RESTinterface {
                         return this.notifier.sendMessage(message) > 0;
 
                     case 400:  //  in stable version cannot happen
-                        logger.severe("Error, bad CHANGE_DEVICE_NAME request");
+                        logger.severe("Error, bad UPDATE_DEVICE_NAME request");
                         break;
 
                     case 404:
-                        logger.severe("Error, locID/sublocID not found");
+                        logger.severe( "Error, dID not found");
                         break;
 
-                    case 500:
+                    case 405: // in stable version cannot happen
+                        logger.severe( "Error, unsupported HTTP method on UPDATE_DEVICE_NAME");
+                        break;
+
+                    case 415:
+                        logger.severe( "Error into UPDATE_DEVICE_NAME, unsupported media type");
+                        break;
+
+                    case 500:  //  an error has occurred inside the erlang network
                         logger.warning("Error, internal server error of erlang network");
                         break;
-
-                    default:
                 }
             }
 
@@ -617,7 +712,7 @@ public class DeviceCommandSender implements RESTinterface {
             if (result != null) {
 
                 switch (result.getStatus()) {
-                    case 200:  //  if command correctly done, we notify it to all the involved components
+                    case 204:  //  if command correctly done, we notify it to all the involved components
                         DeviceUpdateMessage message = new DeviceUpdateMessage(username, from);
                         message.addUpdates(DeviceUpdate.buildRemoveDevice(new Date(System.currentTimeMillis()), dID, name));
                         return this.notifier.sendMessage(message) > 0;
@@ -627,7 +722,11 @@ public class DeviceCommandSender implements RESTinterface {
                         break;
 
                     case 404:
-                        logger.severe("Error, locID/sublocID not found");
+                        logger.severe("Error, dID not found");
+                        break;
+
+                    case 405:
+                        logger.severe( "Error, unsupported HTTP method on REMOVE_DEVICE");
                         break;
 
                     case 500:
@@ -650,17 +749,45 @@ public class DeviceCommandSender implements RESTinterface {
     //  executes the given command to the specified device of the user's smartHome
     public boolean execCommand(String username, String from, String dID, String action, String value, String ipAddr, int port) {
 
-        try {
+        HashMap<String,String> req = new HashMap<>();
+        req.put( this.bridgeTrait( action), value);
+        try{
+            Response result = this.sendCommand(ipAddr, port, "/devcommands", RESTsender.REQ_TYPE.PATCH, new ExecCommandsReq(Collections.singletonList(new ExecCommandReq(dID, req)))).get();
+            if (result != null) {
 
-            DeviceUpdateMessage message = new DeviceUpdateMessage(username, from);
-            message.addUpdates(DeviceUpdate.buildDeviceUpdate(new Date(System.currentTimeMillis()), dID, action, value));
-            return this.notifier.sendMessage(message) > 0;
+                switch (result.getStatus()) {
+                    case 200:
+                        DeviceUpdateMessage message = new DeviceUpdateMessage(username, from);
+                        message.addUpdates(DeviceUpdate.buildDeviceUpdate(new Date(System.currentTimeMillis()), dID, action, value));
+                        return this.notifier.sendMessage(message) > 0;
 
-        } catch (InvalidMessageException e) {
 
-            e.printStackTrace();
+                    case 400:  //  in stable version cannot happen
+                        logger.severe("Error, bad EXEC_COMMAND request");
+                        break;
+
+                    case 405:
+                        logger.severe( "Error, method not allowed into EXEC_COMMAND");
+                        break;
+
+                    case 415:
+                        logger.severe( "Error, unsupported mediaType on EXEC_COMMAND");
+                        break;
+
+                    case 500:
+                        logger.warning("Error, internal server error of erlang network");
+                        break;
+
+                    default:
+                }
+            }
+
             return false;
 
+        } catch (InvalidMessageException | InterruptedException | ExecutionException e) {
+            e.printStackTrace();
+            return false;
         }
+
     }
 }

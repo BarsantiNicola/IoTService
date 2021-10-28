@@ -6,6 +6,7 @@ import config.interfaces.ConfigurationInterface;
 import db.interfaces.DBinterface;
 import iot.SmarthomeManager;
 import iot.SmarthomeDevice;
+import iot.SmarthomeWebDevice;
 import rest.out.interfaces.RESTinterface;
 import weblogic.login.EndpointConfigurator;
 import utils.rabbit.in.WebUpdateReceiver;
@@ -385,13 +386,14 @@ public class WebappEndpoint {
                     //  TODO Request to the server for statistics
                     WebRequest req = gson.fromJson(message, WebRequest.class);
                     HashMap<String, String> data2 = new HashMap<>();
+                    System.out.println("STATISTIC: " + req.getData().get("statistic") +  " CONVERTION: " + this.convertStatistics( req.getData().get("statistic"), req.getData().get("device_name")));
                     System.out.println("START: " + gson2.fromJson( req.getData().get( "start" ).replace(":00:00.000Z", ""), Date.class).toString());
                     System.out.println("STOP: " + req.getData().get( "stop" ).replace(":00:00.000Z", ""));
                     data2.put("device_name", req.getData().get("device_name"));
                     data2.put("statistic", req.getData().get("statistic"));
                     data2.put("values", gson.toJson(db.getStatistics(
                             this.smarthome.giveDeviceIdByName(req.getData().get("device_name")),
-                            req.getData().get("statistic"),
+                            this.convertStatistics(req.getData().get("statistic"), req.getData().get("device_name")),
                             gson2.fromJson( req.getData().get( "start" ).replace(":00:00.000Z", ""), Date.class),
                             gson2.fromJson( req.getData().get( "stop" ).replace(":00:00.000Z", ""), Date.class)
                     )));
@@ -520,6 +522,37 @@ public class WebappEndpoint {
         }else
             this.smarthome.connect( this.configuration );
 
+    }
+
+    private String convertStatistics( String statistic, String device_name ){
+        SmarthomeWebDevice device = this.smarthome.giveDevices().get(device_name);
+        if( device != null ){
+            switch(SmarthomeWebDevice.convertType( device.getType())){
+                case LIGHT:
+                    if(statistic.contains("Device"))
+                        return "action.devices.traits.OnOff";
+                    else
+                        return "action.devices.traits.Brightness";
+                case FAN:
+                    if(statistic.contains("Device"))
+                        return "action.devices.traits.OnOff";
+                    else
+                        return "action.devices.traits.FanSpeed";
+                case THERMOSTAT:
+                case CONDITIONER:
+                    if(statistic.contains("Device"))
+                        return "";
+                    else
+                        return "action.devices.traits.Temperature";
+                case DOOR:
+                    if(statistic.contains("Opening"))
+                        return "";
+                case UNKNOWN:
+                default:
+
+            }
+        }
+        return "";
     }
 
 }

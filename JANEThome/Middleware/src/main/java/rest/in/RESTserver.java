@@ -49,9 +49,9 @@ public class RESTserver{
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.TEXT_PLAIN)
-    public Response UpdateDevice(List<UpdateRequest> data){
+    public Response UpdateDevice( List<UpdateRequest> data ){
 
-        Gson gson = new GsonBuilder().setDateFormat( "yyyy-MM-dd'T'HH:mm:ss.SSS" ).create();
+        Gson gson = new GsonBuilder().setDateFormat( "yyyy-MM-dd'T'HH:mm:ss" ).create();
         int state = 0;
         List<StateResponse> responses = new ArrayList<>();
         try {

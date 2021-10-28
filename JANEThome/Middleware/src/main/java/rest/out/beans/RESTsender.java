@@ -1,5 +1,8 @@
 package rest.out.beans;
 
+import rest.msg.RESTMessage;
+import rest.msg.out.req.ExecCommandsReq;
+
 import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.client.Entity;
 import javax.ws.rs.core.*;
@@ -13,7 +16,7 @@ public class RESTsender implements Callable<Response> {
 
     private final String address;
     private final int port;
-    private final HashMap<String,String> params;
+    private final RESTMessage request;
     private final String path;
     private final REQ_TYPE reqType;
 
@@ -25,11 +28,11 @@ public class RESTsender implements Callable<Response> {
         DELETE
     }
 
-    RESTsender(String address, int port, String path, REQ_TYPE reqType, HashMap<String,String> params ){
+    RESTsender(String address, int port, String path, REQ_TYPE reqType, RESTMessage request){
 
         this.address = address;
         this.port = port;
-        this.params = params;
+        this.request = request;
         this.path = path;
         this.reqType = reqType;
 
@@ -37,8 +40,7 @@ public class RESTsender implements Callable<Response> {
 
     @Override
     public Response call(){
-        //  TODO ENABLE REST INTERFACE
-       /*
+
         switch( this.reqType ){
             case PUT:
                 return ClientBuilder
@@ -46,14 +48,14 @@ public class RESTsender implements Callable<Response> {
                         .target( this.address + ":" + this.port )
                         .path( path )
                         .request( MediaType.APPLICATION_JSON )
-                        .put(Entity.entity( this.params, MediaType.APPLICATION_JSON ));
+                        .put(Entity.entity( request, MediaType.APPLICATION_JSON ));
             case POST:
                 return ClientBuilder
                         .newClient()
                         .target( this.address + ":" + this.port )
                         .path( path )
                         .request( MediaType.APPLICATION_JSON )
-                        .post(Entity.entity( this.params, MediaType.APPLICATION_JSON ));
+                        .post(Entity.entity( request, MediaType.APPLICATION_JSON ));
             case DELETE:
                 return ClientBuilder
                         .newClient()
@@ -67,9 +69,8 @@ public class RESTsender implements Callable<Response> {
                         .target( this.address + ":" + this.port )
                         .path( path )
                         .request( MediaType.APPLICATION_JSON )
-                        .method("PATCH", Entity.entity( this.params, MediaType.APPLICATION_JSON ));
+                        .method("PATCH", Entity.entity( ((ExecCommandsReq)request).getRequests(), MediaType.APPLICATION_JSON ));
         }
-        */
 
         return new Response() {
 

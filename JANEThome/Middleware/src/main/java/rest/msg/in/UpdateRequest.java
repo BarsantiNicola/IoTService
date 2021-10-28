@@ -44,7 +44,7 @@ public class UpdateRequest extends RESTMessage {
 
     public Date giveConvertedTimestamp(){
 
-        Gson gson = new GsonBuilder().setDateFormat( "yyyy-MM-dd'T'HH:mm:ss.SSS" ).create();
+        Gson gson = new GsonBuilder().setDateFormat( "yyyy-MM-dd'T'HH:mm:ss" ).create();
         return gson.fromJson( this.timestamp, Date.class );
 
     }

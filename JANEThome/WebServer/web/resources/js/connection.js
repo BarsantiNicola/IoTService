@@ -290,11 +290,11 @@ function messageManager(update){
             deleteDeviceAct(update.data.name);
             break;
         case "STATISTIC":
-            alert(update.data.values);
+            alert(JSON.stringify(update));
             let data = JSON.parse(update.data.values);
-            for( let a = 0; a<data.length; a++)
-                data[a].x = new Date(Date.parse(data[a].x));
-            updateStatistic( update.data.device_name, update.data.statistic, data);
+            for( let a = 0; a<data.statistics.length; a++)
+                data.statistics[a].x = new Date(Date.parse(data.statistics[a].x));
+            updateStatistic( update.data.device_name, update.data.statistic, data.statistics);
             break;
         case "UPDATE":
             enableDevice( update.data.device_name, "1" );
