@@ -4,10 +4,10 @@ import rest.msg.RESTMessage;
 
 public class AddLocationReq extends RESTMessage {
 
-    private final String name;
-    private final String user;
-    private final int port;
-    private final String hostname;
+    private String name;
+    private String user;
+    private int port;
+    private String hostname;
 
     public AddLocationReq( String name, String user, int port, String hostname ){
 
@@ -16,6 +16,24 @@ public class AddLocationReq extends RESTMessage {
         this.port = port;
         this.hostname = hostname;
 
+    }
+
+    public AddLocationReq(){}
+
+    public void setName( String name ){
+        this.name = name;
+    }
+
+    public void setUser( String user ){
+        this.user = user;
+    }
+
+    public void setPort( int port ){
+        this.port = port;
+    }
+
+    public void setHostname( String hostname ){
+        this.hostname = hostname;
     }
 
     public String getName(){

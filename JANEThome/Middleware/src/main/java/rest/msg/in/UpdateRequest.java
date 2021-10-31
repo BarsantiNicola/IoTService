@@ -12,7 +12,7 @@ public class UpdateRequest extends RESTMessage {
     private String dev_id;
     private String timestamp;
     private String user;
-    private HashMap<String,String> actions;
+    private HashMap<String,Object> actions;
 
     public UpdateRequest(){}
 
@@ -26,7 +26,7 @@ public class UpdateRequest extends RESTMessage {
 
     public void setUser( String user ){ this.user = user; }
 
-    public void setActions( HashMap<String,String> actions ){
+    public void setActions( HashMap<String,Object> actions ){
         this.actions = actions;
     }
 
@@ -40,7 +40,7 @@ public class UpdateRequest extends RESTMessage {
 
     public String getUser(){ return this.user; }
 
-    public HashMap<String,String> getActions(){ return this.actions; }
+    public HashMap<String,Object> getActions(){ return this.actions; }
 
     public Date giveConvertedTimestamp(){
 

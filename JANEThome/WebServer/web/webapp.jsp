@@ -159,7 +159,7 @@
                         <i class="fa fa-location-arrow"></i>
                     </label>
                     <label>
-                        <input id="addrInput" class="input" type="text" name="address" placeholder="IpAddress">
+                        <input id="addrInput" class="input" type="text" name="address" placeholder="hostname">
                         <i class="fa fa-address-card-o"></i>
                     </label>
                     <label>

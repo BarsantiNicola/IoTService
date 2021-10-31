@@ -1,5 +1,7 @@
 package rest.out.beans;
 
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import config.interfaces.ConfigurationInterface;
 import config.interfaces.GeneratorInterface;
 import iot.SmarthomeDevice;
@@ -9,6 +11,7 @@ import rabbit.msg.InvalidMessageException;
 import rabbit.out.interfaces.SenderInterface;
 import rest.msg.RESTMessage;
 import rest.msg.out.req.*;
+import rest.msg.out.resp.AddDeviceResp;
 import rest.out.interfaces.RESTinterface;
 
 import javax.annotation.PostConstruct;
@@ -44,7 +47,7 @@ public class DeviceCommandSender implements RESTinterface {
     private final static ExecutorService executors = Executors.newCachedThreadPool(); //  shared pool of executors to send rest messages
 
 
-    private static final String[] receivedTraits = {
+    private static final String[] convertedTraits = {
             "onOff",
             "fanSpeed",
             "brightness",
@@ -56,7 +59,7 @@ public class DeviceCommandSender implements RESTinterface {
             "connectivity"
     };
 
-    private static final String[] convertedTraits = {
+    private static final String[] receivedTraits = {
             "action.devices.traits.OnOff",
             "action.devices.traits.FanSpeed",
             "action.devices.traits.Brightness",
@@ -68,17 +71,67 @@ public class DeviceCommandSender implements RESTinterface {
             "action.devices.traits.Connectivity"
     };
 
-    private String bridgeTrait( String trait ){
+    private String controllerToServiceTrait( String trait ){
 
-        int index = this.getIndex( trait );
+        int index = this.controllerToServiceIndex( trait );
+        if( index == -1 )
+            return "";
+        else
+            return DeviceCommandSender.receivedTraits[index];
+
+    }
+
+    private String controllerToServiceValue( String value ){
+        if( value.compareTo("on")== 0 || value.compareTo("open") == 0 || value.compareTo("lock") == 0 )
+            return "1";
+        if( value.compareTo("off") == 0 || value.compareTo("close") == 0 || value.compareTo("unlock") == 0 )
+            return "0";
+        return value;
+    }
+
+    private Object serviceToControllerValue( String action, String value ){
+        switch( this.serviceToControllerIndex(action)){
+            case 0:
+                if( value.compareTo("1") == 0 )
+                    return "on";
+                else
+                    return "off";
+            case 4:
+                if( value.compareTo("1") == 0 )
+                    return "open";
+                else
+                    return "close";
+            case 5:
+                if( value.compareTo("1") == 0 )
+                    return "lock";
+                else
+                    return "unlock";
+            default:
+                try{
+                    return Integer.parseInt(value);
+                }catch(Exception e){
+                    return Math.round(Float.parseFloat(value));
+                }
+
+        }
+    }
+
+    private String serviceToControllerTrait( String trait ){
+        int index = this.serviceToControllerIndex( trait );
         if( index == -1 )
             return "";
         else
             return DeviceCommandSender.convertedTraits[index];
-
     }
 
-    private int getIndex( String trait ){
+    private int controllerToServiceIndex( String trait ){
+        for( int a = 0; a<DeviceCommandSender.convertedTraits.length; a++ )
+            if( DeviceCommandSender.convertedTraits[a].compareTo(trait) == 0)
+                return a;
+        return -1;
+    }
+
+    private int serviceToControllerIndex( String trait ){
 
         for( int a = 0; a<DeviceCommandSender.receivedTraits.length; a++ )
             if( DeviceCommandSender.receivedTraits[a].compareTo(trait) == 0)
@@ -143,11 +196,12 @@ public class DeviceCommandSender implements RESTinterface {
             while (true) {
 
                 Response result = this.sendCommand(
-                        ipAddr,
+                        this.conf.getProperty("control_address"),
                         Integer.parseInt(this.conf.getProperty("control_port")),
                         "/location/" + locID,
                         RESTsender.REQ_TYPE.PUT,
-                        new AddLocationReq( location, username, port, ipAddr )).get();
+                        new AddLocationReq( location, username, port, ipAddr ))
+                        .get();
 
                 if (result != null) {
 
@@ -218,7 +272,13 @@ public class DeviceCommandSender implements RESTinterface {
 
         try {
 
-            Response result = this.sendCommand(ipAddr, Integer.parseInt(conf.getProperty("control_port")), "/location/" + locID, RESTsender.REQ_TYPE.POST, new UpdateLocationReq( newName )).get();
+            Response result = this.sendCommand(
+                    this.conf.getProperty("control_address"),
+                    Integer.parseInt(conf.getProperty("control_port")),
+                    "/location/" + locID,
+                    RESTsender.REQ_TYPE.POST,
+                    new UpdateLocationReq( newName )).get();
+
             if (result != null) {
 
                 switch (result.getStatus()) {
@@ -273,7 +333,13 @@ public class DeviceCommandSender implements RESTinterface {
 
         try {
 
-            Response result = this.sendCommand(ipAddr, Integer.parseInt(conf.getProperty("control_port")), "/location/" + locID, RESTsender.REQ_TYPE.DELETE, null).get();
+            Response result = this.sendCommand(
+                    this.conf.getProperty("control_address"),
+                    Integer.parseInt(conf.getProperty("control_port")),
+                    "/location/" + locID,
+                    RESTsender.REQ_TYPE.DELETE,
+                    null ).get();
+
             if (result != null) {
 
                 switch (result.getStatus()) {
@@ -333,7 +399,13 @@ public class DeviceCommandSender implements RESTinterface {
 
         try {
 
-            Response result = this.sendCommand(ipAddr, port, "/sublocation/" + sublocID, RESTsender.REQ_TYPE.PUT, request).get();
+            Response result = this.sendCommand(
+                    ipAddr,
+                    port,
+                    "/sublocation/" + sublocID,
+                    RESTsender.REQ_TYPE.PUT,
+                    request).get();
+
             if (result != null) {
 
                 switch (result.getStatus()) {
@@ -393,11 +465,15 @@ public class DeviceCommandSender implements RESTinterface {
     @Override
     public boolean changeSubLocationName(String username, String from, String location, String sublocation, String locID, String sublocID, String newName, String ipAddr) {
 
-        UpdateSubLocationReq request = new UpdateSubLocationReq( newName );
-
         try {
 
-            Response result = this.sendCommand(ipAddr, Integer.parseInt(conf.getProperty("control_port")), "/location/" + locID + "/" + sublocID, RESTsender.REQ_TYPE.POST, request).get();
+            Response result = this.sendCommand(
+                    this.conf.getProperty("control_address"),
+                    Integer.parseInt(conf.getProperty("control_port")),
+                    "/location/" + locID + "/sublocation/" + sublocID,
+                    RESTsender.REQ_TYPE.POST,
+                    new UpdateSubLocationReq( newName )).get();
+
             if (result != null) {
 
                 switch (result.getStatus()) {
@@ -457,7 +533,13 @@ public class DeviceCommandSender implements RESTinterface {
 
         try {
 
-            Response result = this.sendCommand(ipAddr, port, "/sublocation/" + sublocID, RESTsender.REQ_TYPE.DELETE, null).get();
+            Response result = this.sendCommand(
+                    ipAddr,
+                    port,
+                    "/sublocation/" + sublocID,
+                    RESTsender.REQ_TYPE.DELETE,
+                    null ).get();
+
             if (result != null) {
 
                 switch (result.getStatus()) {
@@ -515,18 +597,31 @@ public class DeviceCommandSender implements RESTinterface {
     public boolean addDevice(String username, String from, String name, String location, String sublocation, String sublocID, SmarthomeDevice.DeviceType type, String ipAddr, int port) {
 
         String dID = idGenerator.generateDID();
-
+        Gson gson = new GsonBuilder().setPrettyPrinting().create();
         try {
             while (true) {
 
-                Response result = this.sendCommand(ipAddr, port, "/device/" + dID, RESTsender.REQ_TYPE.PUT, new AddDeviceReq(Integer.parseInt(dID), name, type.toString().replace("action.devices.types.", ""), ipAddr)).get();
+                Response result = this.sendCommand(
+                        ipAddr,
+                        port,
+                        "/device/" + dID,
+                        RESTsender.REQ_TYPE.PUT,
+                        new AddDeviceReq(
+                                Integer.parseInt(sublocID),
+                                name,
+                                type.toString().replace("action.devices.types.", ""),
+                                ipAddr)).get();
+
                 if (result != null) {
 
                     switch (result.getStatus()) {
                         case 200:  //  if command is correctly done, we notify it to all the involved components
+                            AddDeviceResp response = result.readEntity(AddDeviceResp.class);
+                            System.out.println("GSON: " + gson.toJson(response));
                             DeviceUpdateMessage message = new DeviceUpdateMessage(username, from);
-                            message.addUpdates(DeviceUpdate.buildAddDevice(new Date(System.currentTimeMillis()), location, sublocation, dID, name, type));
-                            //  TODO ADD INIT UPDATES
+                            message.addUpdates(DeviceUpdate.buildAddDevice(new Date(System.currentTimeMillis()), location, sublocation, response.getDev_id(), name, type));
+                            response.getState().forEach( (key,value) -> System.out.println("DATA: " + key + " value: " + value + " converted: " + this.controllerToServiceTrait( key ) + ":" + this.controllerToServiceValue(value)));
+                            response.getState().forEach( (key,value) -> message.addUpdates( DeviceUpdate.buildDeviceUpdate(new Date(System.currentTimeMillis()), response.getDev_id(), this.controllerToServiceTrait( key ), this.controllerToServiceValue(value))));
                             return this.notifier.sendMessage(message) > 0;
 
                         case 400:  //  in stable version cannot happen
@@ -586,7 +681,13 @@ public class DeviceCommandSender implements RESTinterface {
 
         try {
 
-            Response result = this.sendCommand(ipAddr, port, "/device/" + dID, RESTsender.REQ_TYPE.POST, new UpdateDeviceSubLocReq( sublocID )).get();
+            Response result = this.sendCommand(
+                    ipAddr,
+                    port,
+                    "/device/" + dID,
+                    RESTsender.REQ_TYPE.POST,
+                    new UpdateDeviceSubLocReq( sublocID )).get();
+
             if (result != null) {
 
                 switch (result.getStatus()) {
@@ -646,15 +747,19 @@ public class DeviceCommandSender implements RESTinterface {
     @Override
     public boolean changeDeviceName(String username, String from, String dID, String oldName, String newName, String ipAddr) {
 
-        UpdateDeviceNameReq request = new UpdateDeviceNameReq( newName );
-
         try {
 
-            Response result = this.sendCommand(ipAddr, Integer.parseInt(conf.getProperty("control_port")), "/device/" + dID, RESTsender.REQ_TYPE.POST, request).get();
+            Response result = this.sendCommand(
+                    conf.getProperty("control_address"),
+                    Integer.parseInt(conf.getProperty("control_port")),
+                    "/device/" + dID,
+                    RESTsender.REQ_TYPE.POST,
+                    new UpdateDeviceNameReq( newName )).get();
+
             if (result != null) {
 
                 switch (result.getStatus()) {
-                    case 200: //  if command correctly done, we notify it to all the involved components
+                    case 204: //  if command correctly done, we notify it to all the involved components
                         DeviceUpdateMessage message = new DeviceUpdateMessage(username, from);
                         message.addUpdates(DeviceUpdate.buildRenameDevice(new Date(System.currentTimeMillis()), dID, oldName, newName));
                         return this.notifier.sendMessage(message) > 0;
@@ -708,7 +813,13 @@ public class DeviceCommandSender implements RESTinterface {
 
         try {
 
-            Response result = this.sendCommand(ipAddr, port, "/device/" + dID, RESTsender.REQ_TYPE.DELETE, null).get();
+            Response result = this.sendCommand(
+                    ipAddr,
+                    port,
+                    "/device/" + dID,
+                    RESTsender.REQ_TYPE.DELETE,
+                    null ).get();
+
             if (result != null) {
 
                 switch (result.getStatus()) {
@@ -749,10 +860,16 @@ public class DeviceCommandSender implements RESTinterface {
     //  executes the given command to the specified device of the user's smartHome
     public boolean execCommand(String username, String from, String dID, String action, String value, String ipAddr, int port) {
 
-        HashMap<String,String> req = new HashMap<>();
-        req.put( this.bridgeTrait( action), value);
+        HashMap<String,Object> req = new HashMap<>();
+        req.put( this.serviceToControllerTrait(action), this.serviceToControllerValue(action, value));
         try{
-            Response result = this.sendCommand(ipAddr, port, "/devcommands", RESTsender.REQ_TYPE.PATCH, new ExecCommandsReq(Collections.singletonList(new ExecCommandReq(dID, req)))).get();
+            Response result = this.sendCommand(
+                    ipAddr,
+                    port,
+                    "/devcommands",
+                    RESTsender.REQ_TYPE.PATCH,
+                    new ExecCommandsReq(Collections.singletonList(new ExecCommandReq(Integer.parseInt(dID), req)))).get();
+
             if (result != null) {
 
                 switch (result.getStatus()) {

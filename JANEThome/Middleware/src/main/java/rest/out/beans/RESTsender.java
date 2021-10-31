@@ -1,5 +1,9 @@
 package rest.out.beans;
 
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import org.glassfish.jersey.client.ClientProperties;
+import org.glassfish.jersey.client.HttpUrlConnectorProvider;
 import rest.msg.RESTMessage;
 import rest.msg.out.req.ExecCommandsReq;
 
@@ -41,36 +45,52 @@ public class RESTsender implements Callable<Response> {
     @Override
     public Response call(){
 
+        Gson gson = new GsonBuilder().setPrettyPrinting().create();
+        System.out.println( "REST REQUEST:\naddr: " + address + " port: " + port + " path: " + path + "\nRequest:\n" + gson.toJson(request));
         switch( this.reqType ){
+
             case PUT:
-                return ClientBuilder
+                Response response = ClientBuilder
                         .newClient()
-                        .target( this.address + ":" + this.port )
-                        .path( path )
+                        .target( "http://" + this.address + ":" + this.port )
+                        .path(  path )
                         .request( MediaType.APPLICATION_JSON )
                         .put(Entity.entity( request, MediaType.APPLICATION_JSON ));
+
+                System.out.println("OKOKOK " + response);
+                System.out.println("Status: " + response.getStatus());
+                return response;
+
             case POST:
                 return ClientBuilder
                         .newClient()
-                        .target( this.address + ":" + this.port )
+                        .property(ClientProperties.CONNECT_TIMEOUT, 5000)
+                        .target( "http://" + this.address + ":" + this.port  )
                         .path( path )
                         .request( MediaType.APPLICATION_JSON )
                         .post(Entity.entity( request, MediaType.APPLICATION_JSON ));
             case DELETE:
                 return ClientBuilder
                         .newClient()
-                        .target( this.address + ":" + this.port )
+                        .property(ClientProperties.CONNECT_TIMEOUT, 5000)
+                        .target( "http://" + this.address + ":" + this.port  )
                         .path( path )
                         .request( MediaType.APPLICATION_JSON )
                         .delete();
             case PATCH:
+                System.out.println("GSON FORMAT: " + gson.toJson( ((ExecCommandsReq)request).getRequests()));
                 return ClientBuilder
                         .newClient()
-                        .target( this.address + ":" + this.port )
+                        .property(ClientProperties.CONNECT_TIMEOUT, 5000)
+                        .target( "http://" + this.address + ":" + this.port )
                         .path( path )
                         .request( MediaType.APPLICATION_JSON )
-                        .method("PATCH", Entity.entity( ((ExecCommandsReq)request).getRequests(), MediaType.APPLICATION_JSON ));
+                        .build("PATCH", Entity.entity( ((ExecCommandsReq)request).getRequests(), MediaType.APPLICATION_JSON ))
+                        .property(HttpUrlConnectorProvider.SET_METHOD_WORKAROUND, true)
+                        .invoke();
         }
+
+        System.out.println("ERROR");
 
         return new Response() {
 
@@ -204,7 +224,6 @@ public class RESTsender implements Callable<Response> {
                 return null;
             }
         };
-        //return true;
 
     }
 }

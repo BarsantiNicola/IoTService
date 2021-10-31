@@ -1,22 +1,30 @@
 package rest.msg.out.resp;
 
+import rest.msg.RESTMessage;
+
 import java.util.HashMap;
 
-public class AddDeviceResp {
+public class AddDeviceResp extends RESTMessage {
 
-    private final String dev_id;
-    private final HashMap<String,String> params;
+    private String dev_id;
+    private HashMap<String,String> state;
 
-    AddDeviceResp( String dev_id, HashMap<String,String> params){
+    public AddDeviceResp( String dev_id, HashMap<String,String> state){
         this.dev_id = dev_id;
-        this.params = params;
+        this.state = state;
     }
+
+    public AddDeviceResp(){}
+
+    public void setDev_id( String dev_id ){ this.dev_id = dev_id; }
+
+    public void setState( HashMap<String,String> state ){ this.state = state; }
 
     public String getDev_id(){
         return this.dev_id;
     }
 
-    public HashMap<String,String> getParams(){
-        return this.params;
+    public HashMap<String,String> getState(){
+        return this.state;
     }
 }

@@ -6,19 +6,29 @@ import java.util.HashMap;
 
 public class ExecCommandReq{
 
-    private final String dev_id;
-    private final HashMap<String,String> params;
+    private int dev_id;
+    private HashMap<String,Object> actions;
 
-    public ExecCommandReq( String dev_id, HashMap<String,String> params ){
+    public ExecCommandReq( int dev_id, HashMap<String,Object> actions ){
         this.dev_id = dev_id;
-        this.params = params;
+        this.actions = actions;
     }
 
-    public String getDev_id(){
+    public ExecCommandReq(){}
+
+    public void setDev_id( int dev_id ){
+        this.dev_id = dev_id;
+    }
+
+    public void setActions( HashMap<String,Object> actions ){
+        this.actions = actions;
+    }
+
+    public int getDev_id(){
         return this.dev_id;
     }
 
-    public HashMap<String,String> getParams(){
-        return this.params;
+    public HashMap<String,Object> getActions(){
+        return this.actions;
     }
 }

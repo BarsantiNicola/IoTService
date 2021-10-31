@@ -383,11 +383,14 @@ public class SmarthomeManager extends MongoEntity implements Serializable {
             Collection<SmarthomeWebDevice> devs = this.locations.get(location).giveDevices(subLocation);
 
             result = this.locations.get(location).removeSublocation(subLocation, trial);
-            if (result && !trial) { //  in case of success of subLocation removal we drop all the device from the devices list
+            if (result && !trial) { //  in case of success of subLocation removal we move all the device into the default sublocation
 
-                devs.forEach(device -> this.devices.remove(device.giveDeviceName()));
+                devs.forEach(device -> {
+                    device.setRoomHint("default");
+                    this.locations.get(location).addDevice("default", device, trial );
+                });
                 this.logger.info("Sublocation " + subLocation + " of location " + location + " removed. " +
-                        "Consequently removed " + devs.size() + " devices");
+                        "Consequently moved " + devs.size() + " devices into default sublocation");
 
             }
         }

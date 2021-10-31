@@ -216,15 +216,13 @@ public class WebappEndpoint {
                     if ( !request.areSet("location", "address", "port"))
                         return;
 
-                    if (smarthome.addLocation( request.getData("location"), "" , request.getData("address"), Integer.parseInt(request.getData("port")), true )){
-                        this.restInterface.addLocation(
+                    if (!smarthome.addLocation( request.getData("location"), "" , request.getData("address"), Integer.parseInt(request.getData("port")), true ) ||
+                        !this.restInterface.addLocation(
                                 this.username,
                                 "websocket_"+session.getId(),
                                 request.getData( "location" ),
                                 request.getData( "address" ),
-                                Integer.parseInt( request.getData( "port" ) ));
-
-                    }else{
+                                Integer.parseInt( request.getData( "port" ) ))){
 
                         HashMap<String, Object> response = new HashMap<>();
                         response.put("type", "ERROR_LOCATION");

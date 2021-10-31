@@ -260,34 +260,34 @@ function messageManager(update){
 
     switch( update.type ){
         case "RENAME_LOCATION":
-            renameLocationReaction(update.data.old_name,update.data.new_name);
+            renameLocationReaction(update.data.old_name.toLowerCase(),update.data.new_name.toLowerCase());
             break;
         case "RENAME_SUBLOCATION":
-            renameSublocationReaction(update.data.location,update.data.old_name,update.data.new_name);
+            renameSublocationReaction(update.data.location.toLowerCase(),update.data.old_name.toLowerCase(),update.data.new_name.toLowerCase());
             break;
         case "RENAME_DEVICE":
-            renameDeviceReaction(update.data.old_name, update.data.new_name);
+            renameDeviceReaction(update.data.old_name.toLowerCase(), update.data.new_name.toLowerCase());
             break;
         case "ADD_LOCATION":
-            addLocationReaction(update.data.location);
+            addLocationReaction(update.data.location.toLowerCase());
             break;
         case "ADD_SUBLOCATION":
-            addSublocationReaction(update.data.location,update.data.sublocation);
+            addSublocationReaction(update.data.location.toLowerCase(),update.data.sublocation.toLowerCase());
             break;
         case "ADD_DEVICE":
-            addDeviceReaction(update.data.location,update.data.sublocation, update.data.name, update.data.type);
+            addDeviceReaction(update.data.location.toLowerCase(),update.data.sublocation.toLowerCase(), update.data.name.toLowerCase(), update.data.type.charAt(0).toUpperCase() + update.data.type.slice(1));
             break;
         case "CHANGE_SUBLOC":
-            changeDeviceSublocationAct(update.data.name, update.data.location, update.data.sublocation);
+            changeDeviceSublocationAct(update.data.name.toLowerCase(), update.data.location.toLowerCase(), update.data.sublocation.toLowerCase());
             break;
         case "REMOVE_LOCATION":
-            deleteLocationReaction(update.data.location);
+            deleteLocationReaction(update.data.location.toLowerCase());
             break;
         case "REMOVE_SUBLOCATION":
-            deleteSublocationReaction(update.data.location,update.data.sublocation);
+            deleteSublocationReaction(update.data.location.toLowerCase(),update.data.sublocation.toLowerCase());
             break;
         case "REMOVE_DEVICE":
-            deleteDeviceAct(update.data.name);
+            deleteDeviceAct(update.data.name.toLowerCase());
             break;
         case "STATISTIC":
             alert(JSON.stringify(update));
@@ -297,8 +297,8 @@ function messageManager(update){
             updateStatistic( update.data.device_name, update.data.statistic, data.statistics);
             break;
         case "UPDATE":
-            enableDevice( update.data.device_name, "1" );
-            updateDevice(update.data.device_name, update.data.action, update.data.value);
+            enableDevice( update.data.device_name.toLowerCase(), "1" );
+            updateDevice(update.data.device_name.toLowerCase(), update.data.action, update.data.value);
             break;
         case "ERROR_LOCATION":
             errorAddLocation();

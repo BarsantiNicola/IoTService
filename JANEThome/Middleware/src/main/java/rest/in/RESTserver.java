@@ -8,13 +8,16 @@ import rabbit.msg.InvalidMessageException;
 import rabbit.out.interfaces.SenderInterface;
 import rest.msg.in.UpdateRequest;
 import rest.msg.in.StateResponse;
+import rest.out.beans.DeviceCommandSender;
 
 import javax.ejb.EJB;
+import javax.ejb.Timeout;
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.util.ArrayList;
 import java.util.List;
+
 
 @Path("/")
 public class RESTserver{
@@ -22,7 +25,8 @@ public class RESTserver{
     @EJB
     SenderInterface sender;
 
-    private static final String[] receivedTraits = {
+
+    private static final String[] convertedTraits = {
             "onOff",
             "fanSpeed",
             "brightness",
@@ -34,7 +38,7 @@ public class RESTserver{
             "connectivity"
     };
 
-    private static final String[] convertedTraits = {
+    private static final String[] receivedTraits = {
             "action.devices.traits.OnOff",
             "action.devices.traits.FanSpeed",
             "action.devices.traits.Brightness",
@@ -46,7 +50,75 @@ public class RESTserver{
             "action.devices.traits.Connectivity"
     };
 
-    @POST
+    private String controllerToServiceTrait( String trait ){
+
+        int index = this.controllerToServiceIndex( trait );
+        if( index == -1 )
+            return "";
+        else
+            return RESTserver.receivedTraits[index];
+
+    }
+
+    private String controllerToServiceValue( String value ){
+        if( value.compareTo("on")== 0 || value.compareTo("open") == 0 || value.compareTo("lock") == 0 )
+            return "1";
+        if( value.compareTo("off") == 0 || value.compareTo("close") == 0 || value.compareTo("unlock") == 0 )
+            return "0";
+        return value;
+    }
+
+    private Object serviceToControllerValue( String action, String value ){
+        switch( this.serviceToControllerIndex(action)){
+            case 0:
+                if( value.compareTo("1") == 0 )
+                    return "on";
+                else
+                    return "off";
+            case 4:
+                if( value.compareTo("1") == 0 )
+                    return "open";
+                else
+                    return "close";
+            case 5:
+                if( value.compareTo("1") == 0 )
+                    return "lock";
+                else
+                    return "unlock";
+            default:
+                try{
+                    return Integer.parseInt(value);
+                }catch(Exception e){
+                    return Math.round(Float.parseFloat(value));
+                }
+
+        }
+    }
+
+    private String serviceToControllerTrait( String trait ){
+        int index = this.serviceToControllerIndex( trait );
+        if( index == -1 )
+            return "";
+        else
+            return RESTserver.convertedTraits[index];
+    }
+
+    private int controllerToServiceIndex( String trait ){
+        for( int a = 0; a<RESTserver.convertedTraits.length; a++ )
+            if( RESTserver.convertedTraits[a].compareTo(trait) == 0)
+                return a;
+        return -1;
+    }
+
+    private int serviceToControllerIndex( String trait ){
+
+        for( int a = 0; a<RESTserver.receivedTraits.length; a++ )
+            if( RESTserver.receivedTraits[a].compareTo(trait) == 0)
+                return a;
+        return -1;
+    }
+
+    @PATCH
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.TEXT_PLAIN)
     public Response UpdateDevice( List<UpdateRequest> data ){
@@ -77,7 +149,7 @@ public class RESTserver{
                 request.setTimestamp( "\"" + request.getTimestamp() + "\"" );
                 request.getActions().forEach( (key,value) -> {
                     if(verifyRequest(request)) {
-                        message.addUpdates(DeviceUpdate.buildDeviceUpdate(request.giveConvertedTimestamp(), request.getDev_id(), this.bridgeTrait(key), value));
+                        message.addUpdates(DeviceUpdate.buildDeviceUpdate(request.giveConvertedTimestamp(), request.getDev_id(), this.controllerToServiceTrait(key), this.controllerToServiceValue(String.valueOf(value))));
                         sender.sendMessage( message);
                     }
                 });
@@ -127,21 +199,4 @@ public class RESTserver{
                 user != null && user.length() > 0;
     }
 
-    private String bridgeTrait( String trait ){
-
-        int index = this.getIndex( trait );
-        if( index == -1 )
-            return "";
-        else
-            return RESTserver.convertedTraits[index];
-
-    }
-
-    private int getIndex( String trait ){
-
-        for( int a = 0; a<RESTserver.receivedTraits.length; a++ )
-            if( RESTserver.receivedTraits[a].compareTo(trait) == 0)
-                return a;
-        return -1;
-    }
 }

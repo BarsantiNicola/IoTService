@@ -16,6 +16,7 @@ function createDevice(type,name) {
     header.className = "device_title";
     header.textContent = name + "[" + type + "]";
     status_icon.className = "fa fa-circle";
+    status_icon.style.color = "red";
     expand_icon.className = "fa fa-arrows-alt";
 
 

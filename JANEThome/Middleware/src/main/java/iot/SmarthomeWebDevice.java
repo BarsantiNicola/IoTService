@@ -15,7 +15,7 @@ import java.util.Date;
 public class SmarthomeWebDevice extends SmarthomeDevice {
 
     @Expose
-    private final HashMap<String, String> param = new HashMap<>();    //  set of states associated to the device
+    private HashMap<String, String> param = new HashMap<>();    //  set of states associated to the device
     @Expose
     private boolean connectivity;
     @Expose
@@ -30,11 +30,13 @@ public class SmarthomeWebDevice extends SmarthomeDevice {
 
     public SmarthomeWebDevice() {
         initializeLogger();
+        this.expires = new HashMap<>();
+        this.param = new HashMap<>();
     }
 
     public SmarthomeWebDevice(String id, String name, String location, String sub_location, DeviceType type) {
         super(id, name, location, sub_location, type);
-        this.connectivity = true;
+        this.connectivity = false;
         this.initializeLogger();
     }
 
@@ -96,6 +98,9 @@ public class SmarthomeWebDevice extends SmarthomeDevice {
                 trait.compareTo("action.devices.traits.Connectivity") != 0 &&
                 trait.compareTo("action.devices.traits.Temperature") != 0)
             return false;
+
+        if( this.expires == null )
+            this.expires = new HashMap<>();
 
         trait = trait.substring(trait.lastIndexOf(".") + 1);
         //  if there isn't a timestamp already setted every action is good
@@ -163,37 +168,40 @@ public class SmarthomeWebDevice extends SmarthomeDevice {
         this.initializeLogger();
         Gson gson = new Gson();
 
+        System.out.println("OBJECT STATE: " + gson.toJson(this));
+        System.out.println("Execute action: " + gson.toJson(param));
         //  verification that the mandatory parameters are present
         if (!trial && !param.containsKey("timestamp") && !force) {
             logger.error("Error, missing timestamp into application update");
             return false;
         }
-
+        System.out.println("step1");
         if (!param.containsKey("action") || !param.containsKey("device_name") || !param.containsKey("value")) {
             logger.error(
                     "Invalid request to perform an action, missing parameters [device_name:" + param.containsKey("device_name") +
                             "][action:" + param.containsKey("action") + "][value:" + param.containsKey("value") + "][" + param.containsKey("timestamp") + "]");
             return false;
         }
-
+        System.out.println("step2");
         if (!this.updateLastChange(param.get("action"), gson.fromJson(param.get("timestamp"), Date.class), trial, force)) {
             logger.warn("The requested action has an old timestamp, discarding the request");
             return false;
         }
 
         DeviceType typos = SmarthomeDevice.convertType(this.type);
+        System.out.println("step3" + typos);
         if ((typos == DeviceType.THERMOSTAT || typos == DeviceType.CONDITIONER) && param.get("action").compareTo("action.devices.traits.Temperature") == 0) {
             if (!trial && !this.connectivity)
                 this.connectivity = true;
             return true;
         }
-
+        System.out.println("step4");
         if (param.get("action").compareTo("action.devices.traits.Connectivity") == 0) {
             if (!trial)
                 this.connectivity = param.get("value").compareTo("1") == 0;
             return true;
         }
-
+        System.out.println("step5");
         //  verification that this is the correct device
         if (param.get("device_name").compareTo(this.giveDeviceName()) != 0 || !this.getTraits().contains(param.get("action"))) {
             if (param.get("device_name").compareTo(this.giveDeviceName()) != 0)
@@ -204,21 +212,24 @@ public class SmarthomeWebDevice extends SmarthomeDevice {
                 logger.error("Invalid request to perform an action, invalid trait. [Action: " + param.get("action"));
             return false;
         }
-
+        System.out.println("step6");
         // to reduce string comparison heavy we take only the variable part of the string [action.devices.traits.ACTION]
         String value = param.get("action");
         value = value.substring(value.lastIndexOf(".") + 1);
-
+        System.out.println("step6.5");
         //  validation of the given value for the requested action
         if (!validateValue(value, param.get("value"))) {
-
+            System.out.println("step236");
             logger.error("Invalid request to perform an action, invalid value");
             return false;
 
         }
-//
-//        if (trial)
-//            return true;
+        System.out.println("step6.7");
+        if (trial)
+            return true;
+        System.out.println("step7");
+        if( this.param == null )
+            this.param = new HashMap<>();
 
         //  applying the action to the data structure
         if (this.param.containsKey(value))
@@ -226,18 +237,21 @@ public class SmarthomeWebDevice extends SmarthomeDevice {
         else
             this.param.put(value, param.get("value"));
 
-        //add value on historical list
+        // TODO to be removed add value on historical list
         if (param.containsKey("timestamp")) {
             historical.put(gson.fromJson(param.get("timestamp"), Date.class), new Operation(param.get("action"),
                     param.get("value"), gson.fromJson(param.get("timestamp"), Date.class)));
             System.out.print(param.get("device_name") + "-->" + param.get("timestamp"));
         }
 
+        System.out.println("BHOOOO");
         logger.info("Request to perform an action correctly done [DeviceName: " + param.get("device_name") + "][Action: " +
                 param.get("action") + "][Value: " + param.get("value") + "]");
+
         if (!this.connectivity)
             this.connectivity = true;
 
+        System.out.println("OBJECT STATE ended: " + gson.toJson(this));
         return true;
 
     }

@@ -4,11 +4,15 @@ import rest.msg.RESTMessage;
 
 public class UpdateDeviceNameReq extends RESTMessage {
 
-    private final String name;
+    private String name;
 
     public UpdateDeviceNameReq(String name){
         this.name = name;
     }
+
+    public UpdateDeviceNameReq(){}
+
+    public void setName( String name ){ this.name = name; }
 
     public String getName(){
         return this.name;

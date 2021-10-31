@@ -1,4 +1,6 @@
 package rest.msg;
 
-public class RESTMessage {
+import java.io.Serializable;
+
+public class RESTMessage implements Serializable {
 }

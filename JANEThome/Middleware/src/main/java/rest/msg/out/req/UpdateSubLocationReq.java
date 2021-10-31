@@ -4,13 +4,18 @@ import rest.msg.RESTMessage;
 
 public class UpdateSubLocationReq extends RESTMessage {
 
-    private final String name;
+    private String name;
 
     public UpdateSubLocationReq(String name){
         this.name = name;
     }
 
+    public UpdateSubLocationReq(){}
+
+    public void setName( String name ){ this.name = name; }
+
     public String getName(){
         return this.name;
     }
+
 }

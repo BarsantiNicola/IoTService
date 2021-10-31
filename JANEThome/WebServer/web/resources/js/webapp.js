@@ -1667,7 +1667,7 @@ $("#add_location_sub").on('click', function(e){
     let address = form.elements['address'].value;
     let port = form.elements['port'].value;
 
-    if( location_name.length !== 0 && address.length !== 0 && validateAddress(address) && validatePort(port)){
+    if( location_name.length !== 0 && address.length !== 0 && validatePort(port)){
         let locations = document.getElementsByClassName("location");
         for( let location of locations )
             if( location.id === location_name ){
