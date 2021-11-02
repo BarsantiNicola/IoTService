@@ -635,6 +635,22 @@ public class SmarthomeManager extends MongoEntity implements Serializable {
 
     }
 
+    public List<SmarthomeWebDevice> giveSublocationDevices(String location, String sublocation){
+
+        List<SmarthomeWebDevice> devs = new ArrayList<>();
+        //  mutual exclusion on the interactions with the data structure
+        if (this.giveSmartHomeMutex())
+            return devs;
+
+        this.devices.values().forEach( device -> {
+            if( device.getStructureHint().compareTo(location) == 0 && device.getRoomHint().compareTo(sublocation) == 0 )
+                devs.add(device);
+        });
+        System.out.println("Devices MOVED: " + devs.size());
+        this.releaseSmarthomeMutex(); //  release of mutual exclusion
+        return devs;
+    }
+
     //  verifies if the given device is present into the smartHome
     public boolean devicePresent(String name) {
 

@@ -2061,7 +2061,7 @@ a:focus{
     position: relative;
     border-radius: 50%;
     background-color: #fff;
-    box-shadow: 0 0 60px 40px #ECFF00;
+    box-shadow: 0 0 35px 35px #ECFF00;
     opacity: 0;
     z-index: 4;
 }

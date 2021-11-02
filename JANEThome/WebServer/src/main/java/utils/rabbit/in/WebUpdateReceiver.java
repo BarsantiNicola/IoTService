@@ -9,6 +9,7 @@ import com.rabbitmq.client.ShutdownSignalException;
 import config.interfaces.ConfigurationInterface;
 import iot.SmarthomeDevice;
 import iot.SmarthomeManager;
+import iot.SmarthomeWebDevice;
 import rabbit.EndPoint;
 import org.apache.commons.lang.SerializationUtils;
 import rabbit.msg.DeviceUpdate;
@@ -17,6 +18,7 @@ import rabbit.msg.DeviceUpdateMessage;
 import javax.websocket.Session;
 import java.io.IOException;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.logging.ConsoleHandler;
 import java.util.logging.Handler;
@@ -159,13 +161,31 @@ public class WebUpdateReceiver extends EndPoint implements Consumer{
 
                         case REMOVE_SUB_LOCATION:
 
-                            if (message.areSet("location", "sublocation") &&
-                                    this.smarthome.removeSublocation(message.getData("location"), message.getData("sublocation"), false)) {
+                            if (message.areSet("location", "sublocation")){
+                                List<SmarthomeWebDevice> devices = smarthome.giveSublocationDevices( message.getData("location"), message.getData("sublocation"));
 
-                                data.put("location", message.getData("location"));
-                                data.put("sublocation", message.getData("sublocation"));
-                                response.put("type", "REMOVE_SUBLOCATION");
-                                response.put("data", data);
+                                if( this.smarthome.removeSublocation(message.getData("location"), message.getData("sublocation"), false)) {
+
+                                    devices.forEach( device -> {
+                                        data.put("location", message.getData("location"));
+                                        data.put("sublocation", "default");
+                                        data.put("name", device.giveDeviceName());
+                                        response.put("type", "CHANGE_SUBLOC");
+                                        response.put("data", data);
+
+                                        try {
+                                            target.getBasicRemote().sendText(gson.toJson(response));
+                                        }catch( IOException e ){}
+
+                                        data.clear();
+                                        response.clear();
+                                    });
+
+                                    data.put("location", message.getData("location"));
+                                    data.put("sublocation", message.getData("sublocation"));
+                                    response.put("type", "REMOVE_SUBLOCATION");
+                                    response.put("data", data);
+                                }
 
                             }
                             break;

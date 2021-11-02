@@ -227,7 +227,7 @@ function changeDeviceColor( dID, color ){
     if( device != null )
         device.getElementsByClassName("color_input")[0].value = color;
 
-    device.getElementsByClassName("light_ball")[0].style.boxShadow = "0 0 60px 40px " + color;
+    device.getElementsByClassName("light_ball")[0].style.boxShadow = "0 0 35px 35px " + color;
     device.getElementsByClassName("color")[0].value = color;
 
 }
