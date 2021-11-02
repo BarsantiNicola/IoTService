@@ -135,6 +135,7 @@ public class SmarthomeWebDevice extends SmarthomeDevice {
 
         }
 
+        System.out.println("E' IL TIMESTAMP IL PROBLEMA!!");
         //  update is old we can discard it
         return false;
 

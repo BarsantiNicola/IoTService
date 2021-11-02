@@ -118,7 +118,7 @@ public class RESTserver{
         return -1;
     }
 
-    @PATCH
+    @POST
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.TEXT_PLAIN)
     public Response UpdateDevice( List<UpdateRequest> data ){
@@ -158,18 +158,15 @@ public class RESTserver{
             if( state == 0 ){
                 return Response
                         .status(Response.Status.OK)
-                        .entity(gson.toJson(responses))
                         .build();
             }else{
                 if( state == data.size())
                     return Response
                             .status(Response.Status.BAD_REQUEST)
-                            .entity(gson.toJson(responses))
                             .build();
                 else
                     return Response
                             .status(Response.Status.ACCEPTED)
-                            .entity(gson.toJson(responses))
                             .build();
             }
 

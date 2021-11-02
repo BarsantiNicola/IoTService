@@ -198,12 +198,13 @@ public class WebUpdateReceiver extends EndPoint implements Consumer{
                             break;
 
                         case UPDATE:
-
-                            if (message.areSet("dID", "action", "value")) {
-
+                            System.out.println("STARTING UPDATE");
+                            if(message.areSet("dID", "action", "value")) {
+                                System.out.println("STARTING UPDATE SELECTION");
                                 String name = this.smarthome.giveDeviceNameById(message.getData("dID"));
                                 if (this.smarthome.performAction(name, message.getData("action"), message.getData("value"), message.giveConvertedTimestamp(), false)) {
 
+                                    System.out.println("Sending updated!!!!!");
                                     data.put("device_name", name);
                                     data.put("action", message.getData("action"));
                                     data.put("value", message.getData("value"));
@@ -211,7 +212,8 @@ public class WebUpdateReceiver extends EndPoint implements Consumer{
                                     response.put("type", "UPDATE");
                                     response.put("data", data);
 
-                                }
+                                }else
+                                    System.out.println("STRANOOO");
                             }
                             break;
 

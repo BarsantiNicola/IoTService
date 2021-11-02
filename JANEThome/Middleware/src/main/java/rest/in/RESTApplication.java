@@ -5,5 +5,7 @@ import javax.ws.rs.core.Application;
 
 
 @ApplicationPath("/deviceUpdate")
+
 public class RESTApplication extends Application {
+
 }
