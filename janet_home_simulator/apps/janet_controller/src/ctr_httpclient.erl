@@ -653,7 +653,7 @@ send_devcfg_updates(DevCfgUpdates,ConnPid,Loc_user,Loc_id,RESTPath) when is_list
   
    % Otherwise if the encoding was successful, asynchronosuly send the remote REST server the
    % device configuration updates, obtaining the stream reference associated with the HTTP request
-   DevCfgStreamRef = gun:patch(
+   DevCfgStreamRef = gun:post(
                                ConnPid,                                     % PID of the Gun connection process
                                RESTPath,                                    % Resource path in the remote REST server
 		     			       [{<<"content-type">>, "application/json"}],  % Request "Content-Type" header

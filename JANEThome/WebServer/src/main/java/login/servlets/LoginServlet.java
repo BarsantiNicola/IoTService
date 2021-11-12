@@ -1,65 +1,63 @@
-package weblogic.login.servlets;
+package login.servlets;
 
+//  internal services
 import db.interfaces.DBinterface;
-import weblogic.login.beans.BasicData;
-import weblogic.login.beans.UserLogin;
+import login.beans.AuthData;
+import login.beans.UserData;
+
+//  ejb3.0
 import javax.ejb.EJB;
 import javax.servlet.annotation.WebServlet;
+
+//  http protocol management
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+
+//  exceptions
 import java.io.IOException;
+
+//  collections
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Optional;
-import java.util.logging.ConsoleHandler;
-import java.util.logging.Handler;
-import java.util.logging.Logger;
-import java.util.logging.SimpleFormatter;
+
+//  logger
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 
-////////////////////////////////////////////////[ LoginServlet ]/////////////////////////////////////////////////////
-//                                                                                                                 //
-//   Description:  business logic behind user login and auto login. The servlets requests follow three             //
-//                 stages for their management:                                                                    //
-//                 -- if cookies are present the request is an autologin -> it verifies cookies validity           //
-//                 -- if variables are present the request is a login -> it verifies user/password validity        //
-//                 -- otherwise the request will be redirected to the login.jsp page                               //
-//                                                                                                                 //
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
+/**
+ * Business logic behind the login and autologin actions. The servlet requests manegement follows three stages:
+ *    - if variables are present the request is a logic -> verification of credentials( MAIN TARGET )
+ *    - if cookies are present the request is an autologin -> verification of cookies validity ( SECONDARY TARGET )
+ *    - redirection to the login.jsp page ( DEFAULT TARGET )
+ */
 @WebServlet(name="Login", urlPatterns={"/login"})
 public class LoginServlet extends HttpServlet {
 
+    //  database manager instance
     @EJB
     DBinterface db;
 
-    private Logger logger;
-
-    enum RequestType{  //  TYPE OF REQUEST HANDLED BY THE SERVLET
+    private enum RequestType{  //  requests handled by the servlet
         LOGIN_REQ,
         AUTOLOGIN_REQ,
         UNKNOWN
     }
 
+
     public void service( HttpServletRequest req, HttpServletResponse resp ){
 
-        this.initializeLogger();
+        Logger logger = LogManager.getLogger(getClass().getName());
 
+        //  extraction of the eventual parameters from the request(cookies, form values)
         HashMap<String,String> parameters = this.extractParameters( req );
 
-        switch( typeOfRequest( parameters )) {
+        switch( this.typeOfRequest( parameters )) {
 
-            case LOGIN_REQ:  //  login request from the login form
-
-                if( !parameters.containsKey( "email" ) || !parameters.containsKey( "password" )){
-
-                    logger.severe( "Missing email or password during login. Abort operation" );
-                    resp.setStatus( 500 );
-                    return;
-
-                }
+            case LOGIN_REQ:  //  login request from the form [email and password parameters present]
 
                 logger.info( "Received request from [" + req.getRemoteAddr() + "] of type LOGIN_REQ. Email: " + parameters.get( "email" ));
 
@@ -69,39 +67,41 @@ public class LoginServlet extends HttpServlet {
                     logger.info( "Login succeded, email: " + parameters.get( "email" ));
 
                     //  used by the web page to show the user name into the page
-                    UserLogin infoData = new UserLogin();
-                    //TODO:NB: getUserFirstAndLastName vuole lo user, se email == user è ok
+                    UserData infoData = new UserData();
                     String[] names = db.getUserFirstAndLastName(parameters.get( "email" ));
-                    infoData.setParameters( names[0],names[1]);
+                    infoData.setParameters( names[0], names[1] );
                     req.getSession().setAttribute( "infoData", infoData );
 
                     //  used for authorizing the requests, authtoken provided by the user and stored into the server must be equal
-                    BasicData userData = new BasicData();
+                    AuthData userData = new AuthData();
                     userData.createToken( parameters.get( "email" ));
-                    resp.addCookie(new Cookie( "auth", userData.getToken() ));  //  we put the authorization into the user cookie
+                    resp.addCookie( new Cookie( "auth", userData.getToken()));  //  we put the authorization into the user cookie
                     req.getSession().setAttribute( "authData", userData );  //  we put the authorization into the server for comparison
 
                     logger.info("Session for user " + parameters.get( "email" ) + " correctly deployed" );
-                    resp.setStatus( 200 );  //  the reciving of ok status will perform the redirection to the webapp page
+                    resp.setStatus( 200 );  //  the receiving of ok status will perform the redirection to the webapp page
 
                 }else
-                    resp.setStatus( 500 ); //  the reciving of error status will be notified to the user from the login form
+                    resp.setStatus( 500 ); //  the receiving of error status will be notified to the user from the login form
 
                 break;
 
-            case AUTOLOGIN_REQ: //  the request contains the data generated from a previous login, can perform an autologin
+            case AUTOLOGIN_REQ: //  autologin request[auth cookie present]
 
                 logger.info( "Received request from [" + req.getRemoteAddr() + "] of type AUTOLOGIN_REQ. Auth: " + parameters.get( "auth" ));
 
                 //  getting the authentication information from the session and from the cookies
-                //  (from the cookies will be getted from the extractParameter function)
-                BasicData userData = (BasicData) req.getSession().getAttribute( "authData" );
-                if (userData == null || !userData.isValid(parameters.get("auth"))) {
+                AuthData userData = (AuthData) req.getSession().getAttribute( "authData" );
+
+                if( userData == null || !userData.isValid( parameters.get( "auth" ))) {
 
                     if( userData != null ) {
                         logger.info( "Removing invalid authData information from the session" );
                         req.getSession().removeAttribute( "authData" );
                     }
+
+                    logger.info( "Removing invalid authData information from the session" );
+                    req.getSession().removeAttribute( "authData" );
 
                     //  cookie always present( or we will not be here )
                     logger.info("Removing invalid cookie: " + parameters.get("auth"));
@@ -149,25 +149,39 @@ public class LoginServlet extends HttpServlet {
         }
     }
 
-    //// UTILITY FUNCTIONS
 
-    //  it identified the type of request basing on the available parameters
-    //      Return:
-    //          - UNKNOWN: request for the login.jsp page
-    //          - LOGIN_REQ: login by the login.jsp form
-    //          - AUTOLOGIN_REQ: login by session authentication
+    ////////--  UTILITIES  --////////
+
+
+    /**
+     * Method to identify the type of request analyzing the given data:
+     * @param data the set of information obtained by the cookies and parameters fields
+     * @return Returns the type of request
+     *    - LOGIN_REQ: {@link RequestType} the email and password field given by the form are present( MAIN TARGET )
+     *    - AUTOLOGIN_REQ: {@link RequestType} the auth cookie is present( SECONDARY TARGET )
+     *    - UNKNOWN: {@link RequestType} unable to identify the type of request
+     */
     private LoginServlet.RequestType typeOfRequest( HashMap<String,String> data ){
 
         boolean loginReq = data.containsKey( "email" ) && data.containsKey("password" );
         boolean autologin = data.containsKey( "auth" );
 
-        return loginReq? RequestType.LOGIN_REQ : autologin? RequestType.AUTOLOGIN_REQ : RequestType.UNKNOWN;
+        return loginReq?
+                RequestType.LOGIN_REQ :
+                autologin?
+                        RequestType.AUTOLOGIN_REQ :
+                        RequestType.UNKNOWN;
 
     }
 
-    //  it extracts all of the usable parameters from the request and return it as a key-value collection
+    /**
+     * Method to extract parameters and cookies from the requests
+     * @param request {@link HttpServletRequest} the request given by the servlet
+     * @return Returns a set of key value pairs containing the found keys and their values
+     */
     private HashMap<String,String> extractParameters( HttpServletRequest request ){
 
+        //  searching the "email","password" keys inside the request parameters
         HashMap<String, String> result = new HashMap<>();
         Arrays.asList( "email", "password" ).forEach(
                 (field)->{
@@ -176,6 +190,7 @@ public class LoginServlet extends HttpServlet {
                         result.put( field, data );
                 });
 
+        //  searching the "auth" key inside the cookies
         if( request.getCookies() != null ) {    //  cookies can be deleted by the browser
 
             Optional<String> authtoken = Arrays.stream( request.getCookies() )
@@ -187,21 +202,6 @@ public class LoginServlet extends HttpServlet {
 
         }
         return result;
-    }
-
-    //  initialization of the logger that prevent that more handlers are allocated
-    private void initializeLogger(){
-
-        this.logger = Logger.getLogger( getClass().getName() );
-
-        //  verification of the number of instantiated handlers
-        if( this.logger.getHandlers().length == 0 ){ //  first time the logger is created we generate its handler
-
-            Handler consoleHandler = new ConsoleHandler();
-            consoleHandler.setFormatter( new SimpleFormatter() );
-            this.logger.addHandler( consoleHandler );
-
-        }
     }
 
 }

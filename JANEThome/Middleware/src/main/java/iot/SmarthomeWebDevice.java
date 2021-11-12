@@ -18,12 +18,9 @@ public class SmarthomeWebDevice extends SmarthomeDevice {
     private HashMap<String, String> param = new HashMap<>();    //  set of states associated to the device
     @Expose
     private boolean connectivity;
-    @Expose
-    private final HashMap<Date, Operation> historical = new HashMap<>();
     private transient Logger logger;
     @Expose
-    private HashMap<String, Date> expiresForMongo = new HashMap<>();
-    private transient HashMap<String, Date> expires = new HashMap<>(); //  set of timestamp associated with each trait to discard old updates
+    private HashMap<String, Date> expires = new HashMap<>(); //  set of timestamp associated with each trait to discard old updates
 
     //// CONSTRUCTORS
 
@@ -50,17 +47,10 @@ public class SmarthomeWebDevice extends SmarthomeDevice {
         this.param.putAll(param);
     }
 
-    public void setHistorical(HashMap<Date, Operation> historical) {
-        this.historical.putAll(historical);
-    }
-
     public void setExpires(HashMap<String, Date> expires) {
         this.expires = expires;
     }
 
-    public void setExpiresForMongo(HashMap<String, Date> expiresForMongo) {
-        this.expiresForMongo = expiresForMongo;
-    }
     ////// GETTERS
 
     public HashMap<String, String> getParam() {
@@ -71,17 +61,10 @@ public class SmarthomeWebDevice extends SmarthomeDevice {
         return this.connectivity;
     }
 
-    public HashMap<Date, Operation> getHistorical() {
-        return this.historical;
-    }
-
     public HashMap<String, Date> getExpires() {
         return this.expires;
     }
 
-    public HashMap<String, Date> getExpiresForMongo() {
-        return expiresForMongo;
-    }
 
     //// UTILITY FUNCTIONS
 
@@ -239,11 +222,11 @@ public class SmarthomeWebDevice extends SmarthomeDevice {
             this.param.put(value, param.get("value"));
 
         // TODO to be removed add value on historical list
-        if (param.containsKey("timestamp")) {
+       /* if (param.containsKey("timestamp")) {
             historical.put(gson.fromJson(param.get("timestamp"), Date.class), new Operation(param.get("action"),
                     param.get("value"), gson.fromJson(param.get("timestamp"), Date.class)));
             System.out.print(param.get("device_name") + "-->" + param.get("timestamp"));
-        }
+        }*/
 
         System.out.println("BHOOOO");
         logger.info("Request to perform an action correctly done [DeviceName: " + param.get("device_name") + "][Action: " +

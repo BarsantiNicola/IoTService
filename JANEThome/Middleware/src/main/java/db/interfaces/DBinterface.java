@@ -1,14 +1,12 @@
 package db.interfaces;
 
-import iot.SmarthomeDevice;
-import iot.SmarthomeManager;
-import iot.User;
+import iot.*;
 import org.bson.types.ObjectId;
 import rabbit.msg.DeviceUpdate;
-import statistics.Statistics;
 
 import javax.ejb.Remote;
 import java.util.Date;
+import java.util.List;
 
 @Remote
 public interface DBinterface {
@@ -35,6 +33,8 @@ public interface DBinterface {
 
     ObjectId moveDevice(String username, String location, String sublocation, String device);
 
+    void addOperation(Operation operation);
+
     boolean addUser(User user);
 
     boolean deleteManager(ObjectId objectId);
@@ -47,6 +47,7 @@ public interface DBinterface {
 
     boolean changePassword(String email, String new_password);
 
-    Statistics getStatistics(String dID, String action, Date startTime, Date endTime);
+    List<Statistic> getStatistics(String dID, SmarthomeDevice.DeviceType type, String action, Date startTime, Date endTime);
 
+    void removeAllStatistics(String dID);
 }

@@ -4,17 +4,15 @@ import config.interfaces.ConfigurationInterface;
 import db.interfaces.DBinterface;
 import db.interfaces.IUserDAO;
 import db.mongoConnector.MongoClientProvider;
-import iot.SmarthomeDevice;
-import iot.SmarthomeManager;
-import iot.User;
+import iot.*;
 import org.bson.types.ObjectId;
 import rabbit.msg.DeviceUpdate;
-import statistics.Statistics;
 
 import javax.annotation.PostConstruct;
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import java.util.Date;
+import java.util.List;
 
 
 @Stateless
@@ -76,6 +74,11 @@ public class databaseConnector implements DBinterface {
     }
 
     @Override
+    public void addOperation(Operation operation) {
+        mongoClientProvider.writeOperation( operation );
+    }
+
+    @Override
     public ObjectId removeElementIntoManager(String username, DeviceUpdate.UpdateType type,
                                              String location, String subLocation) {
         return mongoClientProvider.removeElementIntoManager(username, type, location, subLocation);
@@ -88,7 +91,7 @@ public class databaseConnector implements DBinterface {
 
     @Override
     public boolean emailPresent(String email) {
-        return mongoClientProvider.mailPresent(email);
+        return MongoClientProvider.mailPresent(email);
     }
 
     @Override
@@ -97,9 +100,14 @@ public class databaseConnector implements DBinterface {
     }
 
     @Override
-    public Statistics getStatistics(String dID, String action, Date startTime, Date endTime) {
-        return mongoClientProvider.getStatistics(dID, action, startTime, endTime);
+    public List<Statistic> getStatistics(String dID, SmarthomeDevice.DeviceType type, String action, Date startTime, Date endTime) {
+        return mongoClientProvider.getStatistics(dID, type, action, startTime, endTime);
 
+    }
+
+    @Override
+    public void removeAllStatistics(String dID) {
+        mongoClientProvider.removeAllStatistics(dID);
     }
 
     @Override

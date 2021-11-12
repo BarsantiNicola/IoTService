@@ -57,6 +57,14 @@ public class SmarthomeDevice implements Serializable {
             return DeviceType.UNKNOWN;
         }
 
+        public static DeviceType StringToTypeStat(String value){
+            String[] values = { "action.devices.types.LIGHT", "action.devices.types.FAN", "action.devices.types.DOOR", "action.devices.types.THERMOSTAT", "action.devices.types.CONDITIONER" };
+            for( int a = 0; a< values.length; a++)
+                if( values[a].compareToIgnoreCase(value) == 0)
+                    return DeviceType.values()[a];
+            return DeviceType.UNKNOWN;
+        }
+
     }
 
     @Expose

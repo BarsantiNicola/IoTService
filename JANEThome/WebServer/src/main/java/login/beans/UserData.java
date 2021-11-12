@@ -1,6 +1,6 @@
-package weblogic.login.beans;
+package login.beans;
 
-import weblogic.login.interfaces.UserLoginLocal;
+import login.interfaces.IUserInfoStorage;
 
 import javax.ejb.Stateful;
 import javax.inject.Named;
@@ -11,9 +11,13 @@ import javax.inject.Named;
 //                                                                                                                 //
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+/**
+ * Class designed as a data node for user information. The class is stored inside the users' sessions to made them
+ * available to the service webPage constructions
+ */
 @Stateful
 @Named("userInfo")
-public class UserLogin implements UserLoginLocal {
+public class UserData implements IUserInfoStorage {
 
     private String name = null;
     private String surname = null;

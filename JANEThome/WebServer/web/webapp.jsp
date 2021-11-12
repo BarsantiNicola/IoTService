@@ -1,8 +1,8 @@
-<%@ page import="weblogic.login.beans.BasicData" %>
-<%@ page import="weblogic.login.beans.UserLogin" %>
+<%@ page import="login.beans.AuthData" %>
+<%@ page import="login.beans.UserData" %>
 <%@ page contentType="text/html;charset=UTF-8" %>
 <%
-    UserLogin userData = (UserLogin)session.getAttribute("infoData");
+    UserData userData = (UserData)session.getAttribute("infoData");
 %>
 <html lang="en">
 <head>

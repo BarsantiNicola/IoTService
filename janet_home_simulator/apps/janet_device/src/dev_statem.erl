@@ -17,7 +17,7 @@
 
 % Minimum inactivity time afterr which the 'dev_statem' may attempt
 % to simulate a state change via the Simulated Activity Timer (ms)
--define(Min_sim_inactivity,25 * 1000).         % Default: 25 * 1000
+-define(Min_sim_inactivity,1 * 100).         % Default: 25 * 1000
 
 % Mean and Variance of the normal distribution using for determining the next time at which
 % the 'dev_statem' attempts to simulate a state change via the Simulated Activity Timer (ms)

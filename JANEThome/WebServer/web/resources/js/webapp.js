@@ -1489,27 +1489,29 @@ function chartCreation(device_name, device_type){
         graph.style.display = "none";
     for( let chart of charts )
         chart.style.display = "block";
-
+    let date = new Date();
+    let start = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+    let end = new Date(date.getFullYear(), date.getMonth(), date.getDate()+1);
     switch(device_type){
         case "Light":
-            serverStatRequest( device_name, "Device Usage", new Date(2012, 6, 15), new Date(2012, 8, 28));
-            serverStatRequest( device_name, "Brightness", new Date(2012, 6, 15), new Date(2012, 8, 28));
+            serverStatRequest( device_name, "Device Usage", start, end);
+            serverStatRequest( device_name, "Brightness", start, end);
             break;
         case "Fan":
-            serverStatRequest( device_name, "Device Usage", new Date(2012, 6, 15), new Date(2012, 8, 28));
-            serverStatRequest( device_name, "Fan Speed", new Date(2012, 6, 15), new Date(2012, 8, 28));
+            serverStatRequest( device_name, "Device Usage", start, end);
+            serverStatRequest( device_name, "Fan Speed", start, end);
             break;
         case "Door":
-            serverStatRequest( device_name, "N. door opening", new Date(2012, 6, 15), new Date(2012, 8, 28));
-            serverStatRequest( device_name, "N. door locking", new Date(2012, 6, 15), new Date(2012, 8, 28));
+            serverStatRequest( device_name, "N. door opening", start, end);
+            serverStatRequest( device_name, "N. door locking", start, end);
             break;
         case "Thermostat":
-            serverStatRequest( device_name, "Device Usage", new Date(2012, 6, 15), new Date(2012, 8, 28));
-            serverStatRequest( device_name, "Temperature", new Date(2012, 6, 15), new Date(2012, 8, 28));
+            serverStatRequest( device_name, "Device Usage", start, end);
+            serverStatRequest( device_name, "Temperature", start, end);
             break;
         case "Conditioner":
-            serverStatRequest( device_name, "Device Usage", new Date(2012, 6, 15), new Date(2012, 8, 28));
-            serverStatRequest( device_name, "Temperature", new Date(2012, 6, 15), new Date(2012, 8, 28));
+            serverStatRequest( device_name, "Device Usage", start, end);
+            serverStatRequest( device_name, "Temperature", start, end);
             break;
         default:
     }
@@ -1561,62 +1563,87 @@ function createChart(id, name, data){
 
     document.getElementsByClassName("statistic_header")[id-1].textContent = name;
     let max = 0;
+    let min = 0;
+
     let node = document.getElementById("container_expand").getElementsByClassName("fa fa-search")[id - 1];
     try {
         alert(data.toString());
-        for (let info of data)
+        for (let info of data) {
             if (info.y > max)
                 max = info.y;
+            if (info.y < min)
+                min = info.y;
+        }
     }catch(e){
         alert("error");
         node.className = "fa fa-search search_ok";
     }
 
+    if( max < 2 ) max = 1;
+    else
+        max = max + Math.floor( max/5 );
+    alert(max);
     let minutes = Math.ceil((data[data.length - 1].x - data[0].x) / (1000 * 60));
     let format;
     if (minutes <= 60 * 24)
         format = "hh-mm";
     else
         format = "DD-MMM-hh-mm"
+    alert( document.getElementById("chart_" + id).style);
     document.getElementById("chart_" + id).innerHTML = "";
-    let chart = new CanvasJS.Chart("chart_" + id,
-        {
-            height: 235,
-            width: 430,
 
-            axisX: {
-                valueFormatString: format,
-                interval: Math.floor(minutes / 8),
-                intervalType: "minute",
-                labelAngle: -50,
-                labelFontColor: "#007bff",
-                minimum: data[0].x
-            },
-            axisY: {
-                valueFormatString: "#M,,.",
-                backgroundColor: "#333333",
-                labelFontColor: "#007bff",
-            },
-            data: [
-                {
-                    indexLabelFontColor: "darkSlateGray",
-                    type: "area",
-                    color: "#e0a800",
+    try {
+        let chart = new CanvasJS.Chart("chart_" + id,
+            {
+                height: 235,
+                width: 430,
 
-                    markerType: "none",
-                    dataPoints: data
-                }]
-        });
+                axisX:{
+                    gridThickness: 0,
+                    tickLength: 0,
+                    lineThickness: 2,
+                    labelFormatter: function(){
+                        return " ";
+                    }
+                },
+                axisY:{
+                    gridThickness: 0,
+                    tickLength: 0,
+                    lineThickness: 2,
+                    labelFormatter: function(){
+                        return " ";
+                    }
+                },
+
+                data: [
+                    {
+                        indexLabelFontColor: "darkSlateGray",
+                        type: "area",
+                        color: "#e0a800",
+                        dataPoints: data
+                    }],
+                options: {
+                    maintainAspectRatio: false,
+                }
+            });
 
         chart.render();
+    }catch(e){
+        alert(e);
+    }
 
         let loader = document.getElementsByClassName("graph_loader")[id - 1];
         let graph = document.getElementsByClassName("graph")[id - 1];
         let cheater = document.getElementsByClassName("cheater")[id - 1];
+        let search = document.getElementsByClassName("statistic_period")[id - 1].getElementsByTagName("i")[0];
+
+
 
         loader.style.display = "none";
         graph.style.display = "block";
         cheater.style.display = "block";
+        search.className = "fa fa-search search_ok";
+
 
 
 }

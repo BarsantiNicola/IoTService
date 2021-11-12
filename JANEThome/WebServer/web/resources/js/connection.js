@@ -291,10 +291,15 @@ function messageManager(update){
             break;
         case "STATISTIC":
             alert(JSON.stringify(update));
-            let data = JSON.parse(update.data.values);
-            for( let a = 0; a<data.statistics.length; a++)
-                data.statistics[a].x = new Date(Date.parse(data.statistics[a].x));
-            updateStatistic( update.data.device_name, update.data.statistic, data.statistics);
+            let data = update.data;
+            alert(data);
+            alert(data.values);
+            data.values = JSON.parse(data.values);
+            for( let a = 0; a<data.values.length; a++) {
+                data.values[a].x = new Date(Date.parse(data.values[a].x));
+                data.values[a].y =  parseFloat(data.values[a].y);
+            }
+            updateStatistic( update.data.device_name, update.data.statistic, data.values);
             break;
         case "UPDATE":
             enableDevice( update.data.device_name.toLowerCase(), "1" );

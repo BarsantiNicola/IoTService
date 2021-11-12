@@ -13,18 +13,14 @@ import org.mongodb.morphia.Datastore;
 import org.mongodb.morphia.Morphia;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
-import org.mongodb.morphia.aggregation.*;
 
 import static org.mongodb.morphia.aggregation.Group.grouping;
-import static org.mongodb.morphia.aggregation.Group.*;
 
 import rabbit.msg.DeviceUpdate;
-import statistics.Statistic;
+import iot.Statistic;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import statistics.Statistics;
-
 import java.util.*;
 import java.util.concurrent.Semaphore;
 
@@ -39,6 +35,7 @@ public class MongoClientProvider {
     private static Morphia morphia;
     private static Datastore datastore;
     private static SmartHomeManagerDAO managerDao;
+    private static StatisticsProvider statistics;
     private static UserDAO userDAO;
     private transient Logger logger;
 
@@ -62,6 +59,8 @@ public class MongoClientProvider {
             datastore.ensureIndexes();
             managerDao = new SmartHomeManagerDAO(SmarthomeManager.class, datastore);
             userDAO = new UserDAO(User.class, datastore);
+            statistics = new StatisticsProvider( properties );
+
         } catch (Exception e) {
             logger.error(e);
         }
@@ -100,8 +99,15 @@ public class MongoClientProvider {
      * @return the ObjectId of element on DB
      */
     public ObjectId writeManager(SmarthomeManager manager) {
-        manager.expiresDotToUnderscore();
         return (ObjectId) managerDao.save(manager).getId();
+    }
+
+    public void writeOperation(Operation operation){
+        MongoClientProvider.statistics.writeOperation(operation);
+    }
+
+    public void removeAllStatistics(String dID){
+        MongoClientProvider.statistics.removeAllStatistics(dID);
     }
 
     /**
@@ -131,6 +137,7 @@ public class MongoClientProvider {
     public ObjectId renameElementManager(String username, DeviceUpdate.UpdateType op, String oldName, String newName,
                                          String location) {
         SmarthomeManager manager = getManagerByUser(username);
+        assert manager != null;
         manager.addSmartHomeMutex(new Semaphore(1));
         switch (op) {
             case RENAME_LOCATION:
@@ -261,11 +268,10 @@ public class MongoClientProvider {
         if (manager == null) {
             return null;
         }
-        manager.expiresUnderscoreToDot();
 
         manager.addSmartHomeMutex(new Semaphore(1));
         manager.performAction(manager.giveDeviceNameById(device), action, value, new Date(), false);
-        manager.expiresDotToUnderscore();
+
         return writeManager(manager);
     }
 
@@ -278,7 +284,6 @@ public class MongoClientProvider {
     public SmarthomeManager getManagerById(String id) {
         SmarthomeManager manager = managerDao.get(new ObjectId(id));
         manager.relink();
-        manager.expiresUnderscoreToDot();
         return manager;
     }
 
@@ -291,7 +296,6 @@ public class MongoClientProvider {
     public SmarthomeManager getManagerByUsername(String username) {
         SmarthomeManager manager = managerDao.findOne(ISmartHomeManagerDAO.USERNAME, username);
         manager.relink();
-        manager.expiresUnderscoreToDot();
         return manager;
     }
 
@@ -303,7 +307,6 @@ public class MongoClientProvider {
     public List<SmarthomeManager> getAllManagers() {
         List<SmarthomeManager> managers = managerDao.find().asList();
         managers.forEach(SmarthomeManager::relink);
-        managers.forEach(SmarthomeManager::expiresUnderscoreToDot);
         return managers;
     }
 
@@ -431,12 +434,15 @@ public class MongoClientProvider {
      * shifted by 5 second( {@link Action} )
      *
      * @param dID       the id of the device
-     * @param action    the action that do you want the statistics
+     * @param stat_name    the action that do you want the statistics
      * @param startTime start time of range
      * @param endTime   end time of range
-     * @return The {@link Statistics} that it contains a sorted list of {@link Statistic}
+     * @return The {@link List<Statistic>} that it contains a sorted list of {@link Statistic}
      */
-    public Statistics getStatistics(String dID, String action, Date startTime, Date endTime) {
+    public List<Statistic> getStatistics(String dID, SmarthomeDevice.DeviceType type, String stat_name, Date startTime, Date endTime) {
+
+        return MongoClientProvider.statistics.getStatistic(stat_name, dID, type, startTime, endTime);
+        /*
         Statistics statistics = new Statistics();
         Statistic tempStat;
         Statistic tempStatPre;
@@ -477,7 +483,7 @@ public class MongoClientProvider {
         } catch (Exception e) {
             logger.error(e);
         }
-        return statistics;
+        return statistics;*/
     }
 
     private Date shiftDateForward(Date d) {

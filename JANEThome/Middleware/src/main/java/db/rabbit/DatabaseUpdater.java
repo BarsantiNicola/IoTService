@@ -3,6 +3,7 @@ package db.rabbit;
 import com.rabbitmq.client.*;
 import config.interfaces.ConfigurationInterface;
 import db.interfaces.DBinterface;
+import iot.Operation;
 import iot.SmarthomeDevice;
 import org.apache.commons.lang.SerializationUtils;
 import rabbit.EndPoint;
@@ -131,10 +132,12 @@ public class DatabaseUpdater extends EndPoint implements Consumer {
 
                             case REMOVE_DEVICE:
 
-                                if (message.areSet(NAME) || request.getDestination() != null)
+                                if (message.areSet(NAME) || message.areSet(NAME) || request.getDestination() != null) {
                                     dB.removeElementIntoManager(request.getDestination(),
                                             DeviceUpdate.UpdateType.REMOVE_DEVICE, message.getData(NAME),
                                             null);
+                                    dB.removeAllStatistics( message.getData(DID));
+                                }
                                 break;
 
                             case CHANGE_DEVICE_SUB_LOCATION:
@@ -146,9 +149,11 @@ public class DatabaseUpdater extends EndPoint implements Consumer {
 
                             case UPDATE:
 
-                                if (message.areSet(DID, ACTION, VALUE) || request.getDestination() != null)
+                                if (message.areSet(DID, ACTION, VALUE) || request.getDestination() != null) {
                                     dB.performAction(request.getDestination(), message.getData(DID),
                                             message.getData(ACTION), message.getData(VALUE));
+                                    dB.addOperation( new Operation( message.getData(DID), message.getData(ACTION), message.getData(VALUE), message.giveConvertedTimestamp()));
+                                }
                                 break;
 
                             default:

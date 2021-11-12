@@ -1,4 +1,4 @@
-package statistics;
+package iot;
 
 import java.io.Serializable;
 import java.util.Date;

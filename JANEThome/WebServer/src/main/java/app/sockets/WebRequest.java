@@ -1,19 +1,19 @@
-package weblogic.login.websockets;
+package app.sockets;
 
+//  utilities
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import java.io.Serializable;
+
+//  collections
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 
-/////////////////////////////////////////////////[ WebRequest ]//////////////////////////////////////////////////////
-//                                                                                                                 //
-//   Class designed to contain a single request from a webpage, it is implemented for giving to the developer the  //
-//   possibility to work on the data given by the webpage in a simple and easy way                                 //
-//                                                                                                                 //
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+/**
+ * Class designed to contain a single request/response given/sent to the webClient
+ */
 public class WebRequest implements Serializable {
 
     //  update type for easy switch management
@@ -37,17 +37,20 @@ public class WebRequest implements Serializable {
     private final String type; //  type of request
     private final HashMap<String,String> data;  // message fields
 
-    WebRequest( String type, HashMap<String,String> data){
+    public WebRequest(String type, HashMap<String, String> data){
 
         this.type = type;
         this.data = data;
 
     }
 
-    //  converts the stringed type given by the webpage into an enumerator
+    /**
+     * Converts the stringed type given by the webpage into an enumerator
+      */
     public UpdateType requestType(){
 
         List<String> values = Arrays.asList(
+
                 "RENAME_LOCATION",
                 "RENAME_SUBLOCATION",
                 "RENAME_DEVICE",
@@ -61,6 +64,7 @@ public class WebRequest implements Serializable {
                 "STATISTIC",
                 "UPDATE",
                 "LOGOUT"
+
         );
 
         int index = values.indexOf( type );
@@ -68,24 +72,36 @@ public class WebRequest implements Serializable {
 
     }
 
-    ////  GETTERS
-
+    /**
+     * Returns the type of the request without any conversion
+     * @return a string containing the type of the request
+     */
     public String getStringType(){
         return type;
     }
 
+
+    /**
+     * Returns the data stored into the class
+     * @return An hashmap describing all the data stored into the class
+     */
     public HashMap<String,String> getData(){
         return data;
     }
 
+    /**
+     * Returns a particular value stored into the data
+     * @return A string if the value is present otherwise null
+     */
     public String getData( String key ){
         return this.data.get( key );
     }
 
 
-    ////  PUBLIC FUNCTIONS
-
-    //  converts the message received from the webclient into a WebRequest instance
+    /**
+     * converts the message received from the webclient into a WebRequest instance
+     * @return {@link WebRequest} The data given from the client converted into an object
+     */
     public static WebRequest buildRequest( String data ){
 
         //  set the date format is mandatory to convert the date given by javascript
@@ -94,7 +110,10 @@ public class WebRequest implements Serializable {
         return gson.fromJson( data, WebRequest.class );
     }
 
-    //  used to quickly verifies the content of a message
+    /**
+     * Verifies that the given fields are present into the data received
+     * @return true if all the keys are present
+     */
     public boolean areSet( String...keys ){
         for( String key: keys )
             if( !this.data.containsKey( key ))
