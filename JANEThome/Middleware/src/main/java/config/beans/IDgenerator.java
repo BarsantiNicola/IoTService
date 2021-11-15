@@ -1,6 +1,6 @@
 package config.beans;
 
-import config.interfaces.ConfigurationInterface;
+import config.interfaces.IConfiguration;
 import config.interfaces.GeneratorInterface;
 
 import javax.annotation.PostConstruct;
@@ -22,7 +22,7 @@ public class IDgenerator implements GeneratorInterface {
     private Logger logger;
 
     @EJB
-    ConfigurationInterface configuration;
+    IConfiguration configuration;
 
     private void saveData(){
 

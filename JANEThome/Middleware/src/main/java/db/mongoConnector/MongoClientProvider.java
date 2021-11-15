@@ -2,7 +2,7 @@ package db.mongoConnector;
 
 import com.mongodb.*;
 import config.beans.Configuration;
-import config.interfaces.ConfigurationInterface;
+import config.interfaces.IConfiguration;
 import db.dao.SmartHomeManagerDAO;
 import db.dao.UserDAO;
 import db.interfaces.ISmartHomeManagerDAO;
@@ -42,12 +42,12 @@ public class MongoClientProvider {
     /**
      * Open DB connection
      */
-    public MongoClientProvider(ConfigurationInterface configuration) {
+    public MongoClientProvider(IConfiguration configuration) {
         this.logger = LogManager.getLogger(getClass());
         init(configuration);
     }
 
-    private void init(ConfigurationInterface configuration) {
+    private void init(IConfiguration configuration) {
         try {
             Properties properties = configuration.getConfiguration("db");
 
@@ -189,12 +189,12 @@ public class MongoClientProvider {
      * @param port        The port of element
      * @param subLocation The subLocation name
      * @param device      The device name
-     * @param device_type The device type {@link SmarthomeDevice.DeviceType}
+     * @param device_type The device type {@link DeviceType}
      * @return a {@link ObjectId}
      */
     public ObjectId addElementManager(String username, DeviceUpdate.UpdateType op, String id, String location,
                                       String address, int port, String subLocation, String device,
-                                      SmarthomeDevice.DeviceType device_type) {
+                                      DeviceType device_type) {
         SmarthomeManager manager = getManagerByUser(username);
         if (manager == null) {
             return null;
@@ -439,7 +439,7 @@ public class MongoClientProvider {
      * @param endTime   end time of range
      * @return The {@link List<Statistic>} that it contains a sorted list of {@link Statistic}
      */
-    public List<Statistic> getStatistics(String dID, SmarthomeDevice.DeviceType type, String stat_name, Date startTime, Date endTime) {
+    public List<Statistic> getStatistics(String dID, DeviceType type, String stat_name, Date startTime, Date endTime) {
 
         return MongoClientProvider.statistics.getStatistic(stat_name, dID, type, startTime, endTime);
         /*

@@ -1,10 +1,10 @@
 package app.sockets;
 
 //  internal services
-import config.interfaces.ConfigurationInterface;
+import config.interfaces.IConfiguration;
 import db.interfaces.DBinterface;
+import iot.DeviceType;
 import iot.SmarthomeManager;
-import iot.SmarthomeDevice;
 import login.beans.AuthData;
 import rest.out.interfaces.RESTinterface;
 import app.rabbit.in.WebUpdateReceiver;
@@ -49,7 +49,7 @@ public class WebappEndpoint {
     private WebUpdateReceiver updater;   //  rabbitMQ input instance(to receive commands from the internal service)
 
     @EJB
-    private ConfigurationInterface configuration; //  configurations manager
+    private IConfiguration configuration; //  configurations manager
 
     @EJB
     private RESTinterface restInterface;  //  rest interface instance(to send commands to devices)
@@ -291,13 +291,13 @@ public class WebappEndpoint {
                 request.getData( "sublocation" ),
                 "",
                 request.getData( "name" ),
-                SmarthomeDevice.DeviceType.StringToType(request.getData( "type" )), true )){
+                DeviceType.StringToType(request.getData( "type" )), true )){
 
             String network = this.smarthome.giveLocationNetwork( request.getData( "location" ));
             String sublocID = this.smarthome.giveSubLocIdByName(request.getData( "location" ), request.getData( "sublocation" ));
-            SmarthomeDevice.DeviceType type = SmarthomeDevice.DeviceType.StringToType(request.getData( "type" ));
+            DeviceType type = DeviceType.StringToType(request.getData( "type" ));
 
-            if( network != null && sublocID != null && type != SmarthomeDevice.DeviceType.UNKNOWN) {
+            if( network != null && sublocID != null && type != DeviceType.UNKNOWN) {
 
                 String[] netInfo = network.split( ":" );
 
@@ -332,12 +332,9 @@ public class WebappEndpoint {
         //  verification that the location can be renamed from the server prospective
         if( this.smarthome.changeLocationName( request.getData( "old_name" ), request.getData( "new_name" ), true )){
 
-            String network = this.smarthome.giveLocationNetwork( request.getData( "old_name" ));
             String locID = this.smarthome.giveLocIdByName(request.getData("old_name" ));
 
-            if( network != null && locID != null ) {
-
-                String[] netInfo = network.split( ":" );
+            if( locID != null && locID.length() > 0 ) {
 
                 //  forward the request to the real smarthome
                 this.restInterface.changeLocationName(
@@ -345,8 +342,7 @@ public class WebappEndpoint {
                         "websocket_"+session.getId(),
                         locID,
                         request.getData( "old_name" ),
-                        request.getData( "new_name" ),
-                        netInfo[0] );
+                        request.getData( "new_name" ));
 
             }
         }
@@ -366,13 +362,10 @@ public class WebappEndpoint {
         //  verification that the subLocation can be renamed from the server prospective
         if( smarthome.changeSublocationName( request.getData( "location" ), request.getData( "old_name" ), request.getData( "new_name" ), true )){
 
-            String network = this.smarthome.giveLocationNetwork( request.getData( "location" ));
             String locID =this.smarthome.giveLocIdByName(request.getData( "location" ));
             String sublocID = this.smarthome.giveSubLocIdByName( request.getData( "location" ), request.getData( "old_name" ));
 
-            if( network != null && locID != null && sublocID != null ) {
-
-                String[] netInfo = network.split( ":" );
+            if( locID != null && sublocID != null ) {
 
                 //  forward the request to the real smarthome
                 this.restInterface.changeSubLocationName(
@@ -382,8 +375,7 @@ public class WebappEndpoint {
                         request.getData( "old_name" ),
                         locID,
                         sublocID,
-                        request.getData("new_name"),
-                        netInfo[0]);
+                        request.getData("new_name"));
 
             }
         }
@@ -403,12 +395,9 @@ public class WebappEndpoint {
         //  verification that the device can be renamed from the server prospective
         if ( smarthome.changeDeviceName( request.getData( "old_name" ), request.getData( "new_name" ), true )){
 
-            String network = this.smarthome.giveDeviceNetwork( request.getData( "old_name" ));
             String dID = this.smarthome.giveDeviceIdByName( request.getData( "old_name" ));
 
-            if( network != null && network.length() > 0 && dID != null && dID.length() > 0 ) {
-
-                String[] netInfo = network.split( ":" );
+            if( dID != null && dID.length() > 0 ) {
 
                 //  forward the request to the real smarthome
                 this.restInterface.changeDeviceName(
@@ -416,8 +405,7 @@ public class WebappEndpoint {
                         "websocket_"+session.getId(),
                         dID,
                         request.getData( "old_name" ),
-                        request.getData( "new_name" ),
-                        netInfo[0] );
+                        request.getData( "new_name" ));
 
             }
         }
@@ -440,20 +428,16 @@ public class WebappEndpoint {
         //  verification that the location can be removed from the server prospective
         if ( smarthome.removeLocation( request.getData( "location" ), true )){
 
-            String network = this.smarthome.giveLocationNetwork( request.getData( "location" ));
             String locID = this.smarthome.giveLocIdByName(request.getData( "location" ));
 
-            if( network != null && network.length() > 0 && locID != null && locID.length() > 0 ) {
-
-                String[] netInfo = network.split( ":" );
+            if( locID != null && locID.length() > 0 ) {
 
                 //  forward the request to the real smarthome
                 this.restInterface.removeLocation(
                         this.username,
                         "websocket_"+session.getId(),
                         request.getData( "location" ),
-                        locID,
-                        netInfo[0] );
+                        locID );
             }
         }
     }

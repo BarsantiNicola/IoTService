@@ -1,9 +1,10 @@
 package rest.msg.out.req;
 
-import rest.msg.RESTMessage;
-
 import java.util.HashMap;
 
+/**
+ * Class implementing the internal requests of ExecCommandsReq.class
+ */
 public class ExecCommandReq{
 
     private int dev_id;
@@ -14,7 +15,9 @@ public class ExecCommandReq{
         this.actions = actions;
     }
 
-    public ExecCommandReq(){}
+
+    ////////--  SETTERS  --////////
+
 
     public void setDev_id( int dev_id ){
         this.dev_id = dev_id;
@@ -23,6 +26,10 @@ public class ExecCommandReq{
     public void setActions( HashMap<String,Object> actions ){
         this.actions = actions;
     }
+
+
+    ////////--  GETTERS  --////////
+
 
     public int getDev_id(){
         return this.dev_id;

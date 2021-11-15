@@ -1,185 +1,126 @@
 package rest.in;
 
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
+//  internal services
 import rabbit.msg.DeviceUpdate;
 import rabbit.msg.DeviceUpdateMessage;
-import rabbit.msg.InvalidMessageException;
-import rabbit.out.interfaces.SenderInterface;
+import rabbit.out.interfaces.IRabbitSender;
+import rest.DeviceBridge;
 import rest.msg.in.UpdateRequest;
-import rest.msg.in.StateResponse;
-import rest.out.beans.DeviceCommandSender;
 
+//  exceptions
+import rabbit.msg.InvalidMessageException;
+
+//  ejb3.0
 import javax.ejb.EJB;
-import javax.ejb.Timeout;
+
+//  jersey REST management
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
-import java.util.ArrayList;
+
+//  collections
 import java.util.List;
 
 
+/**
+ * REST server to manage asynchronous updates from the smartHomes and propagate them
+ * to the internal service after performing a bridging of the requests to their service representation.
+ * The server is available on http[s]://serviceHostname:servicePort/deviceUpdate
+ */
 @Path("/")
 public class RESTserver{
 
     @EJB
-    SenderInterface sender;
+    IRabbitSender sender;
 
-
-    private static final String[] convertedTraits = {
-            "onOff",
-            "fanSpeed",
-            "brightness",
-            "color",
-            "openClose",
-            "lockUnlock",
-            "tempTarget",
-            "tempCurrent",
-            "connectivity"
-    };
-
-    private static final String[] receivedTraits = {
-            "action.devices.traits.OnOff",
-            "action.devices.traits.FanSpeed",
-            "action.devices.traits.Brightness",
-            "action.devices.traits.ColorSetting",
-            "action.devices.traits.OpenClose",
-            "action.devices.traits.LockUnlock",
-            "action.devices.traits.TemperatureSetting",
-            "action.devices.traits.Temperature",
-            "action.devices.traits.Connectivity"
-    };
-
-    private String controllerToServiceTrait( String trait ){
-
-        int index = this.controllerToServiceIndex( trait );
-        if( index == -1 )
-            return "";
-        else
-            return RESTserver.receivedTraits[index];
-
-    }
-
-    private String controllerToServiceValue( String value ){
-        if( value.compareTo("on")== 0 || value.compareTo("open") == 0 || value.compareTo("lock") == 0 )
-            return "1";
-        if( value.compareTo("off") == 0 || value.compareTo("close") == 0 || value.compareTo("unlock") == 0 )
-            return "0";
-        return value;
-    }
-
-    private Object serviceToControllerValue( String action, String value ){
-        switch( this.serviceToControllerIndex(action)){
-            case 0:
-                if( value.compareTo("1") == 0 )
-                    return "on";
-                else
-                    return "off";
-            case 4:
-                if( value.compareTo("1") == 0 )
-                    return "open";
-                else
-                    return "close";
-            case 5:
-                if( value.compareTo("1") == 0 )
-                    return "lock";
-                else
-                    return "unlock";
-            default:
-                try{
-                    return Integer.parseInt(value);
-                }catch(Exception e){
-                    return Math.round(Float.parseFloat(value));
-                }
-
-        }
-    }
-
-    private String serviceToControllerTrait( String trait ){
-        int index = this.serviceToControllerIndex( trait );
-        if( index == -1 )
-            return "";
-        else
-            return RESTserver.convertedTraits[index];
-    }
-
-    private int controllerToServiceIndex( String trait ){
-        for( int a = 0; a<RESTserver.convertedTraits.length; a++ )
-            if( RESTserver.convertedTraits[a].compareTo(trait) == 0)
-                return a;
-        return -1;
-    }
-
-    private int serviceToControllerIndex( String trait ){
-
-        for( int a = 0; a<RESTserver.receivedTraits.length; a++ )
-            if( RESTserver.receivedTraits[a].compareTo(trait) == 0)
-                return a;
-        return -1;
-    }
-
+    /**
+     * POST request to update a device
+     * LINK: POST http[s]://serviceHostname:servicePort/deviceUpdate
+     * BODY example:
+     *
+     * [
+     *  {
+     *    "dev_id" : 123,
+     *    "timestamp" : ",
+     *    "user" : "example@service.it",
+     *    "actions" : {
+     *        "onOff" : "on",
+     *        "brightness" : 57,
+     *        "colorSetting": "#a523d6"
+     *    }
+     *  }
+     * ]
+     *
+     */
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.TEXT_PLAIN)
     public Response UpdateDevice( List<UpdateRequest> data ){
 
-        Gson gson = new GsonBuilder().setDateFormat( "yyyy-MM-dd'T'HH:mm:ss" ).create();
-        int state = 0;
-        List<StateResponse> responses = new ArrayList<>();
-        try {
 
-            for( UpdateRequest request: data ){
+        int errorState = 0;
 
-                String verify = request.getDev_id();
-                if( verify == null || verify.length() == 0 ){
-                    state++;
-                    responses.add(StateResponse.buildError("0"));
-                    continue;
-                }
+        for( UpdateRequest request: data ){
 
-                verify = request.getUser();
-                if( verify == null || verify.length() == 0 ){
-                    state++;
-                    responses.add(StateResponse.buildError(request.getDev_id()));
-                    continue;
-                }
+            //  verification that the request is valid(all the needed fields present and well formatted)
+            if( !verifyRequest( request )){
+                errorState++;
+                continue;
+            }
 
-                DeviceUpdateMessage message = new DeviceUpdateMessage(request.getUser(), "async_devices" );
-                responses.add( StateResponse.buildSuccess(request.getDev_id()));
-                request.setTimestamp( "\"" + request.getTimestamp() + "\"" );
+            try {
+
+                //  generation of message, from field irrelevant(REST server will not receive any message from rabbitMQ)
+                DeviceUpdateMessage message = new DeviceUpdateMessage( request.getUser(), "async_devices");
+
+                //  a single request to a user can contain many update requests
                 request.getActions().forEach( (key,value) -> {
-                    if(verifyRequest(request)) {
-                        message.addUpdates(DeviceUpdate.buildDeviceUpdate(request.giveConvertedTimestamp(), request.getDev_id(), this.controllerToServiceTrait(key), this.controllerToServiceValue(String.valueOf(value))));
-                        sender.sendMessage( message);
-                    }
+
+                    message.addUpdates(
+                            DeviceUpdate.buildDeviceUpdate(
+                                    request.giveConvertedTimestamp(),
+                                    request.getDev_id(),
+                                    DeviceBridge.controllerToServiceTrait( key ),
+                                    DeviceBridge.controllerToServiceValue( String.valueOf( value ))));
+
+                    sender.sendMessage( message);
+
                 });
+
+            }catch( InvalidMessageException e ){
+
+                //  invalid username field cause the raise of an Exception into DeviceUpdateMessage constructor
+                errorState++;
+
             }
-
-            if( state == 0 ){
-                return Response
-                        .status(Response.Status.OK)
-                        .build();
-            }else{
-                if( state == data.size())
-                    return Response
-                            .status(Response.Status.BAD_REQUEST)
-                            .build();
-                else
-                    return Response
-                            .status(Response.Status.ACCEPTED)
-                            .build();
-            }
-
-        }catch( InvalidMessageException e ){
-
-            return Response
-                    .status(Response.Status.INTERNAL_SERVER_ERROR)
-                    .entity(gson.toJson(responses))
-                    .build();
 
         }
+
+        //  basing on the failure we decides the response to give back
+        if( errorState == 0 )  //  no errors, all request well forwarded
+            return Response
+                    .status( Response.Status.OK )
+                    .build();
+            else
+                if( errorState == data.size() )  //  all requests make an erroR
+                    return Response
+                            .status( Response.Status.BAD_REQUEST )
+                            .build();
+                else //  not all the requests made an error
+                    return Response
+                            .status( Response.Status.ACCEPTED )
+                            .build();
     }
 
+
+    ////////--  UTILITIES  --////////
+
+
+    /**
+     * Method to verify that a received message has all the mandatory information
+     * @param request {@link UpdateRequest} Request to be verified
+     * @return True in case of success otherwise false
+     */
     private boolean verifyRequest( UpdateRequest request ){
 
         String id = request.getDev_id();
@@ -187,13 +128,21 @@ public class RESTserver{
         String user = request.getUser();
 
         try{
+
+            //  verification of timestamp correctly formatted
             request.giveConvertedTimestamp();
+
         }catch( ClassCastException e ){
+
             return false;
+
         }
 
-        return id!= null && id.length() > 0 && timestamp != null && timestamp.length() > 0 &&
-                user != null && user.length() > 0;
+        //  verification of fields presence
+        return id!= null && id.length() > 0 &&
+                    timestamp != null && timestamp.length() > 0 &&
+                        user != null && user.length() > 0;
+
     }
 
 }

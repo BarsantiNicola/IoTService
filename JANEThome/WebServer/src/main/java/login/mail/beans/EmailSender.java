@@ -2,7 +2,7 @@ package login.mail.beans;
 
 //  internal services
 import login.mail.interfaces.IEmailService;
-import config.interfaces.ConfigurationInterface;
+import config.interfaces.IConfiguration;
 import java.util.Properties;
 
 //  logger
@@ -37,7 +37,7 @@ public class EmailSender implements IEmailService {
 
     //  resource manager of the system configurations
     @EJB
-    private ConfigurationInterface configuration;
+    private IConfiguration configuration;
 
     //////////--   PUBLIC METHODS   --//////////
 

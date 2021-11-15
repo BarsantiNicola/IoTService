@@ -14,7 +14,7 @@ import org.bson.codecs.configuration.CodecRegistry;
 import org.bson.codecs.pojo.PojoCodecProvider;
 import iot.Statistic;
 import org.mongodb.morphia.query.Sort;
-
+import iot.DeviceType;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.*;
@@ -58,6 +58,7 @@ public class StatisticsProvider {
         this.archive = this.client.getDatabase("IoTServiceDB").getCollection("Statistics",Operation.class);
         this.statistics = this.client.getDatabase("IoTServiceDB").getCollection("Statistics",Statistic.class);
     }
+
     public void writeOperation( Operation operation ){
         this.archive.insertOne(operation);
     }
@@ -66,7 +67,7 @@ public class StatisticsProvider {
         this.archive.deleteMany(eq("dID", dID));
     }
 
-    public List<Statistic> getStatistic(String statistic_name, String dID, SmarthomeDevice.DeviceType type, Date start, Date end){
+    public List<Statistic> getStatistic(String statistic_name, String dID, DeviceType type, Date start, Date end){
 
         switch( this.getStatisticType( statistic_name, type)){
 
@@ -206,7 +207,7 @@ public class StatisticsProvider {
         return stats.subList(0,2);
     }
 
-    private StatisticType getStatisticType(String stat_name, SmarthomeDevice.DeviceType type ){
+    private StatisticType getStatisticType(String stat_name, DeviceType type ){
         switch( type ){
             case LIGHT:
                 return stat_name.compareTo("Device Usage") == 0? StatisticType.DEVICE_USAGE : StatisticType.BRIGHTNESS;

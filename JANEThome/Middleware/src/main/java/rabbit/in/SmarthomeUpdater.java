@@ -1,195 +1,196 @@
 package rabbit.in;
 
-import com.rabbitmq.client.AMQP.BasicProperties;
-import com.rabbitmq.client.Consumer;
-import com.rabbitmq.client.DeliverCallback;
-import com.rabbitmq.client.Envelope;
-import com.rabbitmq.client.ShutdownSignalException;
-import config.interfaces.ConfigurationInterface;
-import iot.SmarthomeDevice;
+//  internal services
+import config.interfaces.IConfiguration;
+import iot.DeviceType;
 import iot.SmarthomeManager;
-import org.apache.commons.lang.SerializationUtils;
-import rabbit.EndPoint;
-import rabbit.msg.DeviceUpdate;
-import rabbit.msg.DeviceUpdateMessage;
+import rabbit.Receiver;
 
-import java.io.IOException;
-import java.util.Map;
-import java.util.logging.ConsoleHandler;
-import java.util.logging.Handler;
-import java.util.logging.Logger;
-import java.util.logging.SimpleFormatter;
+//  utils
+import java.util.Date;
 
+/**
+ * Class designed to receive the updates from the middleware and update the smarthome associated with
+ * a user. The class is similar to the class WebServer.rabbit.in.WebUpdateReceiver but necessary in order
+ * to update the smarthome even if no client in currectly connected(so when no websockets are present to perform the update)
+ */
 
-//  Class designed to receive the updates from the middleware and update the smarthome associated with
-//  a user. The class is similar to the class WebServer.rabbit.in.WebUpdateReceiver but necessary in order
-//  to update the smarthome even if no client in currectly connected(so when no websockets are present to perform the update)
-public class SmarthomeUpdater extends EndPoint implements Consumer{
+public class SmarthomeUpdater extends Receiver{
 
-    private final Logger logger;
     private final SmarthomeManager smarthome;   //  reference to the smarthome to update
 
-    public SmarthomeUpdater(String endPointName, SmarthomeManager smarthome, ConfigurationInterface configuration ){
+    public SmarthomeUpdater( String endPointName, SmarthomeManager smarthome, IConfiguration configuration ) {
 
-        this.logger = Logger.getLogger(getClass().getName());
-
-        //  verification of the number of instantiated handlers
-        if( this.logger.getHandlers().length == 0 ){ //  first time the logger is created we generate its handler
-
-            Handler consoleHandler = new ConsoleHandler();
-            consoleHandler.setFormatter(new SimpleFormatter());
-            logger.addHandler(consoleHandler);
+            //  each component need a unique endpointName in order for the underlying management layer to been able to forward
+            //  to the correct receivers the messages(endpointName = username = email)
+            super( endPointName, configuration );
+            this.smarthome = smarthome;
 
         }
 
-        this.smarthome = smarthome;
 
-        //  initialization of parent class, cannot be performed into constructor
-        //  (EJBs and in particular ConfigurationInterface is not available into constructors)
-        if( super.inizialize( configuration )){
-            this.logger.info( "Connection with rabbitMQ message exchange correctly executed" );
+        ////////--  UTILITIES  --////////
 
-            DeliverCallback deliverCallback = (consumerTag, delivery) -> {
+        /**
+         * Method automatically called when a new request of adding a location is received
+         * @param username Username associated on the message(needed by Federico)
+         * @param location Name to be associated to the new location
+         * @param lID Unique identifier of the location(needed by Riccardo)
+         * @param hostname hostname of the destination smarthome location
+         * @param port port of the destination smarthome location
+         */
+        @Override
+        protected void addLocation( String username, String location, String lID, String hostname, String port ) {
 
-                DeviceUpdateMessage request;
+            //  updating of the shared smartHome(can be already updated)
+            this.smarthome.addLocation( location, lID, hostname, Integer.parseInt( port ), false );
 
-                try {
+        }
 
-                    request = (DeviceUpdateMessage) SerializationUtils.deserialize( delivery.getBody() );
-                    for( DeviceUpdate message : request.getAllDeviceUpdate()) {
-                        switch (message.getUpdateType()) {
+        /**
+         * Method automatically called when a new request of adding a subLocation is received
+         * @param username Username associated on the message(needed by Federico)
+         * @param location Name of the location in which insert the subLocation
+         * @param sublocation Name to be associated with the subLocation
+         * @param subID Unique identifier of the subLocation(needed by Riccardo)
+         */
+        @Override
+        protected void addSubLocation( String username, String location, String sublocation, String subID ) {
 
-                            case ADD_LOCATION:
+            //  updating of the shared smartHome(can be already updated)
+            this.smarthome.addSubLocation( location, sublocation, subID, false );
 
-                                if (message.areSet("location", "locID", "address", "port"))
-                                    this.smarthome.addLocation(message.getData("location"), message.getData( "locID" ), message.getData("address"), Integer.parseInt(message.getData("port")), false);
-                                break;
+        }
 
-                            case ADD_SUB_LOCATION:
+        /**
+         * Method automatically called when a new request of adding a device is received
+         * @param username Username associated on the message(needed by Federico)
+         * @param location Name of the location in which insert the subLocation
+         * @param sublocation Name to be associated with the subLocation
+         * @param name Unique identifier of the subLocation(needed by Riccardo)
+         * @param type Type of the device(LIGHT,FAN,DOOR,THERMOSTAT,CONDITIONER)
+         */
+        @Override
+        protected void addDevice( String username, String location, String sublocation, String name, String type, String dID ) {
 
-                                if (message.areSet("location", "sublocation", "sublocID" ))
-                                    this.smarthome.addSubLocation(message.getData("location"), message.getData("sublocation"), message.getData("sublocID" ), false);
-                                break;
+            //  updating of the shared smartHome(can be already updated)
+            this.smarthome.addDevice( location, sublocation, dID, name, DeviceType.StringToType( type ), false );
 
-                            case ADD_DEVICE:
+        }
 
-                                if (message.areSet("location", "sublocation", "name", "type", "dID"))
-                                    this.smarthome.addDevice(message.getData("location"), message.getData("sublocation"), message.getData("dID"),
-                                            message.getData("name"), SmarthomeDevice.DeviceType.StringToType(message.getData("type")), false);
+        /**
+         * Method automatically called when a new request of renaming a location is received
+         * @param username Username associated on the message(needed by Federico)
+         * @param old_name Current name of location to be renamed
+         * @param new_name New name to associate to the location
+         */
+        @Override
+        protected void renameLocation( String username, String old_name, String new_name ) {
 
-                                break;
+            //  updating of the shared smartHome(can be already updated)
+            this.smarthome.changeLocationName( old_name, new_name, false );
 
-                            case RENAME_LOCATION:
+        }
 
-                                if (message.areSet("old_name", "new_name"))
-                                    this.smarthome.changeLocationName(message.getData("old_name"), message.getData("new_name"), false);
-                                break;
+        /**
+         * Method automatically called when a new request of renaming a subLocation is received
+         * @param username Username associated on the message(needed by Federico)
+         * @param location Location in which the subLocation is deployed
+         * @param old_name Current name of subLocation to be renamed
+         * @param new_name New name to associate to the subLocation
+         */
+        @Override
+        protected void renameSubLocation( String username, String location, String old_name, String new_name ){
 
-                            case RENAME_SUB_LOCATION:
+            //  updating of the shared smartHome(can be already updated)
+            this.smarthome.changeSublocationName( location, old_name, new_name, false );
 
-                                if (message.areSet("location", "old_name", "new_name"))
-                                    this.smarthome.changeSublocationName(message.getData("location"), message.getData("old_name"), message.getData("new_name"), false);
-                                break;
+        }
 
-                            case RENAME_DEVICE:
+        /**
+         * Method automatically called when a new request of renaming a device is received
+         * @param username Username associated on the message(needed by Federico)
+         * @param old_name Current name of device to be renamed
+         * @param new_name New name to associate to the device
+         */
+        @Override
+        protected void renameDevice( String username, String old_name, String new_name ) {
 
-                                if (message.areSet("old_name", "new_name"))
-                                    this.smarthome.changeDeviceName(message.getData("old_name"), message.getData("new_name"), false);
-                                break;
+            //  updating of the shared smartHome(can be already updated)
+            this.smarthome.changeDeviceName( old_name, new_name, false );
 
-                            case REMOVE_LOCATION:
+        }
 
-                                if (message.areSet("location"))
-                                    this.smarthome.removeLocation(message.getData("location"), false);
-                                break;
+        /**
+         * Method automatically called when a new request of removing a location is received
+         * @param username Username associated on the message(needed by Federico)
+         * @param location Name of the location to be removed
+         */
+        @Override
+        protected void removeLocation( String username, String location ){
 
-                            case REMOVE_SUB_LOCATION:
+            //  updating of the shared smartHome(can be already updated)
+            this.smarthome.removeLocation( location, false );
 
-                                if (message.areSet("location", "sublocation"))
-                                    this.smarthome.removeSublocation(message.getData("location"), message.getData("sublocation"), false);
-                                break;
+        }
 
-                            case REMOVE_DEVICE:
+        /**
+         * Method automatically called when a new request of removing a subLocation is received
+         * @param username Username associated on the message(needed by Federico)
+         * @param location Location in which the subLocation is deployed
+         * @param sublocation Name of the subLocation to be removed
+         */
+        @Override
+        protected void removeSubLocation( String username, String location, String sublocation ){
 
-                                if (message.areSet("name"))
-                                    this.smarthome.removeDevice(message.getData("name"), false);
-                                break;
+            //  updating of the shared smartHome(can be already updated)
+            this.smarthome.removeSublocation( location, sublocation, false );
 
-                            case CHANGE_DEVICE_SUB_LOCATION:
+        }
 
-                                if (message.areSet("location", "sublocation", "name"))
-                                    this.smarthome.changeDeviceSubLocation(message.getData("location"), message.getData("sublocation"), message.getData("name"), false);
-                                break;
+    /**
+     * Method automatically called when a new request of removing a device is received
+     * @param username Username associated on the message(needed by Federico)
+     * @param name Name of the device to be removed
+     * @param dID Unique identifier of the device(needed by Federico)
+     */
+        @Override
+        protected void removeDevice( String username, String name, String dID ){
 
-                            case UPDATE:
+            //  updating of the shared smartHome(can be already updated)
+            this.smarthome.removeDevice( name, false );
+        }
 
-                                if (message.areSet("dID", "action", "value"))
-                                    this.smarthome.performAction(this.smarthome.giveDeviceNameById(message.getData("dID")), message.getData("action"), message.getData("value"), message.giveConvertedTimestamp(), false);
-                                break;
+        /**
+         * Method automatically called when a new request of changing a device location is received
+         * @param username Username associated on the message(needed by Federico)
+         * @param location Location in which the device is deployed
+         * @param sublocation Name of the current subLocation of the device
+         * @param new_sublocation Name of the subLocation in which move the device
+         */
+        @Override
+        protected void changeDeviceSubLocation( String username, String location, String sublocation, String new_sublocation ){
 
-                            default:
-                        }
-                    }
+            //  updating of the shared smartHome(can be already updated)
+            this.smarthome.changeDeviceSubLocation( location, sublocation, new_sublocation, false );
 
-                }catch( Exception e ) {
+        }
 
-                    e.printStackTrace();
+        /**
+         * Method automatically called when a new request of executing a device action is received
+         * @param username Username associated on the message(needed by Federico)
+         * @param dID Unique identifier associated with the device
+         * @param action Name of the action to perform(OnOff, OpenClose...)
+         * @param value Value to associate to the action(OnOff -> 0 close 1 open)
+         */
+        @Override
+        protected void executeAction( String username, String dID, String action, String value, Date timestamp ) {
 
-                }
+            //  SmarthomeManager.class uses device names as unique identifier
+            String name = this.smarthome.giveDeviceNameById( dID );
 
-            };
+            //  updating of the shared smartHome(can be already updated)
+            this.smarthome.performAction( name, action, value, timestamp, false );
 
-            try {
-
-                String queueName = channel.queueDeclare().getQueue();
-                channel.queueBind( queueName, "DeviceUpdate", endPointName);
-                channel.basicConsume( queueName, true, deliverCallback, consumerTag -> {});
-                this.logger.info( "Configuration of rabbitMQ client correctly executed. Client ready to exchange messages" );
-
-            } catch (IOException e) {
-
-                e.printStackTrace();
-                this.logger.info( "An error has occurred during the rabbitMQ client configuration" );
-            }
-
-        }else
-            logger.severe( "Error, connection with the rabbitMQ message exchange failed" );
-    }
-
-    //  called when a new message is received and correctly processed
-    public void handleConsumeOk( String consumerTag ){
-
-        this.logger.info( "Message " + consumerTag + " processed" );
-
-    }
-
-   //  called when a new message is delivered
-    @SuppressWarnings( "all" )
-    public void handleDelivery(String consumerTag, Envelope env,
-                               BasicProperties props, byte[] body){
-        Map map = (Map)SerializationUtils.deserialize(body);
-        this.logger.info("Message Number "+ map.get( "message number" ) + " received but not managed" );
-
-    }
-
-    //  called when a new message is not managed and leaved into the queue
-    public void handleCancel( String consumerTag ) {
-        this.logger.info( "Message received unhandled. Starting management" );
-    }
-
-    //  called when a new message is correctly removed from the queue without a management
-    public void handleCancelOk( String consumerTag ) {
-        this.logger.info( "Message received unhandled. Operation correctly aborted" );
-    }
-
-    //  called when a previously unmanaged message is recovered
-    public void handleRecoverOk( String consumerTag ) {
-        this.logger.info( "Recovery of previously unhandled message. Operation correctly done" );
-    }
-
-    //  called when the rabbitMQ client receive a request to be terminated
-    public void handleShutdownSignal( String consumerTag, ShutdownSignalException arg1 ) {
-        this.logger.info( "Request to close the rabbitMQ client received" );
-    }
-
+        }
 }

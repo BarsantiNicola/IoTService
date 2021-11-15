@@ -1,24 +1,32 @@
 package rabbit.msg;
 
+//  collections
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-//  Class used to define an update message that can be sent on rabbitMQ. The update consist of
-//  a mandatory destination(this will be used as the destination of the message) and a list of
-//  DeviceUpdate instances, each instance will correspond to an update to be send to the target
+/**
+ * Class used to generate an update message that can be sent on rabbitMQ.
+ * The class consists in a container for DeviceUpdate request and a set of fields
+ * to permit to the rabbitMQ system to forward the message
+ */
 public class DeviceUpdateMessage extends Message {
 
-    //  an update message can contain several device updates
+    //  a message can contain several device updates
     private final List<DeviceUpdate> updates = new ArrayList<>();
 
-    //  throws an exception in case of invalid target
+    /**
+     * Constructor for a DeviceUpdateMessage class
+     * @param target Destination for the message, must be an email
+     * @param from Source of the message, must be an unique identifier of the sender
+     * @throws InvalidMessageException Received in case of invalid target/from
+     */
     public DeviceUpdateMessage( String target, String from ) throws InvalidMessageException{
 
         super( target, from );
+
     }
 
-    //  throws an exception in case of invalid target
     public DeviceUpdateMessage( String target, String from, List<DeviceUpdate> updates ) throws InvalidMessageException{
 
         super( target, from );
@@ -26,30 +34,33 @@ public class DeviceUpdateMessage extends Message {
 
     }
 
-    //  converts a json string into the corresponding DeviceUpdateMessage class
+    ////////--  UTILITIES  --////////
+
+
+    /**
+     * Convert a serialized version of the message into the corresponding DeviceUpdateMessage object
+     * @param serialization Gson string of the object
+     * @return {@link DeviceUpdateMessage} returns the corresponding object or null
+     */
     public static DeviceUpdateMessage convertMessage( String serialization ){
 
         try {
 
-            return converter.fromJson(serialization, DeviceUpdateMessage.class);
+            return converter.fromJson( serialization, DeviceUpdateMessage.class );
 
-        }catch(Exception e){
+        }catch( Exception e ){
 
-            e.printStackTrace();
             return null;
 
         }
-
     }
 
-    //  adds one or more deviceUpdates to the message
     public void addUpdates( DeviceUpdate... updates ){
 
         this.updates.addAll(Arrays.asList(updates));
 
     }
 
-    // adds a list of deviceUpdates to the message
     public void addUpdates( List<DeviceUpdate> updates ){
 
         this.updates.addAll(updates);
@@ -59,7 +70,8 @@ public class DeviceUpdateMessage extends Message {
     public boolean removeUpdate( DeviceUpdate update ){
         return this.updates.remove(update);
     }
-    //  gives back the list of DeviceUpdate classes
+
+
     public List<DeviceUpdate> getAllDeviceUpdate(){
         return updates;
     }

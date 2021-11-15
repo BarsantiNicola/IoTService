@@ -29,7 +29,7 @@ public interface DBinterface {
 
     ObjectId addElementManager(String username, DeviceUpdate.UpdateType type, String id, String location,
                                String address, int port, String subLocation, String device,
-                               SmarthomeDevice.DeviceType device_type);
+                               DeviceType device_type);
 
     ObjectId moveDevice(String username, String location, String sublocation, String device);
 
@@ -47,7 +47,7 @@ public interface DBinterface {
 
     boolean changePassword(String email, String new_password);
 
-    List<Statistic> getStatistics(String dID, SmarthomeDevice.DeviceType type, String action, Date startTime, Date endTime);
+    List<Statistic> getStatistics(String dID, DeviceType type, String action, Date startTime, Date endTime);
 
     void removeAllStatistics(String dID);
 }

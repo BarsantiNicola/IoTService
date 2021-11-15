@@ -1,168 +1,77 @@
 package rest.out.beans;
 
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-import config.interfaces.ConfigurationInterface;
+//  internal services
+import config.interfaces.IConfiguration;
 import config.interfaces.GeneratorInterface;
-import iot.SmarthomeDevice;
+import iot.DeviceType;
 import rabbit.msg.DeviceUpdate;
 import rabbit.msg.DeviceUpdateMessage;
-import rabbit.msg.InvalidMessageException;
-import rabbit.out.interfaces.SenderInterface;
+import rest.DeviceBridge;
 import rest.msg.RESTMessage;
+import rabbit.out.interfaces.IRabbitSender;
+
+//  exceptions
+import rabbit.msg.InvalidMessageException;
+
+//  jersey REST management
 import rest.msg.out.req.*;
 import rest.msg.out.resp.AddDeviceResp;
 import rest.out.interfaces.RESTinterface;
+import javax.ws.rs.core.Response;
 
+//  ejb3.0
 import javax.annotation.PostConstruct;
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
-import javax.ws.rs.core.Response;
+
+//  ExecutorServices
 import java.util.*;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
-import java.util.logging.ConsoleHandler;
-import java.util.logging.Handler;
-import java.util.logging.Logger;
-import java.util.logging.SimpleFormatter;
 
+//  logger
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
+/**
+ * Service for sending messages to the smarthome controller/simulator via REST communications
+ */
 @Stateless
 public class DeviceCommandSender implements RESTinterface {
-
+    
+    //  rabbitMQ sender service
+    @EJB
+    private IRabbitSender notifier;
 
     @EJB
-    private SenderInterface notifier;           //  component to update all the elements of the service
-
-    private Logger logger;
-    private Properties conf;        //  configuration of the service
-
+    private IConfiguration configuration;     //  gives the configuration for the rest interface
+    
+    //  service for generating unique identifiers for devices and locations
     @EJB
-    private ConfigurationInterface configuration;   //  gives the configuration for the rest interface
-
-    @EJB
-    GeneratorInterface idGenerator;             //  generates unique identifiers for the resource of the service
-
-    private final static ExecutorService executors = Executors.newCachedThreadPool(); //  shared pool of executors to send rest messages
-
-
-    private static final String[] convertedTraits = {
-            "onOff",
-            "fanSpeed",
-            "brightness",
-            "color",
-            "openClose",
-            "lockUnlock",
-            "tempTarget",
-            "tempCurrent",
-            "connectivity"
-    };
-
-    private static final String[] receivedTraits = {
-            "action.devices.traits.OnOff",
-            "action.devices.traits.FanSpeed",
-            "action.devices.traits.Brightness",
-            "action.devices.traits.ColorSetting",
-            "action.devices.traits.OpenClose",
-            "action.devices.traits.LockUnlock",
-            "action.devices.traits.TemperatureSetting",
-            "action.devices.traits.Temperature",
-            "action.devices.traits.Connectivity"
-    };
-
-    private String controllerToServiceTrait( String trait ){
-
-        int index = this.controllerToServiceIndex( trait );
-        if( index == -1 )
-            return "";
-        else
-            return DeviceCommandSender.receivedTraits[index];
-
-    }
-
-    private String controllerToServiceValue( String value ){
-        if( value.compareTo("on")== 0 || value.compareTo("open") == 0 || value.compareTo("lock") == 0 )
-            return "1";
-        if( value.compareTo("off") == 0 || value.compareTo("close") == 0 || value.compareTo("unlock") == 0 )
-            return "0";
-        return value;
-    }
-
-    private Object serviceToControllerValue( String action, String value ){
-        switch( this.serviceToControllerIndex(action)){
-            case 0:
-                if( value.compareTo("1") == 0 )
-                    return "on";
-                else
-                    return "off";
-            case 4:
-                if( value.compareTo("1") == 0 )
-                    return "open";
-                else
-                    return "close";
-            case 5:
-                if( value.compareTo("1") == 0 )
-                    return "lock";
-                else
-                    return "unlock";
-            default:
-                try{
-                    return Integer.parseInt(value);
-                }catch(Exception e){
-                    return Math.round(Float.parseFloat(value));
-                }
-
-        }
-    }
-
-    private String serviceToControllerTrait( String trait ){
-        int index = this.serviceToControllerIndex( trait );
-        if( index == -1 )
-            return "";
-        else
-            return DeviceCommandSender.convertedTraits[index];
-    }
-
-    private int controllerToServiceIndex( String trait ){
-        for( int a = 0; a<DeviceCommandSender.convertedTraits.length; a++ )
-            if( DeviceCommandSender.convertedTraits[a].compareTo(trait) == 0)
-                return a;
-        return -1;
-    }
-
-    private int serviceToControllerIndex( String trait ){
-
-        for( int a = 0; a<DeviceCommandSender.receivedTraits.length; a++ )
-            if( DeviceCommandSender.receivedTraits[a].compareTo(trait) == 0)
-                return a;
-        return -1;
-    }
-
+    GeneratorInterface idGenerator; 
+    
+    private final Logger logger;
+    private Properties privateConfiguration;  //  personal configuration of the REST sender
+    
+    //  shared pool of executors to send rest messages
+    private final static ExecutorService executors = Executors.newCachedThreadPool(); 
+    
     public DeviceCommandSender() {
-        this.initializeLogger();
+        
+        this.logger = LogManager.getLogger( getClass().getName() );
+    
     }
 
     @PostConstruct
     private void initialization() {
-        this.conf = configuration.getConfiguration("rest");
+        
+        this.privateConfiguration = this.configuration.getConfiguration( "rest" );
+        
     }
 
-    private void initializeLogger() {
-
-        this.logger = Logger.getLogger(getClass().getName());
-
-        //  verification of the number of instantiated handlers
-        if (logger.getHandlers().length == 0) { //  first time the logger is created we generate its handler
-
-            Handler consoleHandler = new ConsoleHandler();
-            consoleHandler.setFormatter(new SimpleFormatter());
-            logger.addHandler(consoleHandler);
-
-        }
-    }
-
-
+    
     //  sends a command to the device REST server
     private Future<Response> sendCommand(String address, int port, String path, RESTsender.REQ_TYPE reqType, RESTMessage request) {
 
@@ -170,42 +79,53 @@ public class DeviceCommandSender implements RESTinterface {
 
     }
 
-    //  adds a new location to the user's smartHome. In case of success it automatically forwards the update to all the involved components.
-    //  The locID information will be automatically generated and linked with the update forwarded to all the components
-    //  Parameters:
-    //      - username: email of the user
-    //      - from: an identifier of the component which made the request. Prevent duplicated updates
-    //      - location: name of the location
-    //      - ipAddr: Ipv4 address of the location controller/simulator(controller will be deployed in the same network of the simulator)
-    //      - port: port used by the location controller
-    //
-    //  MESSAGE   [path: /location/{locID} PUT]
-    //  {
-    //      "name" : "....",
-    //      "user" : "....",
-    //      "port" : "....",
-    //      "hostname" : "...."
-    //  }
+
+    ////////--  LOCATION REQUESTS  --////////
+
+
+    /**
+     *  Adds a new location to the user's smartHome. In case of success it automatically forwards the update to all the involved components.
+     *  The locID information will be automatically generated and linked with the update forwarded to all the components
+     *
+     *  Destination: Simulator
+     *  Path: /location/{locID} PUT
+     *  BODY example:
+     *  {
+     *    "name" : "office",
+     *    "user" : "example@service.it",
+     *    "port" : "33334",
+     *    "hostname" : "kali"
+     *  }
+     *  
+     * @param username Email of the user
+     * @param from An identifier of the component which made the request(see rabbit.out package)
+     * @param location name of the location
+     * @param ipAddr hostname/ipv4 of the location controller
+     * @param port port used by the location controller
+     * @return True in case of success otherwise false
+     */
     @Override
     public boolean addLocation( String username, String from, String location, String ipAddr, int port ) {
 
+        //  generation of a new unique location identifier(lID)
         String locID = idGenerator.generateLID();
 
         try {
 
-            while (true) {
-
+            //  for some reasons can happen that the simulator refuses lID(already present), we loop until a valid one is found
+            while( true ){
+                
                 Response result = this.sendCommand(
-                        this.conf.getProperty("control_address"),
-                        Integer.parseInt(this.conf.getProperty("control_port")),
-                        "/location/" + locID,
-                        RESTsender.REQ_TYPE.PUT,
-                        new AddLocationReq( location, username, port, ipAddr ))
-                        .get();
+                        this.privateConfiguration.getProperty( "control_address" ),  //  address of the simulator
+                        Integer.parseInt( this.privateConfiguration.getProperty( "control_port" )),  //  port of the simulator
+                        "/location/" + locID, 
+                        RESTsender.REQ_TYPE.PUT,    
+                        new AddLocationReq( location, username, port, ipAddr )).get();  //  blocking request
 
-                if (result != null) {
+                //  result management
+                if ( result != null ) {
 
-                    switch (result.getStatus()) {
+                    switch( result.getStatus() ) {
 
                         case 201:  //  if command correctly done, we notify it to all the involved components
                             DeviceUpdateMessage message = new DeviceUpdateMessage(username, from);
@@ -213,32 +133,31 @@ public class DeviceCommandSender implements RESTinterface {
                             return this.notifier.sendMessage(message) > 0;
 
                         case 400:  //  in stable version cannot happen
-                            logger.severe("Error, bad ADD_LOCATION request");
+                            logger.error("Error, bad ADD_LOCATION request");
                             return false;
 
                         case 405: // in stable version cannot happen
-                            logger.severe( "Error, unsupported HTTP method on ADD_LOCATION");
+                            logger.error( "Error, unsupported HTTP method on ADD_LOCATION");
                             return false;
 
                         case 406:
-                            logger.severe( "Error, hostname not valid into ADD_LOCATION");
+                            logger.error( "Error, hostname not valid into ADD_LOCATION");
                             return false;
 
-                        case 409:  //  TODO to be splitted into future updates into two errors: duplicate port / duplicate locID
-                            logger.severe("Error, duplicated locID");
+                        case 409:  //  lID already present
                             locID = idGenerator.generateLID();
                             break;
 
                         case 412:
-                            logger.severe( "Error into ADD_LOCATION, port already assigned");
+                            logger.error( "Error into ADD_LOCATION, port already assigned");
                             return false;
 
                         case 415:
-                            logger.severe( "Error into ADD_LOCATION, unsupported media type");
+                            logger.error( "Error into ADD_LOCATION, unsupported media type");
                             return false;
 
                         case 500:  //  an error has occurred inside the erlang network
-                            logger.warning("Error, internal server error of erlang network");
+                            logger.error("Error, internal server error of erlang network");
                             return false;
 
                         default:
@@ -246,65 +165,72 @@ public class DeviceCommandSender implements RESTinterface {
                 }
             }
 
-        } catch (InvalidMessageException | InterruptedException | ExecutionException e) {
+        } catch (InvalidMessageException | InterruptedException | ExecutionException e){
+            
             e.printStackTrace();
             return false;
+        
         }
 
     }
 
-
-    //  changes the location name of a location. In case of success it automatically forwards the update to all the involved components.
-    //  Parameters:
-    //      - username: email of the user
-    //      - from: an identifier of the component which made the request. Prevent duplicated updates
-    //      - locID: the identifier of the location
-    //      - oldName: the current name of the location
-    //      - newName: the new name to be associated with the location
-    //      - ipAddr: Ipv4 address of the location controller/simulator(controller will be deployed in the same network of the simulator)
-    //
-    //  MESSAGE   [path: /location/{locID} POST ]
-    //  {
-    //      "name" : "...."
-    //  }
+    /**
+     *  Changes the location name of a location. In case of success it automatically forwards the update to all the involved components
+     *
+     *  Destination: Simulator
+     *  Path: /location/{locID} POST
+     *  BODY example:
+     *  {
+     *    "name" : "office"
+     *  }
+     *
+     * @param username Email of the user
+     * @param from An identifier of the component which made the request(see rabbit.out package)
+     * @param locID Identifier of a location(Stringed integer)
+     * @param oldName Current name of the location
+     * @param newName New name to be linked to the location
+     * @return True in case of success otherwise false
+     */
     @Override
-    public boolean changeLocationName(String username, String from, String locID, String oldName, String newName, String ipAddr) {
+    public boolean changeLocationName( String username, String from, String locID, String oldName, String newName ) {
 
         try {
 
             Response result = this.sendCommand(
-                    this.conf.getProperty("control_address"),
-                    Integer.parseInt(conf.getProperty("control_port")),
+                    this.privateConfiguration.getProperty( "control_address" ),  //  address of the simulator
+                    Integer.parseInt(privateConfiguration.getProperty( "control_port" )),  //  port of the simulator
                     "/location/" + locID,
                     RESTsender.REQ_TYPE.POST,
-                    new UpdateLocationReq( newName )).get();
+                    new UpdateLocationReq( newName )).get();  //  blocking request
 
+            //  result management
             if (result != null) {
 
                 switch (result.getStatus()) {
+                    
                     case 204:  //  if command correctly done, we notify it to all the involved components
-                        DeviceUpdateMessage message = new DeviceUpdateMessage(username, from);
-                        message.addUpdates(DeviceUpdate.buildRenameLocation(new Date(System.currentTimeMillis()), oldName, newName));
-                        return this.notifier.sendMessage(message) > 0;
+                        DeviceUpdateMessage message = new DeviceUpdateMessage( username, from );
+                        message.addUpdates( DeviceUpdate.buildRenameLocation( new Date( System.currentTimeMillis()), oldName, newName ));
+                        return this.notifier.sendMessage( message ) > 0;
 
                     case 400:  //  in stable version cannot happen
-                        logger.severe("Error, bad UPDATE_LOCATION request");
+                        logger.error( "Error, bad UPDATE_LOCATION request" );
                         break;
 
                     case 404:
-                        logger.severe( "Error, locID not found");
+                        logger.error( "Error, locID not found" );
                         break;
 
                     case 405: // in stable version cannot happen
-                        logger.severe( "Error, unsupported HTTP method on ADD_LOCATION");
+                        logger.error( "Error, unsupported HTTP method on ADD_LOCATION" );
                         break;
 
                     case 415:
-                        logger.severe( "Error into ADD_LOCATION, unsupported media type");
+                        logger.error( "Error into ADD_LOCATION, unsupported media type" );
                         break;
 
                     case 500:  //  an error has occurred inside the erlang network
-                        logger.warning("Error, internal server error of erlang network");
+                        logger.warn( "Error, internal server error of erlang network" );
                         break;
 
                     default:
@@ -313,55 +239,63 @@ public class DeviceCommandSender implements RESTinterface {
 
             return false;
 
-        } catch (InvalidMessageException | InterruptedException | ExecutionException e) {
+        }catch( InvalidMessageException | InterruptedException | ExecutionException e ) {
+            
             e.printStackTrace();
             return false;
+        
         }
     }
 
-    //  removes the location identified by its locID. In case of success it automatically forward the update to all the involved components.
-    //  Parameters:
-    //      - username: email of the user
-    //      - from: an identifier of the component which made the request. Prevent duplicated updates
-    //      - name: the current name of the location
-    //      - locID: identifier of the location
-    //      - ipAddr: Ipv4 address of the location controller/simulator(controller will be deployed in the same network of the simulator)
-    //
-    //  MESSAGE   [path: /location/{locID} DELETE ]
+    /**
+     *  Removes the location identified by its locID. In case of success it automatically forwards the update to all the involved components
+     *
+     *  Destination: Simulator
+     *  Path: /location/{locID} DELETE
+     *  NO BODY
+     *
+     * @param username Email of the user
+     * @param from An identifier of the component which made the request(see rabbit.out package)
+     * @param name Name of the location to remove
+     * @param locID Identifier of a location(Stringed integer) to remove
+     * @return True in case of success otherwise false
+     */
     @Override
-    public boolean removeLocation(String username, String from, String name, String locID, String ipAddr) {
+    public boolean removeLocation( String username, String from, String name, String locID ) {
 
         try {
 
             Response result = this.sendCommand(
-                    this.conf.getProperty("control_address"),
-                    Integer.parseInt(conf.getProperty("control_port")),
+                    this.privateConfiguration.getProperty( "control_address" ),                 //  address of the simulator
+                    Integer.parseInt( this.privateConfiguration.getProperty( "control_port" )), //  port of the simulator
                     "/location/" + locID,
                     RESTsender.REQ_TYPE.DELETE,
-                    null ).get();
+                    null ).get();   //  blocking request
 
-            if (result != null) {
+            //  result management
+            if( result != null ){
 
-                switch (result.getStatus()) {
+                switch ( result.getStatus() ) {
+
                     case 204:  //  if command correctly done, we notify it to all the involved components
-                        DeviceUpdateMessage message = new DeviceUpdateMessage(username, from);
-                        message.addUpdates(DeviceUpdate.buildRemoveLocation(new Date(System.currentTimeMillis()), name));
-                        return this.notifier.sendMessage(message) > 0;
+                        DeviceUpdateMessage message = new DeviceUpdateMessage( username, from );
+                        message.addUpdates( DeviceUpdate.buildRemoveLocation( new Date( System.currentTimeMillis() ), name));
+                        return this.notifier.sendMessage( message ) > 0;
 
                     case 400:  //  in stable version cannot happen
-                        logger.severe("Error, bad REMOVE_LOCATION request");
+                        logger.error("Error, bad REMOVE_LOCATION request" );
                         break;
 
                     case 404:
-                        logger.severe("Error, locID not found");
+                        logger.error("Error, locID not found" );
                         break;
 
                     case 405:
-                        logger.severe( "Error, unsupported HTTP method on REMOVE_LOCATION");
+                        logger.error( "Error, unsupported HTTP method on REMOVE_LOCATION" );
                         break;
 
                     case 500:
-                        logger.warning("Error, internal server error of erlang network");
+                        logger.warn( "Error, internal server error of erlang network" );
                         break;
 
                     default:
@@ -370,68 +304,80 @@ public class DeviceCommandSender implements RESTinterface {
 
             return false;
 
-        } catch (InvalidMessageException | InterruptedException | ExecutionException e) {
+        }catch( InvalidMessageException | InterruptedException | ExecutionException e ){
+
             e.printStackTrace();
             return false;
+
         }
 
     }
 
-    //  adds a new sublocation to the given location. In case of success it automatically forward the update to all the involved components.
-    //  Parameters:
-    //      - username: email of the user
-    //      - from: an identifier of the component which made the request. Prevent duplicated updates
-    //      - location: the current name of the location
-    //      - sublocation: the name of the sublocation to add
-    //      - sublocID: the identifier of the subLocation
-    //      - locID: identifier of the location
-    //      - ipAddr: Ipv4 address of the location controller/simulator(controller will be deployed in the same network of the simulator)
-    //      - port: port from which the controller is reachable(defined into addLocation request)
-    //
-    //  MESSAGE   [path: /sublocation/{subLocID} PUT ]
-    //  {
-    //     "name" : "...."
-    //  }
+
+    ////////--  SUBLOCATION REQUESTS  --////////
+
+
+    /**
+     *  Adds a new sublocation to the given location. In case of success it automatically forwards the update to all the involved components
+     *
+     *  Destination: Controller
+     *  Path: /sublocation/{subLocID} PUT
+     *  BODY example:
+     *  {
+     *    "name" : "bedroom"
+     *  }
+     *
+     * @param username Email of the user
+     * @param from An identifier of the component which made the request(see rabbit.out package)
+     * @param location Location name in which deploy the subLocation
+     * @param sublocation SubLocation name
+     * @param sublocID Unique Controller subLocation Identifier(univocity only inside a controller) for the subLocation
+     * @param ipAddr Address/Hostname of destination controller
+     * @param port Port used by the destination controller
+     * @return True in case of success otherwise false
+     */
     @Override
-    public boolean addSubLocation(String username, String from, String location, String sublocation, String sublocID, String ipAddr, int port) {
+    public boolean addSubLocation( String username, String from, String location, String sublocation, String sublocID, String ipAddr, int port ) {
 
         AddSubLocationReq request = new AddSubLocationReq( sublocation );
 
         try {
 
             Response result = this.sendCommand(
-                    ipAddr,
-                    port,
+                    ipAddr,                            //  address of the controller
+                    port,                              //  port of the controller
                     "/sublocation/" + sublocID,
                     RESTsender.REQ_TYPE.PUT,
-                    request).get();
+                    request ).get();                    //  blocking request
 
-            if (result != null) {
+            //  result management
+            if( result != null ){
 
-                switch (result.getStatus()) {
+                switch( result.getStatus() ) {
+
                     case 201:  //  if command correctly done, we notify it to all the involved components
-                        DeviceUpdateMessage message = new DeviceUpdateMessage(username, from);
-                        message.addUpdates(DeviceUpdate.buildAddSubLocation(new Date(System.currentTimeMillis()), location, sublocation, sublocID));
-                        return this.notifier.sendMessage(message) > 0;
+                        DeviceUpdateMessage message = new DeviceUpdateMessage( username, from );
+                        message.addUpdates( DeviceUpdate.buildAddSubLocation( new Date( System.currentTimeMillis() ), location, sublocation, sublocID ));
+                        return this.notifier.sendMessage( message ) > 0;
 
                     case 400:  //  in stable version cannot happen
-                        logger.severe("Error, bad ADD_SUBLOC request");
+                        logger.error("Error, bad ADD_SUBLOC request" );
                         break;
 
                     case 404:
-                        logger.severe( "Error, locID not found");
+                        logger.error( "Error, locID not found" );
                         break;
 
                     case 405: // in stable version cannot happen
-                        logger.severe( "Error, unsupported HTTP method on ADD_SUBLOC");
+                        logger.error( "Error, unsupported HTTP method on ADD_SUBLOC" );
                         break;
 
                     case 415:
-                        logger.severe( "Error into ADD_SUBLOC, unsupported media type");
+                        logger.error( "Error into ADD_SUBLOC, unsupported media type" );
                         break;
 
                     case 500:  //  an error has occurred inside the erlang network
-                        logger.warning("Error, internal server error of erlang network");
+                        logger.warn("Error, internal server error of erlang network");
                         break;
 
                     default:
@@ -440,66 +386,73 @@ public class DeviceCommandSender implements RESTinterface {
 
             return false;
 
-        } catch (InvalidMessageException | InterruptedException | ExecutionException e) {
+        }catch( InvalidMessageException | InterruptedException | ExecutionException e ){
+
             e.printStackTrace();
             return false;
+
         }
     }
 
-    //  change a sublocation name identified by locID/sublocID. In case of success it automatically forward the update to all the involved components.
-    //  Parameters:
-    //      - username: email of the user
-    //      - from: an identifier of the component which made the request. Prevent duplicated updates
-    //      - location: the current name of the location
-    //      - sublocation: the current name of the subLocation
-    //      - newName: the new name for the subLocation
-    //      - locID: the identifier of the location
-    //      - sublocID: the identifier of the subLocation
-    //      - locID: identifier of the location
-    //      - ipAddr: Ipv4 address of the location controller/simulator(controller will be deployed in the same network of the simulator)
-    //
-    //  MESSAGE   [path: /location/{locID}/{subLocID} POST ]
-    //  {
-    //     "name" : "...."
-    //  }
+    /**
+     *  Change a sublocation name identified by locID/sublocID. In case of success it automatically forwards the update to all the involved components
+     *
+     *  Destination: Simulator
+     *  Path: /location/{locID}/{subLocID} POST
+     *  BODY example:
+     *  {
+     *    "name" : "living room"
+     *  }
+     *
+     * @param username Email of the user
+     * @param from An identifier of the component which made the request(see rabbit.out package)
+     * @param location Location name in which the subLocation is deployed
+     * @param sublocation Current subLocation name
+     * @param locID Unique identifier of the location
+     * @param sublocID Unique Controller subLocation Identifier(univocity only inside a controller) for the subLocation
+     * @param newName New name to assign to the subLocation
+     * @return True in case of success otherwise false
+     */
     @Override
-    public boolean changeSubLocationName(String username, String from, String location, String sublocation, String locID, String sublocID, String newName, String ipAddr) {
+    public boolean changeSubLocationName( String username, String from, String location, String sublocation, String locID, String sublocID, String newName ) {
 
         try {
 
             Response result = this.sendCommand(
-                    this.conf.getProperty("control_address"),
-                    Integer.parseInt(conf.getProperty("control_port")),
+                    this.privateConfiguration.getProperty( "control_address" ),                 //  address of the simulator
+                    Integer.parseInt( this.privateConfiguration.getProperty( "control_port" )), //  port of the simulator
                     "/location/" + locID + "/sublocation/" + sublocID,
                     RESTsender.REQ_TYPE.POST,
-                    new UpdateSubLocationReq( newName )).get();
+                    new UpdateSubLocationReq( newName )).get();    //  blocking request
 
-            if (result != null) {
+            //  result management
+            if( result != null ){
 
-                switch (result.getStatus()) {
+                switch( result.getStatus() ){
+
                     case 204:  //  if command correctly done, we notify it to all the involved components
-                        DeviceUpdateMessage message = new DeviceUpdateMessage(username, from);
-                        message.addUpdates(DeviceUpdate.buildRenameSubLocation(new Date(System.currentTimeMillis()), location, sublocation, newName));
-                        return this.notifier.sendMessage(message) > 0;
+                        DeviceUpdateMessage message = new DeviceUpdateMessage( username, from );
+                        message.addUpdates( DeviceUpdate.buildRenameSubLocation( new Date( System.currentTimeMillis() ), location, sublocation, newName ));
+                        return this.notifier.sendMessage( message ) > 0;
 
                     case 400:  //  in stable version cannot happen
-                        logger.severe("Error, bad UPDATE_SUBLOCATION request");
+                        logger.error( "Error, bad UPDATE_SUBLOCATION request" );
                         break;
 
                     case 404:
-                        logger.severe( "Error, {locID,sublID} not found");
+                        logger.error( "Error, {locID,sublID} not found" );
                         break;
 
                     case 405: // in stable version cannot happen
-                        logger.severe( "Error, unsupported HTTP method on UPDATE_SUBLOCATION");
+                        logger.error( "Error, unsupported HTTP method on UPDATE_SUBLOCATION" );
                         break;
 
                     case 415:
-                        logger.severe( "Error into UPDATE_SUBLOCATION, unsupported media type");
+                        logger.error( "Error into UPDATE_SUBLOCATION, unsupported media type" );
                         break;
 
                     case 500:  //  an error has occurred inside the erlang network
-                        logger.warning("Error, internal server error of erlang network");
+                        logger.warn( "Error, internal server error of erlang network" );
                         break;
 
 
@@ -509,59 +462,67 @@ public class DeviceCommandSender implements RESTinterface {
 
             return false;
 
-        } catch (InvalidMessageException | InterruptedException | ExecutionException e) {
+        }catch( InvalidMessageException | InterruptedException | ExecutionException e ){
+
             e.printStackTrace();
             return false;
+
         }
 
     }
 
-    //  removes a sublocation from the given location. In case of success it automatically forward the update to all the involved components.
-    //  Parameters:
-    //      - username: email of the user
-    //      - from: an identifier of the component which made the request. Prevent duplicated updates
-    //      - location: the current name of the location
-    //      - sublocation: the current name of the subLocation
-    //      - sublocID: the identifier of the subLocation
-    //      - locID: identifier of the location
-    //      - ipAddr: Ipv4 address of the location controller
-    //      - port: port from which the controller is reachable(defined into addLocation request)
-    //
-    //  MESSAGE   [path: /sublocation/{subLocID} DELETE ]
+    /**
+     *  Removes a sublocation from the given location. In case of success it automatically forwards the update to all the involved components
+     *
+     *  Destination: Controller
+     *  Path: /sublocation/{subLocID} DELETE
+     *  NO BODY
+     *
+     * @param username Email of the user
+     * @param from An identifier of the component which made the request(see rabbit.out package)
+     * @param location Location name in which the subLocation is deployed
+     * @param sublocation SubLocation name
+     * @param sublocID Unique Controller subLocation Identifier(univocity only inside a controller) for the subLocation
+     * @param ipAddr Address/Hostname of destination controller
+     * @param port Port used by the destination controller
+     * @return True in case of success otherwise false
+     */
     @Override
     public boolean removeSubLocation(String username, String from, String location, String sublocation, String sublocID, String ipAddr, int port) {
 
         try {
 
             Response result = this.sendCommand(
-                    ipAddr,
-                    port,
+                    ipAddr,                            //  address of the controller
+                    port,                              //  port of the controller
                     "/sublocation/" + sublocID,
                     RESTsender.REQ_TYPE.DELETE,
-                    null ).get();
+                    null ).get();               //  blocking request
 
-            if (result != null) {
+            //  result management
+            if( result != null ){
 
-                switch (result.getStatus()) {
+                switch( result.getStatus() ){
+
                     case 204:  //  if command correctly done, we notify it to all the involved components
-                        DeviceUpdateMessage message = new DeviceUpdateMessage(username, from);
-                        message.addUpdates(DeviceUpdate.buildRemoveSubLocation(new Date(System.currentTimeMillis()), location, sublocation));
-                        return this.notifier.sendMessage(message) > 0;
+                        DeviceUpdateMessage message = new DeviceUpdateMessage( username, from );
+                        message.addUpdates( DeviceUpdate.buildRemoveSubLocation( new Date(System.currentTimeMillis()), location, sublocation ));
+                        return this.notifier.sendMessage( message ) > 0;
 
                     case 400:  //  in stable version cannot happen
-                        logger.severe("Error, bad REMOVE_SUB_LOCATION request");
+                        logger.error( "Error, bad REMOVE_SUB_LOCATION request" );
                         break;
 
                     case 404:
-                        logger.severe("Error, locID not found");
+                        logger.error( "Error, locID not found" );
                         break;
 
                     case 405:
-                        logger.severe( "Error, unsupported HTTP method on REMOVE_SUB_LOCATION");
+                        logger.error( "Error, unsupported HTTP method on REMOVE_SUB_LOCATION" );
                         break;
 
                     case 500:
-                        logger.warning("Error, internal server error of erlang network");
+                        logger.warn( "Error, internal server error of erlang network" );
                         break;
 
                     default:
@@ -570,82 +531,115 @@ public class DeviceCommandSender implements RESTinterface {
 
             return false;
 
-        } catch (InvalidMessageException | InterruptedException | ExecutionException e) {
+        }catch( InvalidMessageException | InterruptedException | ExecutionException e ){
+
             e.printStackTrace();
             return false;
+
         }
     }
 
-    //  adds a new device into a given location/sublocation. In case of success it automatically forward the update to all the involved components.
-    //  Parameters:
-    //      - username: email of the user
-    //      - from: an identifier of the component which made the request. Prevent duplicated updates
-    //      - location: the name of the location in which deploy the device
-    //      - sublocation: the name of the sublocation in which deploy the device
-    //      - sublocID: the identifier of the subLocation in which deploy the device
-    //      - type: the type of the device according to Google Smarthome(action.devices.types.LIGHT/FAN/CONDITIONER/THERMOSTAT)
-    //      - ipAddr: Ipv4 address of the location controller
-    //      - port: port from which the controller is reachable(defined into addLocation request)
-    //
-    //  MESSAGE   [path: /device/{dID} PUT ]
-    //  {
-    //     "subloc_id" : "...",
-    //     "name" : "...",
-    //     "type" : "..."
-    //  }
+
+    ////////--  DEVICES REQUESTS  --////////
+
+
+    /**
+     *  Removes a sublocation from the given location. In case of success it automatically forwards the update to all the involved components
+     *
+     *  Destination: Controller
+     *  Path: /device/{dID} PUT
+     *  BODY example:
+     *  {
+     *    "subloc_id" : 234,
+     *    "name" : "MyLamp",
+     *    "type" : "Light"
+     *  }
+     *
+     * @param username Email of the user
+     * @param from An identifier of the component which made the request(see rabbit.out package)
+     * @param name Name of the device
+     * @param location Location name in which the device will be deployed
+     * @param sublocation SubLocation name in which the device will be deployed
+     * @param sublocID Unique Controller subLocation Identifier(univocity only inside a controller) for the subLocation
+     * @param type Device type in controller format(Light,Fan,Door,Conditioner,Thermostat)
+     * @param ipAddr Address/Hostname of destination controller
+     * @param port Port used by the destination controller
+     * @return True in case of success otherwise false
+     */
     @Override
-    public boolean addDevice(String username, String from, String name, String location, String sublocation, String sublocID, SmarthomeDevice.DeviceType type, String ipAddr, int port) {
+    public boolean addDevice(String username, String from, String name, String location, String sublocation, String sublocID, DeviceType type, String ipAddr, int port ){
 
         String dID = idGenerator.generateDID();
-        Gson gson = new GsonBuilder().setPrettyPrinting().create();
+
+        AddDeviceReq request = new AddDeviceReq(
+                Integer.parseInt( sublocID ),
+                name,
+                type.toString().replace( "action.devices.types.", "" ),  //  easiest way to generate the controller types
+                ipAddr );
+
         try {
+
+            //  for some reasons can happen that the controller refuses dID(already present), we loop until a valid one is found
             while (true) {
 
                 Response result = this.sendCommand(
-                        ipAddr,
-                        port,
+                        ipAddr,                            //  address of the controller
+                        port,                              //  port of the controller
                         "/device/" + dID,
                         RESTsender.REQ_TYPE.PUT,
-                        new AddDeviceReq(
-                                Integer.parseInt(sublocID),
-                                name,
-                                type.toString().replace("action.devices.types.", ""),
-                                ipAddr)).get();
+                        request ).get();                    //  blocking request
 
-                if (result != null) {
+                //  result management
+                if( result != null ){
 
-                    switch (result.getStatus()) {
+                    switch( result.getStatus() ){
+
                         case 200:  //  if command is correctly done, we notify it to all the involved components
-                            AddDeviceResp response = result.readEntity(AddDeviceResp.class);
-                            System.out.println("GSON: " + gson.toJson(response));
-                            DeviceUpdateMessage message = new DeviceUpdateMessage(username, from);
-                            message.addUpdates(DeviceUpdate.buildAddDevice(new Date(System.currentTimeMillis()), location, sublocation, response.getDev_id(), name, type));
-                            response.getState().forEach( (key,value) -> System.out.println("DATA: " + key + " value: " + value + " converted: " + this.controllerToServiceTrait( key ) + ":" + this.controllerToServiceValue(value)));
-                            response.getState().forEach( (key,value) -> message.addUpdates( DeviceUpdate.buildDeviceUpdate(new Date(System.currentTimeMillis()), response.getDev_id(), this.controllerToServiceTrait( key ), this.controllerToServiceValue(value))));
-                            return this.notifier.sendMessage(message) > 0;
+
+                            //  into the response we find the initial status of the device, we use it to initialize its representation
+                            AddDeviceResp response = result.readEntity( AddDeviceResp.class );
+                            DeviceUpdateMessage message = new DeviceUpdateMessage( username, from );
+
+                            //  inserting "add device" as first request
+                            message.addUpdates( DeviceUpdate.buildAddDevice(
+                                    new Date(System.currentTimeMillis()),
+                                    location,
+                                    sublocation,
+                                    response.getDev_id(),
+                                    name,
+                                    type ));
+
+                            //  for each device parameter we insert a request to update it
+                            response.getState().forEach( ( key,value ) -> message.addUpdates(
+                                    DeviceUpdate.buildDeviceUpdate( new Date( System.currentTimeMillis() ),
+                                                                    response.getDev_id(),
+                                                                    DeviceBridge.controllerToServiceTrait( key ),
+                                                                    DeviceBridge.controllerToServiceValue( value ))));
+
+                            return this.notifier.sendMessage( message ) > 0;
 
                         case 400:  //  in stable version cannot happen
-                            logger.severe("Error, bad ADD_DEVICE request");
+                            logger.error( "Error, bad ADD_DEVICE request" );
                             return false;
 
                         case 404:
-                            logger.severe("Error, {locID,sublocID} not found");
+                            logger.error( "Error, {locID,sublocID} not found" );
                             return false;
 
                         case 405:
-                            logger.severe( "Error, unsupported HTTP method on ADD_DEVICE");
+                            logger.error( "Error, unsupported HTTP method on ADD_DEVICE" );
                             return false;
 
                         case 406:
-                            logger.severe( "Error, hostname not allowed");
+                            logger.error( "Error, hostname not allowed" );
                             return false;
 
-                        case 409:
+                        case 409:   //  dID already present
                             dID = idGenerator.generateDID();
                             break;
 
                         case 500:
-                            logger.warning("Error, internal server error of erlang network");
+                            logger.warn( "Error, internal server error of erlang network" );
                             return false;
 
                         default:
@@ -653,67 +647,82 @@ public class DeviceCommandSender implements RESTinterface {
                 }
             }
 
-        } catch (InvalidMessageException | InterruptedException | ExecutionException e) {
+        }catch( InvalidMessageException | InterruptedException | ExecutionException e ){
+
             e.printStackTrace();
             return false;
+
         }
     }
 
-    //  changes the device's subLocation into the user's smartHome. In case of success it automatically forward the update to all the involved components.
-    //  Parameters:
-    //      - username: email of the user
-    //      - from: an identifier of the component which made the request. Prevent duplicated updates
-    //      - dID: the identifier of the device
-    //      - name: the name of the device
-    //      - location: the name of the current location in which the device is deployed
-    //      - sublocation: the name of the current sublocation in which the device is deployed
-    //      - newSublocation: the name of the sublocation in which the device has to be deployed
-    //      - sublocID: the identifier of the sublocation in which the device has to be deployed
-    //      - ipAddr: Ipv4 address of the location controller
-    //      - port: port from which the controller is reachable(defined into addLocation request)
-    //
-    //  MESSAGE   [path: /device/{dID} POST ]
-    //  {
-    //     "subloc_id" : "..."
-    //  }
+    /**
+     *  Changes the device's subLocation into the user's smartHome. In case of success it automatically forwards the update to all the involved components
+     *
+     *  Destination: Controller
+     *  Path: /device/{dID} POST
+     *  BODY example:
+     *  {
+     *    "subloc_id" : 234
+     *  }
+     *
+     * @param username Email of the user
+     * @param from An identifier of the component which made the request(see rabbit.out package)
+     * @param dID Unique identifier of the device
+     * @param name Name of the device
+     * @param location Location name in which the device will be deployed
+     * @param subLocation Current subLocation name in which the device will be deployed
+     * @param newSubLocation Sublocation name in which e the device
+     * @param sublocID Unique Controller subLocation Identifier(univocity only inside a controller) for the current subLocation
+     * @param ipAddr Address/Hostname of destination controller
+     * @param port Port used by the destination controller
+     * @return True in case of success otherwise false
+     */
     @Override
-    public boolean changeDeviceSublocation(String username, String from, String dID, String name, String location, String subLocation, String newSubLocation, String sublocID, String ipAddr, int port) {
+    public boolean changeDeviceSublocation( String username, String from, String dID, String name, String location, String subLocation, String newSubLocation, String sublocID, String ipAddr, int port) {
 
         try {
 
             Response result = this.sendCommand(
-                    ipAddr,
-                    port,
+                    ipAddr,                            //  address of the controller
+                    port,                              //  port of the controller
                     "/device/" + dID,
                     RESTsender.REQ_TYPE.POST,
-                    new UpdateDeviceSubLocReq( sublocID )).get();
+                    new UpdateDeviceSubLocReq( sublocID )).get();                    //  blocking request
 
-            if (result != null) {
+            //  result management
+            if( result != null ){
 
-                switch (result.getStatus()) {
+                switch( result.getStatus() ){
+
                     case 204: //  if command correctly done, we notify it to all the involved components
-                        DeviceUpdateMessage message = new DeviceUpdateMessage(username, from);
-                        message.addUpdates(DeviceUpdate.buildChangeDeviceSubLocation(new Date(System.currentTimeMillis()), location, dID, name, newSubLocation));
-                        return this.notifier.sendMessage(message) > 0;
+                        DeviceUpdateMessage message = new DeviceUpdateMessage( username, from );
+                        message.addUpdates( DeviceUpdate.buildChangeDeviceSubLocation(
+                                new Date(System.currentTimeMillis()),
+                                location,
+                                dID,
+                                name,
+                                newSubLocation ));
+
+                        return this.notifier.sendMessage( message ) > 0;
 
                     case 400:  //  in stable version cannot happen
-                        logger.severe("Error, bad UPDATE_DEVICE_SUB_LOC request");
+                        logger.error( "Error, bad UPDATE_DEVICE_SUB_LOC request" );
                         break;
 
                     case 404:
-                        logger.severe( "Error, dID not found");
+                        logger.error( "Error, dID not found" );
                         break;
 
                     case 405: // in stable version cannot happen
-                        logger.severe( "Error, unsupported HTTP method on UPDATE_DEVICE_SUB_LOC");
+                        logger.error( "Error, unsupported HTTP method on UPDATE_DEVICE_SUB_LOC" );
                         break;
 
                     case 415:
-                        logger.severe( "Error into UPDATE_DEVICE_SUB_LOC, unsupported media type");
+                        logger.error( "Error into UPDATE_DEVICE_SUB_LOC, unsupported media type" );
                         break;
 
                     case 500:  //  an error has occurred inside the erlang network
-                        logger.warning("Error, internal server error of erlang network");
+                        logger.warn( "Error, internal server error of erlang network" );
                         break;
 
                     default:
@@ -722,126 +731,137 @@ public class DeviceCommandSender implements RESTinterface {
 
             return false;
 
-        } catch (InvalidMessageException | InterruptedException | ExecutionException e) {
+        }catch( InvalidMessageException | InterruptedException | ExecutionException e ){
+
             e.printStackTrace();
             return false;
+
         }
     }
 
-    //  changes the device's name identified by a dID. In case of success it automatically forward the update to all the involved components.
-    //  Parameters:
-    //      - username: email of the user
-    //      - from: an identifier of the component which made the request. Prevent duplicated updates
-    //      - location: the current name of the location
-    //      - sublocation: the current name of the subLocation
-    //      - newName: the new name for the subLocation
-    //      - locID: the identifier of the location
-    //      - sublocID: the identifier of the subLocation
-    //      - locID: identifier of the location
-    //      - ipAddr: Ipv4 address of the location controller/simulator(controller will be deployed in the same network of the simulator)
-    //
-    //  MESSAGE   [path: /device/{dID} POST ]
-    //  {
-    //     "name" : "...."
-    //  }
+    /**
+     *  Changes the device's subLocation into the user's smartHome. In case of success it automatically forwards the update to all the involved components
+     *
+     *  Destination: Simulator
+     *  Path: /device/{dID} POST
+     *  BODY example:
+     *  {
+     *    "name" : "MyLamp"
+     *  }
+     *
+     * @param username Email of the user
+     * @param from An identifier of the component which made the request(see rabbit.out package)
+     * @param dID Unique identifier of the device
+     * @param oldName Name of the device
+     * @param newName Location name in which the device will be deployed
+     * @return True in case of success otherwise false
+     */
     @Override
-    public boolean changeDeviceName(String username, String from, String dID, String oldName, String newName, String ipAddr) {
+    public boolean changeDeviceName( String username, String from, String dID, String oldName, String newName ) {
 
         try {
 
             Response result = this.sendCommand(
-                    conf.getProperty("control_address"),
-                    Integer.parseInt(conf.getProperty("control_port")),
+                    this.privateConfiguration.getProperty( "control_address" ),                 //  address of the simulator
+                    Integer.parseInt( this.privateConfiguration.getProperty( "control_port" )), //  port of the simulator
                     "/device/" + dID,
                     RESTsender.REQ_TYPE.POST,
-                    new UpdateDeviceNameReq( newName )).get();
+                    new UpdateDeviceNameReq( newName )).get();                    //  blocking request
 
-            if (result != null) {
+            //  result management
+            if( result != null ){
 
-                switch (result.getStatus()) {
+                switch( result.getStatus() ){
+
                     case 204: //  if command correctly done, we notify it to all the involved components
-                        DeviceUpdateMessage message = new DeviceUpdateMessage(username, from);
-                        message.addUpdates(DeviceUpdate.buildRenameDevice(new Date(System.currentTimeMillis()), dID, oldName, newName));
-                        return this.notifier.sendMessage(message) > 0;
+                        DeviceUpdateMessage message = new DeviceUpdateMessage( username, from );
+                        message.addUpdates( DeviceUpdate.buildRenameDevice( new Date( System.currentTimeMillis()), dID, oldName, newName ));
+                        return this.notifier.sendMessage( message ) > 0;
 
                     case 400:  //  in stable version cannot happen
-                        logger.severe("Error, bad UPDATE_DEVICE_NAME request");
+                        logger.error( "Error, bad UPDATE_DEVICE_NAME request" );
                         break;
 
                     case 404:
-                        logger.severe( "Error, dID not found");
+                        logger.error( "Error, dID not found" );
                         break;
 
                     case 405: // in stable version cannot happen
-                        logger.severe( "Error, unsupported HTTP method on UPDATE_DEVICE_NAME");
+                        logger.error( "Error, unsupported HTTP method on UPDATE_DEVICE_NAME" );
                         break;
 
                     case 415:
-                        logger.severe( "Error into UPDATE_DEVICE_NAME, unsupported media type");
+                        logger.error( "Error into UPDATE_DEVICE_NAME, unsupported media type" );
                         break;
 
                     case 500:  //  an error has occurred inside the erlang network
-                        logger.warning("Error, internal server error of erlang network");
+                        logger.warn( "Error, internal server error of erlang network" );
                         break;
                 }
             }
 
             return false;
 
-        } catch (InvalidMessageException | InterruptedException | ExecutionException e) {
+        }catch( InvalidMessageException | InterruptedException | ExecutionException e ){
+
             e.printStackTrace();
             return false;
+
         }
 
     }
 
-    //  removes the device from the user's smartHome. In case of success it automatically forward the update to all the involved components.
-    //  Parameters:
-    //      - username: email of the user
-    //      - from: an identifier of the component which made the request. Prevent duplicated updates
-    //      - location: the current name of the location
-    //      - sublocation: the current name of the subLocation
-    //      - newName: the new name for the subLocation
-    //      - locID: the identifier of the location
-    //      - sublocID: the identifier of the subLocation
-    //      - locID: identifier of the location
-    //      - ipAddr: Ipv4 address of the location controller/simulator(controller will be deployed in the same network of the simulator)
-    //
-    //  MESSAGE   [path: /device/{dID} REMOVE ]
+    /**
+     *  Removes the device from the user's smartHome. In case of success it automatically forwards the update to all the involved components
+     *
+     *  Destination: Controller
+     *  Path: /device/{dID} DELETE
+     *  NO BODY
+     *
+     * @param username Email of the user
+     * @param from An identifier of the component which made the request(see rabbit.out package)
+     * @param dID Unique identifier of the device
+     * @param name Name of the device to be removed
+     * @param ipAddr Address/Hostname of destination controller
+     * @param port Port used by the destination controller
+     * @return True in case of success otherwise false
+     */
     @Override
-    public boolean removeDevice(String username, String from, String dID, String name, String ipAddr, int port) {
+    public boolean removeDevice( String username, String from, String dID, String name, String ipAddr, int port ) {
 
         try {
 
             Response result = this.sendCommand(
-                    ipAddr,
-                    port,
+                    ipAddr,                            //  address of the controller
+                    port,                              //  port of the controller
                     "/device/" + dID,
                     RESTsender.REQ_TYPE.DELETE,
-                    null ).get();
+                    null ).get();                    //  blocking request
 
-            if (result != null) {
+            //  result management
+            if( result != null ){
 
-                switch (result.getStatus()) {
+                switch( result.getStatus() ){
+
                     case 204:  //  if command correctly done, we notify it to all the involved components
-                        DeviceUpdateMessage message = new DeviceUpdateMessage(username, from);
-                        message.addUpdates(DeviceUpdate.buildRemoveDevice(new Date(System.currentTimeMillis()), dID, name));
-                        return this.notifier.sendMessage(message) > 0;
+                        DeviceUpdateMessage message = new DeviceUpdateMessage( username, from );
+                        message.addUpdates( DeviceUpdate.buildRemoveDevice( new Date( System.currentTimeMillis() ), dID, name ));
+                        return this.notifier.sendMessage( message ) > 0;
 
                     case 400:  //  in stable version cannot happen
-                        logger.severe("Error, bad REMOVE_DEVICE request");
+                        logger.error( "Error, bad REMOVE_DEVICE request" );
                         break;
 
                     case 404:
-                        logger.severe("Error, dID not found");
+                        logger.error( "Error, dID not found" );
                         break;
 
                     case 405:
-                        logger.severe( "Error, unsupported HTTP method on REMOVE_DEVICE");
+                        logger.error( "Error, unsupported HTTP method on REMOVE_DEVICE" );
                         break;
 
                     case 500:
-                        logger.warning("Error, internal server error of erlang network");
+                        logger.warn( "Error, internal server error of erlang network" );
                         break;
 
                     default:
@@ -850,49 +870,87 @@ public class DeviceCommandSender implements RESTinterface {
 
             return false;
 
-        } catch (InvalidMessageException | InterruptedException | ExecutionException e) {
+        }catch( InvalidMessageException | InterruptedException | ExecutionException e ){
+
             e.printStackTrace();
             return false;
+
         }
     }
 
+    /**
+     *  Executes the given command to the specified device of the user's smartHome.
+     *  In case of success it automatically forwards the update to all the involved components
+     *
+     *  Destination: Controller
+     *  Path: /devcommands PATCH
+     *  BODY example:
+     *  [
+     *   {
+     *      "dev_id": 123,
+     *      "actions": {
+     *          "onOff": "on",
+     *          "brightness": 50
+     *      }
+     *   }
+     *  ]
+     *
+     * @param username Email of the user
+     * @param from An identifier of the component which made the request(see rabbit.out package)
+     * @param dID Unique identifier of the device
+     * @param action Internal Service formatted device action
+     * @param value Internal Service formatted action value
+     * @param ipAddr Address/Hostname of destination controller
+     * @param port Port used by the destination controller
+     * @return True in case of success otherwise false
+     */
     @Override
-    //  executes the given command to the specified device of the user's smartHome
-    public boolean execCommand(String username, String from, String dID, String action, String value, String ipAddr, int port) {
+    public boolean execCommand( String username, String from, String dID, String action, String value, String ipAddr, int port ) {
 
         HashMap<String,Object> req = new HashMap<>();
-        req.put( this.serviceToControllerTrait(action), this.serviceToControllerValue(action, value));
+        req.put( DeviceBridge.serviceToControllerTrait( action ), DeviceBridge.serviceToControllerValue( action, value ));
         try{
             Response result = this.sendCommand(
-                    ipAddr,
-                    port,
+                    ipAddr,                            //  address of the controller
+                    port,                              //  port of the controller
                     "/devcommands",
                     RESTsender.REQ_TYPE.PATCH,
-                    new ExecCommandsReq(Collections.singletonList(new ExecCommandReq(Integer.parseInt(dID), req)))).get();
+                    new ExecCommandsReq(   //  we can send more than one action, i will update if needed by Google home
+                            Collections.singletonList(
+                                    new ExecCommandReq( Integer.parseInt( dID ), req )
+                            )
+                    )).get();        //  blocking request
 
-            if (result != null) {
+            //  result management
+            if( result != null ){
 
-                switch (result.getStatus()) {
+                switch( result.getStatus() ){
+
                     case 200:
-                        DeviceUpdateMessage message = new DeviceUpdateMessage(username, from);
-                        message.addUpdates(DeviceUpdate.buildDeviceUpdate(new Date(System.currentTimeMillis()), dID, action, value));
-                        return this.notifier.sendMessage(message) > 0;
+                        DeviceUpdateMessage message = new DeviceUpdateMessage( username, from );
+                        message.addUpdates( DeviceUpdate.buildDeviceUpdate(
+                                                new Date( System.currentTimeMillis() ),
+                                                dID,
+                                                action,
+                                                value ));
+
+                        return this.notifier.sendMessage( message ) > 0;
 
 
                     case 400:  //  in stable version cannot happen
-                        logger.severe("Error, bad EXEC_COMMAND request");
+                        logger.error( "Error, bad EXEC_COMMAND request" );
                         break;
 
                     case 405:
-                        logger.severe( "Error, method not allowed into EXEC_COMMAND");
+                        logger.error( "Error, method not allowed into EXEC_COMMAND" );
                         break;
 
                     case 415:
-                        logger.severe( "Error, unsupported mediaType on EXEC_COMMAND");
+                        logger.error( "Error, unsupported mediaType on EXEC_COMMAND" );
                         break;
 
                     case 500:
-                        logger.warning("Error, internal server error of erlang network");
+                        logger.warn( "Error, internal server error of erlang network" );
                         break;
 
                     default:
@@ -901,10 +959,11 @@ public class DeviceCommandSender implements RESTinterface {
 
             return false;
 
-        } catch (InvalidMessageException | InterruptedException | ExecutionException e) {
+        }catch( InvalidMessageException | InterruptedException | ExecutionException e ){
+
             e.printStackTrace();
             return false;
-        }
 
+        }
     }
 }

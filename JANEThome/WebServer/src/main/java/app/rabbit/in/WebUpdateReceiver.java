@@ -2,14 +2,11 @@ package app.rabbit.in;
 
 //  internal services
 import app.sockets.WebRequest;
+import iot.DeviceType;
 import rabbit.Receiver;
-import config.interfaces.ConfigurationInterface;
-import iot.SmarthomeDevice;
+import config.interfaces.IConfiguration;
 import iot.SmarthomeManager;
 import iot.SmarthomeWebDevice;
-
-//  rabbitMQ
-import com.rabbitmq.client.Consumer;
 
 //  utils
 import com.google.gson.Gson;
@@ -29,12 +26,12 @@ import java.util.List;
  * Class assigned to each websocket to manage the incoming updates. The class is based on a Receiver.class which
  * generates an underlying environment for the requests de-multiplexing
  */
-public class WebUpdateReceiver extends Receiver implements Consumer{
+public class WebUpdateReceiver extends Receiver{
     
     private final Session target;    //  endpoint for communicating with the webClient
     private final SmarthomeManager smarthome;   //  a pointer to the smarthome session instance
 
-    public WebUpdateReceiver( String endPointName, Session websocket, SmarthomeManager smarthome, ConfigurationInterface configuration ) {
+    public WebUpdateReceiver( String endPointName, Session websocket, SmarthomeManager smarthome, IConfiguration configuration ) {
 
         //  each component need a unique endpointName in order for the underlying management layer to been able to forward
         //  to the correct receivers the messages(endpointName = username = email)
@@ -56,7 +53,7 @@ public class WebUpdateReceiver extends Receiver implements Consumer{
         try {
             
             target.getBasicRemote().sendText( new Gson().toJson( response ));
-            
+
         }catch( IOException e ){
             
             e.printStackTrace();
@@ -123,7 +120,7 @@ public class WebUpdateReceiver extends Receiver implements Consumer{
         HashMap<String,String> data = new HashMap<>();
 
         //  updating of the shared smartHome(can be already updated)
-        if( this.smarthome.addDevice( location, sublocation, dID, name, SmarthomeDevice.DeviceType.StringToType( type ), false )) {
+        if( this.smarthome.addDevice( location, sublocation, dID, name, DeviceType.StringToType( type ), false )) {
 
             data.put( "location", location);
             data.put( "sublocation", sublocation);
@@ -268,9 +265,10 @@ public class WebUpdateReceiver extends Receiver implements Consumer{
      * Method automatically called when a new request of removing a device is received
      * @param username Username associated on the message(needed by Federico)
      * @param name Name of the device to be removed
+     * @param dID Unique identifier of the device(needed by Federico)
      */
     @Override
-    protected void removeDevice( String username, String name ){
+    protected void removeDevice( String username, String name, String dID ){
 
         HashMap<String,String> data = new HashMap<>();
 
@@ -297,10 +295,7 @@ public class WebUpdateReceiver extends Receiver implements Consumer{
         HashMap<String,String> data = new HashMap<>();
 
         //  updating of the shared smartHome(can be already updated)
-        if( this.smarthome.changeDeviceSubLocation(
-                location,
-                sublocation,
-                new_sublocation, false )){
+        if( this.smarthome.changeDeviceSubLocation( location, sublocation, new_sublocation, false )){
 
             data.put( "location", location );
             data.put( "sublocation", sublocation );

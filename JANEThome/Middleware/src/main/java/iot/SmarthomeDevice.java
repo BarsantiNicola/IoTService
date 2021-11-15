@@ -1,71 +1,26 @@
 package iot;
 
-import com.google.gson.annotations.Expose;
+//  internal services
+import static iot.Action.*;
 
+//  utils
 import java.io.Serializable;
 import java.util.*;
 
-import static iot.Action.*;
+//  database management
+import com.google.gson.annotations.Expose;
 
-//  Class developed to maintain the definition of a smarthome device. The class in compatible with
-//  the google home device definition and can be used to aggregate a response for the google sync requests
-//  [https://developers.google.com/assistant/smarthome/reference/rest/v1/devices/sync]
-//
-//  The main usage of the class is to store in memory the devices information for the web server functionalities
-//  and as a data definition for the mongoDb connector to store permanently the devices information
 
+/**
+ *  Class developed to maintain the definition of a smarthome device. The class in compatible with
+ *  the google home device definition and can be used to aggregate a response for the google sync requests
+ *    [https://developers.google.com/assistant/smarthome/reference/rest/v1/devices/sync]
+ *
+ *  The main usage of the class is to store in memory the devices information for the web server functionalities
+ *  and as a data definition for the mongoDb connector to store permanently the devices information
+ */
 @SuppressWarnings("unused")
 public class SmarthomeDevice implements Serializable {
-
-
-    public enum DeviceType{
-        LIGHT,            //  https://developers.google.com/assistant/smarthome/guides/light
-        FAN,              //  https://developers.google.com/assistant/smarthome/guides/fan
-        DOOR,             //  https://developers.google.com/assistant/smarthome/guides/door
-        THERMOSTAT,       //  https://developers.google.com/assistant/smarthome/guides/thermostat
-        CONDITIONER,      //  https://developers.google.com/assistant/smarthome/guides/acunit
-        UNKNOWN;
-
-        public static String typeToString(DeviceType type){
-
-            switch( type ){
-                case LIGHT:
-                    return LIGHT_ACTION;
-
-                case FAN:
-                    return FAN_ACTION;
-
-                case DOOR:
-                    return DOOR_ACTION;
-
-                case THERMOSTAT:
-                    return THERM_ACTION;
-
-                case CONDITIONER:
-                    return AC_ACTION;
-
-                default:
-                    return "Unknown";
-            }
-        }
-
-        public static DeviceType StringToType(String value){
-            String[] values = { "Light", "Fan", "Door", "Thermostat", "Conditioner" };
-            for( int a = 0; a< values.length; a++)
-                if( values[a].compareToIgnoreCase(value) == 0)
-                    return DeviceType.values()[a];
-            return DeviceType.UNKNOWN;
-        }
-
-        public static DeviceType StringToTypeStat(String value){
-            String[] values = { "action.devices.types.LIGHT", "action.devices.types.FAN", "action.devices.types.DOOR", "action.devices.types.THERMOSTAT", "action.devices.types.CONDITIONER" };
-            for( int a = 0; a< values.length; a++)
-                if( values[a].compareToIgnoreCase(value) == 0)
-                    return DeviceType.values()[a];
-            return DeviceType.UNKNOWN;
-        }
-
-    }
 
     @Expose
     protected String id;      //  ID to uniquely identify a device
@@ -92,10 +47,7 @@ public class SmarthomeDevice implements Serializable {
     @Expose
     protected Boolean notificationSupportedByAgent;  //  specify if the service is able to receive notification(for reportStateAndNotification)
 
-    //// CONSTRUCTORS
-
-    public SmarthomeDevice() {
-    }
+    public SmarthomeDevice() {}
 
     public SmarthomeDevice(String id, String name, String location, String sub_location, DeviceType type ){
 
@@ -111,10 +63,10 @@ public class SmarthomeDevice implements Serializable {
         this.notificationSupportedByAgent = false;
 
         this.deviceInfo = new HashMap<>();
-        this.deviceInfo.put("manufacturer", "JanetHOME.co");
-        this.deviceInfo.put("model", "BASE_MODEL");
-        this.deviceInfo.put("hwVersion", "v1.0");
-        this.deviceInfo.put("swVersion", "v1.0");
+        this.deviceInfo.put( "manufacturer", "JanetHOME.co" );
+        this.deviceInfo.put( "model", "BASE_MODEL" );
+        this.deviceInfo.put( "hwVersion", "v1.0" );
+        this.deviceInfo.put( "swVersion", "v1.0" );
 
         this.attributes = null;
 
@@ -124,9 +76,9 @@ public class SmarthomeDevice implements Serializable {
         this.id = id;
         switch(type){
             case LIGHT:
-                this.name.put("defaultNames", "[\"JanetHOME Light\"]");
+                this.name.put( "defaultNames", "[\"JanetHOME Light\"]" );
                 this.type = LIGHT_ACTION;
-                this.traits.addAll(Arrays.asList(
+                this.traits.addAll( Arrays.asList(
                         Action.ONOFF,
                         Action.COLORSET,
                         Action.BRIGHNESS
@@ -134,25 +86,25 @@ public class SmarthomeDevice implements Serializable {
                 break;
 
             case FAN:
-                this.name.put("defaultNames", "[\"JanetHOME Fan\"]");
+                this.name.put( "defaultNames", "[\"JanetHOME Fan\"]" );
                 this.type = Action.FAN_ACTION;
-                this.traits.addAll(Arrays.asList(
+                this.traits.addAll( Arrays.asList(
                         Action.ONOFF,
                         Action.FANSPEED
                 ));
                 break;
 
             case DOOR:
-                this.name.put("defaultNames", "[\"JanetHOME Door\"]");
+                this.name.put( "defaultNames", "[\"JanetHOME Door\"]" );
                 this.type = Action.DOOR_ACTION;
-                this.traits.addAll(Arrays.asList(
+                this.traits.addAll( Arrays.asList(
                         Action.OPENCLOSE,
                         Action.LOCKUNLOCK
                 ));
                 break;
 
             case THERMOSTAT:
-                this.name.put("defaultNames", "[\"JanetHOME Thermostat\"]");
+                this.name.put( "defaultNames", "[\"JanetHOME Thermostat\"]" );
                 this.type = Action.THERM_ACTION;
                 this.traits.add(
                         Action.TEMPSET
@@ -160,9 +112,9 @@ public class SmarthomeDevice implements Serializable {
                 break;
 
             case CONDITIONER:
-                this.name.put("defaultNames", "[\"JanetHOME Conditioner\"]");
+                this.name.put( "defaultNames", "[\"JanetHOME Conditioner\"]" );
                 this.type = Action.AC_ACTION;
-                this.traits.addAll(Arrays.asList(
+                this.traits.addAll( Arrays.asList(
                         Action.ONOFF,
                         Action.FANSPEED,
                         Action.TEMPSET
@@ -175,7 +127,7 @@ public class SmarthomeDevice implements Serializable {
         }
     }
 
-    SmarthomeDevice(SmarthomeDevice device){
+    SmarthomeDevice( SmarthomeDevice device ){
 
         this.id = device.id;
         this.type = device.type;
@@ -184,190 +136,118 @@ public class SmarthomeDevice implements Serializable {
         this.structureHint = device.structureHint;
         this.notificationSupportedByAgent = device.notificationSupportedByAgent;
 
-        if( device.traits != null){
+        if( device.traits != null ){
             this.traits = new ArrayList<>();
-            this.traits.addAll(device.traits);
+            this.traits.addAll( device.traits );
         }
 
-        if( device.name != null){
+        if( device.name != null ){
             this.name = new HashMap<>();
-            this.name.putAll(device.name);
+            this.name.putAll( device.name );
         }
 
-        if( device.deviceInfo != null){
+        if( device.deviceInfo != null ){
 
             this.deviceInfo = new HashMap<>();
-            this.deviceInfo.putAll(device.deviceInfo);
+            this.deviceInfo.putAll( device.deviceInfo );
 
         }
 
         if( device.attributes != null ) {
             this.attributes = new HashMap<>();
-            this.attributes.putAll(device.attributes);
+            this.attributes.putAll( device.attributes );
         }
 
         if( device.customData != null ){
             this.customData = new HashMap<>();
-            this.customData.putAll(device.customData);
+            this.customData.putAll( device.customData );
         }
 
         if( device.otherDeviceIds != null ){
             this.otherDeviceIds = new ArrayList<>();
-            this.otherDeviceIds.addAll(device.otherDeviceIds);
+            this.otherDeviceIds.addAll( device.otherDeviceIds );
         }
     }
 
-    //  used to quickly make decision with switch case
-    public static DeviceType convertType(String type){
 
-        type = type.substring(type.lastIndexOf(".") +1 );
-        String[] types = {"LIGHT" , "FAN", "DOOR" , "THERMOSTAT" , "AC_UNIT"};
+    ////////--  SETTERS  --////////
 
-        for(int a = 0; a<types.length; a++)
-            if( types[a].compareTo(type) == 0 )
-                return DeviceType.values()[a];
-        return DeviceType.UNKNOWN;
 
-    }
+    public void setStructureHint( String location ){ this.structureHint = location; }
 
-    //  changes the user assigned device's name
-    public void changeDeviceName(String name){
+    public void setRoomHint( String sub_location ){ this.roomHint = sub_location; }
 
-        if( this.name.containsKey("name"))
-            this.name.replace("name", name);
+    public void setId( String id ){ this.id = id; }
+
+    public void setType( String type ){ this.type = type; }
+
+    public void setName( HashMap<String,String> names ){ this.name = names; }
+
+    public void setTraits( ArrayList<String> traits ){ this.traits = traits; }
+
+    public void setWillReportState( boolean state ){ this.willReportState = state; }
+
+    public void setNotificationSupportedByAgent( boolean state ){ this.notificationSupportedByAgent = state; }
+
+    public void setDeviceInfo( HashMap<String,String> info ){ this.deviceInfo = info; }
+
+    public void setAttributes( HashMap<String,String> attributes ){ this.attributes = attributes; }
+
+    public void setCustomData( HashMap<String,String> data ){ this.customData = data; }
+
+    public void setOtherDeviceIds( ArrayList<String> ids ){ this.otherDeviceIds = ids; }
+
+
+    ////////--  SETTERS  --////////
+
+
+    public String getId(){ return this.id; }
+
+    public String getType(){ return this.type; }
+
+    public HashMap<String,String> getName(){ return this.name; }
+
+    public ArrayList<String>  getTraits(){ return this.traits; }
+
+    public Boolean getWillReportState(){ return this.willReportState; }
+
+    public Boolean getNotificationSupportedByAgent(){ return this.notificationSupportedByAgent; }
+
+    public HashMap<String,String> getDeviceInfo(){ return this.deviceInfo; }
+
+    public HashMap<String,String> getAttributes(){ return this.attributes; }
+
+    public HashMap<String,String> getCustomData(){ return this.customData; }
+
+    public ArrayList<String> getOtherDeviceIds(){ return this.otherDeviceIds; }
+
+    public String getRoomHint(){ return this.roomHint; }
+
+    public String getStructureHint(){ return this.structureHint; }
+
+
+    ////////--  UTILITIES  --////////
+
+
+    /**
+     * Changes the user assigned device's name
+     * @param name Name of the device
+     */
+    public void changeDeviceName( String name ){
+
+        if( this.name.containsKey( "name" ))
+            this.name.replace( "name", name );
         else
-            this.name.put("name",name);
+            this.name.put( "name",name );
 
     }
 
-    //  gives the user assigned device's name
+    /**
+     * Get the user assigned device's name
+     * @return The device name assigned by the user
+     */
     public String giveDeviceName(){
-        return this.name.get("name");
+        return this.name.get( "name" );
     }
 
-    //  SETTERS
-
-    //  changes the location assigned to the device
-    public void setStructureHint(String location){
-        this.structureHint = location;
-    }
-
-    //  changes the sub-location assigned to the device
-    public void setRoomHint(String sub_location){
-        this.roomHint = sub_location;
-    }
-
-    //  only for beans functionalities. Not recommended not be used, ask if you have to use it to Nicola
-    public void setId(String id){
-        this.id = id;
-    }
-
-    //  only for beans functionalities. Not recommended not be used, ask if you have to use it to Nicola
-    public void setType(String type){
-        this.type = type;
-    }
-
-    //  only for beans functionalities. Not recommended not be used, ask if you have to use it to Nicola
-    //  [maybe you are looking for SmarthomeDevice.changeDeviceName]
-    public void setName(HashMap<String,String> names){
-        this.name = names;
-    }
-
-    //  only for beans functionalities. Not recommended not be used, ask if you have to use it to Nicola
-    public void setTraits(ArrayList<String> traits){
-        this.traits = traits;
-    }
-
-    //  only for beans functionalities. Not recommended not be used, ask if you have to use it to Nicola
-    public void setWillReportState(boolean state){
-        this.willReportState = state;
-    }
-
-    //  only for beans functionalities. Not recommended not be used, ask if you have to use it to Nicola
-    public void setNotificationSupportedByAgent(boolean state){
-        this.notificationSupportedByAgent = state;
-    }
-
-    //  only for beans functionalities. Not recommended not be used, ask if you have to use it to Nicola
-    public void setDeviceInfo(HashMap<String,String> info){
-        this.deviceInfo = info;
-    }
-
-    //  only for beans functionalities. Not recommended not be used, ask if you have to use it to Nicola
-    public void setAttributes(HashMap<String,String> attributes){
-        this.attributes = attributes;
-    }
-
-    //  only for beans functionalities. Not recommended not be used, ask if you have to use it to Nicola
-    public void setCustomData(HashMap<String,String> data){
-        this.customData = data;
-    }
-
-    //  only for beans functionalities. Not recommended not be used, ask if you have to use it to Nicola
-    public void setOtherDeviceIds(ArrayList<String> ids){
-        this.otherDeviceIds = ids;
-    }
-
-    //  GETTERS
-
-    //  only for beans functionalities. Not recommended not be used, ask if you have to use it to Nicola
-    public String getId(){
-        return this.id;
-    }
-
-    //  only for beans functionalities. Not recommended not be used, ask if you have to use it to Nicola
-    public String getType(){
-        return this.type;
-    }
-
-    //  only for beans functionalities. Not recommended not be used, ask if you have to use it to Nicola
-    //  [maybe you are looking for SmarthomeDevice.giveDeviceName]
-    public HashMap<String,String> getName(){
-        return this.name;
-    }
-
-    //  only for beans functionalities. Not recommended not be used, ask if you have to use it to Nicola
-    public ArrayList<String>  getTraits(){
-        return this.traits;
-    }
-
-    //  only for beans functionalities. Not recommended not be used, ask if you have to use it to Nicola
-    public Boolean getWillReportState(){
-        return this.willReportState;
-    }
-
-    //  only for beans functionalities. Not recommended not be used, ask if you have to use it to Nicola
-    public Boolean getNotificationSupportedByAgent(){
-        return this.notificationSupportedByAgent;
-    }
-
-    //  only for beans functionalities. Not recommended not be used, ask if you have to use it to Nicola
-    public HashMap<String,String> getDeviceInfo(){
-        return this.deviceInfo;
-    }
-
-    //  only for beans functionalities. Not recommended not be used, ask if you have to use it to Nicola
-    public HashMap<String,String> getAttributes(){
-        return this.attributes;
-    }
-
-    //  only for beans functionalities. Not recommended not be used, ask if you have to use it to Nicola
-    public HashMap<String,String> getCustomData(){
-        return this.customData;
-    }
-
-    //  only for beans functionalities. Not recommended not be used, ask if you have to use it to Nicola
-    public ArrayList<String> getOtherDeviceIds(){
-        return this.otherDeviceIds;
-    }
-
-    //  gives the subLocation where the device is deployed
-    public String getRoomHint(){
-        return this.roomHint;
-    }
-
-    //  gives the location where the device is deployed
-    public String getStructureHint(){
-        return this.structureHint;
-    }
 }

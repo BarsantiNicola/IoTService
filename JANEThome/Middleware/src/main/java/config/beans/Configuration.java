@@ -1,6 +1,6 @@
 package config.beans;
 
-import config.interfaces.ConfigurationInterface;
+import config.interfaces.IConfiguration;
 
 import javax.annotation.PostConstruct;
 import javax.ejb.Singleton;
@@ -13,7 +13,7 @@ import java.util.logging.Logger;
 import java.util.logging.SimpleFormatter;
 
 @Singleton
-public class Configuration implements ConfigurationInterface {
+public class Configuration implements IConfiguration {
     private final HashMap<String, Properties> configurations = new HashMap<>();
     private static final String[] files = {"db.properties", "rabbit.properties", "rest.properties", "mail.properties", "tokens.properties"};
     private static final String config = "rabbit.properties";

@@ -1,6 +1,6 @@
 package db.beans;
 
-import config.interfaces.ConfigurationInterface;
+import config.interfaces.IConfiguration;
 import db.interfaces.DBinterface;
 import db.interfaces.IUserDAO;
 import db.mongoConnector.MongoClientProvider;
@@ -20,7 +20,7 @@ public class databaseConnector implements DBinterface {
     MongoClientProvider mongoClientProvider;
 
     @EJB
-    private ConfigurationInterface configuration;   //  gives the configuration for the rest interface
+    private IConfiguration configuration;   //  gives the configuration for the rest interface
 
 
     @Override
@@ -63,7 +63,7 @@ public class databaseConnector implements DBinterface {
     @Override
     public ObjectId addElementManager(String username, DeviceUpdate.UpdateType type, String id, String location,
                                       String address, int port, String subLocation, String device,
-                                      SmarthomeDevice.DeviceType device_type) {
+                                      DeviceType device_type) {
         return mongoClientProvider.addElementManager(username, type, id, location, address, port, subLocation,
                 device, device_type);
     }
@@ -100,7 +100,7 @@ public class databaseConnector implements DBinterface {
     }
 
     @Override
-    public List<Statistic> getStatistics(String dID, SmarthomeDevice.DeviceType type, String action, Date startTime, Date endTime) {
+    public List<Statistic> getStatistics(String dID, DeviceType type, String action, Date startTime, Date endTime) {
         return mongoClientProvider.getStatistics(dID, type, action, startTime, endTime);
 
     }

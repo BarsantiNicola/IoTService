@@ -1,104 +1,130 @@
 package rabbit.out.beans;
 
-import config.interfaces.ConfigurationInterface;
+//  internal services
 import rabbit.EndPoint;
+import rabbit.msg.DeviceUpdate;
+import rabbit.msg.DeviceUpdateMessage;
+import rabbit.out.interfaces.IRabbitSender;
+import config.interfaces.IConfiguration;
+
+//  exceptions
 import java.io.IOException;
-import java.io.Serializable;
+
+//  ejb3.0
+
 import javax.annotation.PostConstruct;
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
-import java.util.List;
-import java.util.logging.ConsoleHandler;
-import java.util.logging.Handler;
-import java.util.logging.Logger;
-import java.util.logging.SimpleFormatter;
 
-import rabbit.msg.DeviceUpdate;
-import rabbit.msg.DeviceUpdateMessage;
-import rabbit.out.interfaces.SenderInterface;
+//  collections
+import java.util.List;
+
+//  logger
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
+//  utils
+import java.io.Serializable;
 import org.apache.commons.lang.SerializationUtils;
 
-//  EJB class to send notification messages by rabbitMQ. Can be used to send
-//  messages in a non-blocking way to two different targets:
-//    - Users by using their email as keyword
-//    - Database Connectors by using the keyword 'db'
+
+/**
+ * Class designed to send update messages by rabbitMQ using topics
+ */
 @Stateless
-public class UpdateSender extends EndPoint implements SenderInterface {
+public class UpdateSender extends EndPoint implements IRabbitSender {
 
     private final Logger logger;
 
     @EJB
-    ConfigurationInterface configuration;
+    IConfiguration configuration;
 
     public UpdateSender(){
 
-        this.logger = Logger.getLogger( getClass().getName() );
+        this.logger = LogManager.getLogger( getClass().getName() );
 
-        //  verification of the number of instantiated handlers
-        if( logger.getHandlers().length == 0 ){ //  first time the logger is created we generate its handler
-
-            Handler consoleHandler = new ConsoleHandler();
-            consoleHandler.setFormatter( new SimpleFormatter() );
-            logger.addHandler( consoleHandler );
-
-        }
     }
 
+    /**
+     * Needed to inizialize the rabbitMQ outside constructor(EJB not available at constructor time)
+     */
     @PostConstruct
-    //  needed to inizialize the parent class out of the constructor(ConfigurationInterface not available into constructor)
     private void init(){
 
-        if( super.inizialize( configuration ))
+        if(super.inizialize(configuration))
             logger.info( "RabbitMQ client ready to send messages" );
         else
-            logger.severe( "An error has occurred during the client initialization" );
+            logger.error( "An error has occurred during the client initialization" );
 
     }
 
-    //  split the sending of the message in several distinct message exchange(one per DeviceUpdate).
-    //  The function automatically verifies the correctness of the updates and only if they are correct they will be sent.
-    //  Returns the number of message sent
+    /**
+     * Method designed to send a message via rabbitMQ. The function extract from the message the requests,
+     * verify them and remove them from the message if invalid then send the rebuilt message to the destinations
+     * @param message {@link DeviceUpdateMessage} Set of requests to be sent
+     * @return The number of requests composing the message sent
+     */
     public int sendMessage( DeviceUpdateMessage message ){
 
-        int sentCount = 0;
-        //  verification that the destination is present
-        String destination = message.getDestination();
-        if( destination == null || destination.length() == 0 ) {
+        int sentCount = 0;  //  counter for sent messages
 
-            this.logger.severe( "Error, a message must contain a destination field" );
+        //  verification of destination presence
+        String destination = message.getDestination();
+        if( destination == null || destination.length() == 0 ){
+
+            this.logger.error( "Error, a message must contains a destination field" );
             return sentCount;
 
         }
 
-        //  verificationi that the destination is valid
+        //  verification that the destination is valid(it must be an email)
         if( destination.indexOf( '@' ) == -1 ) {
 
-            this.logger.severe( "Error, invalid destination. A destination can consist of a user email or the keyword 'db'" );
+            this.logger.error( "Error, invalid destination. A destination can consist of a user email or the keyword 'db'" );
             return sentCount;
 
         }
 
+        //  a message might contains more requests
         List<DeviceUpdate> updates = message.getAllDeviceUpdate();
 
-        //  getting the updates. For each update we will verify its consistence and then send it
+        //  for each request we will verify its consistence, if invalid we simply remove it from the message
         for( DeviceUpdate update : updates )
-            if( this.verifyUpdate(update))
+            if( this.verifyUpdate( update ))
                 sentCount++;
-            else {
+            else
                 message.removeUpdate( update );
-                this.logger.severe("The current update will not been sent");
-            }
-        this.sendMessage( message , destination );
-        logger.info( "Sent " + sentCount + " updates of " + updates.size() + " to " + destination );
-        this.sendMessage( message, "db" );
-        logger.info( "Sent " + sentCount + " updates of " + updates.size() + " to the database for information storing" );
+
+        if( sentCount > 0 ) {
+
+            //  each message will be forwarded to the selected keyword(all the session associated with the user)
+            this.sendMessage( message, destination );
+            logger.info( "Sent " + sentCount + " updates of " + updates.size() + " to " + destination );
+
+            //  for giving persistence to the update we send a copy to the database manager
+            this.sendMessage( message, "db" );
+            logger.info( "Sent " + sentCount + " updates of " + updates.size() + " to the database for information storing" );
+
+        }else
+            logger.error( "No valid updates to be sent. Abort" );
+
         return sentCount;
+
     }
 
-    //  message verification. For each message type verifies that all the mandatory fields are present
+
+    ////////--  UTILITIES  --////////
+
+
+    /**
+     * Message verification. For each message type verifies that all the mandatory fields are present
+     * @param update A request to be checked
+     * @return True if the request contains all the mandatory fields false otherwise
+     */
     private boolean verifyUpdate( DeviceUpdate update ){
 
         switch( update.getUpdateType() ){
+
             case ADD_LOCATION:
                 return update.areSet("location", "address", "port" );
 
@@ -118,7 +144,7 @@ public class UpdateSender extends EndPoint implements SenderInterface {
                 return update.areSet( "location", "sublocation", "dID", "name", "type" );
 
             case REMOVE_DEVICE:
-                return update.areSet( "dID", "name" );
+                return update.areSet( "dID", "name", "dID" );
 
             case RENAME_DEVICE:
                 return update.areSet( "dID", "new_name", "old_name" );
@@ -130,21 +156,27 @@ public class UpdateSender extends EndPoint implements SenderInterface {
                 return update.areSet( "dID", "action", "value" );
 
         }
-        this.logger.severe( "Error during message verification. Unmatched update type" );
+
+        this.logger.error( "Error during message verification. Unmatched update type" );
         return false;
+
     }
 
-    //  private function to send a message via rabbitMQ. It returns true in case of success
+    /**
+     * Method to send a message via rabbitMQ. Returns true in case of success
+     * @param object A rabbitMQ serialized version of DeviceUpdate.class
+     * @param uID Keyword for forwarding the messages to the right destinations
+     */
     private void sendMessage( Serializable object, String uID ){
 
         try{
 
             logger.info("Sending a new message to " + uID );
-            channel.basicPublish("DeviceUpdate", uID, null, SerializationUtils.serialize(object));
+            channel.basicPublish( "DeviceUpdate", uID, null, SerializationUtils.serialize( object ));
 
-        }catch(IOException e){
+        }catch( IOException e ){
 
-            logger.severe("Error, unable to send the message");
+            logger.error( "Error, unable to send the message" );
             e.printStackTrace();
 
         }

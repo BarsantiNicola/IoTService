@@ -2,7 +2,7 @@ package rabbit;
 
 //  rabbitMQ
 import com.rabbitmq.client.*;
-import config.interfaces.ConfigurationInterface;
+import config.interfaces.IConfiguration;
 import org.apache.commons.lang.SerializationUtils;
 
 //  logger
@@ -28,7 +28,21 @@ public abstract class Receiver extends EndPoint implements Consumer {
 
     protected final Logger logger;
 
-    protected Receiver( String endpointName, ConfigurationInterface configuration ){
+    /**
+     * Function developed for compatibility reasons with Federico
+     */
+    protected Receiver(){
+
+        this.logger = LogManager.getLogger( getClass().getName() );
+
+    }
+
+    /**
+     * Basic Constructor to use
+     * @param endpointName Topic associated with the receiver
+     * @param configuration Context configuration of the Receiver
+     */
+    protected Receiver( String endpointName, IConfiguration configuration ){
 
         super.inizialize( configuration );
         this.logger = LogManager.getLogger( getClass().getName() );
@@ -116,10 +130,11 @@ public abstract class Receiver extends EndPoint implements Consumer {
                                             request.getData( "sublocation" ));
 
                             case REMOVE_DEVICE:
-                                if( request.areSet( "name" ))
+                                if( request.areSet( "name", "dID" ))
                                     this.removeDevice(
                                             message.getDestination(),
-                                            request.getData( "name" ));
+                                            request.getData( "name" ),
+                                            request.getData( "dID" ));
                                 break;
 
                             case CHANGE_DEVICE_SUB_LOCATION:
@@ -169,6 +184,158 @@ public abstract class Receiver extends EndPoint implements Consumer {
             }
         }
     }
+
+    /**
+     * Function developed for compatibility reasons with Federico
+     * @param endpointName Topic associated with the receiver
+     * @param configuration Context configuration of the Receiver
+     */
+    @SuppressWarnings("all")
+    protected void initialize( String endpointName, IConfiguration configuration ){
+
+        super.inizialize( configuration );
+
+        //  callback function called when a new message is received
+        DeliverCallback deliverCallback = ( consumerTag, delivery ) -> {
+
+            try {
+
+                DeviceUpdateMessage message = (DeviceUpdateMessage) SerializationUtils.deserialize( delivery.getBody() );
+
+                //  each message can contain several requests
+                for( DeviceUpdate request : message.getAllDeviceUpdate())
+                    switch(request.getUpdateType()) {  //  filtering of the request
+
+                        case ADD_LOCATION:
+                            //  many components can be connected to rabbitMQ, it's better to consider the received data as tainted
+                            //  and perform a quick verification that into the message the mandatory fields are present
+                            if( request.areSet( "location", "locID", "address", "port" ))
+                                this.addLocation(
+                                        message.getDestination(),
+                                        request.getData( "location" ),
+                                        request.getData( "locID" ),
+                                        request.getData( "address" ),
+                                        request.getData( "port" ));
+                            break;
+
+                        case ADD_SUB_LOCATION:
+                            if( request.areSet("location", "sublocation", "sublocID" ))
+                                this.addSubLocation(
+                                        message.getDestination(),
+                                        request.getData( "location" ),
+                                        request.getData( "sublocation" ),
+                                        request.getData( "sublocID" ));
+                            break;
+
+                        case ADD_DEVICE:
+                            if( request.areSet( "location", "sublocation", "name", "type", "dID" ))
+                                this.addDevice(
+                                        message.getDestination(),
+                                        request.getData( "location" ),
+                                        request.getData( "sublocation" ),
+                                        request.getData( "name" ),
+                                        request.getData( "type" ),
+                                        request.getData( "dID"));
+                            break;
+
+                        case RENAME_LOCATION:
+                            if( request.areSet( "old_name", "new_name" ))
+                                this.renameLocation(
+                                        message.getDestination(),
+                                        request.getData( "old_name" ),
+                                        request.getData( "new_name" ));
+                            break;
+
+                        case RENAME_SUB_LOCATION:
+                            if( request.areSet( "location", "old_name", "new_name" ))
+                                this.renameSubLocation(
+                                        message.getDestination(),
+                                        request.getData( "location" ),
+                                        request.getData( "old_name" ),
+                                        request.getData( "new_name" ));
+                            break;
+
+                        case RENAME_DEVICE:
+                            if( request.areSet( "old_name", "new_name" ))
+                                this.renameDevice(
+                                        message.getDestination(),
+                                        request.getData( "old_name" ),
+                                        request.getData( "new_name" ));
+                            break;
+
+                        case REMOVE_LOCATION:
+                            if( request.areSet( "location" ))
+                                this.removeLocation(
+                                        message.getDestination(),
+                                        request.getData( "location" ));
+                            break;
+
+                        case REMOVE_SUB_LOCATION:
+                            if( request.areSet( "location", "sublocation" ))
+                                this.removeSubLocation(
+                                        message.getDestination(),
+                                        request.getData( "location" ),
+                                        request.getData( "sublocation" ));
+
+                        case REMOVE_DEVICE:
+                            if( request.areSet( "name", "dID" ))
+                                this.removeDevice(
+                                        message.getDestination(),
+                                        request.getData( "name" ),
+                                        request.getData( "dID" ));
+                            break;
+
+                        case CHANGE_DEVICE_SUB_LOCATION:
+                            if( request.areSet( "location", "sublocation", "name" ))
+                                this.changeDeviceSubLocation(
+                                        message.getDestination(),
+                                        request.getData( "location" ),
+                                        request.getData( "sublocation" ),
+                                        request.getData( "name" ));
+                            break;
+
+                        case UPDATE:
+                            if( request.areSet( "dID", "action", "value" ))
+                                this.executeAction(
+                                        message.getDestination(),
+                                        request.getData( "dID" ),
+                                        request.getData( "action" ),
+                                        request.getData( "value" ),
+                                        request.giveConvertedTimestamp());
+                            break;
+
+                        default:
+                    }
+
+            }catch( Exception e ) {
+
+                e.printStackTrace();
+
+            }
+
+
+        };
+
+        if( channel != null && connection != null ) {
+
+            String queueName;
+            try {
+
+                queueName = channel.queueDeclare().getQueue();
+                channel.queueBind( queueName, "DeviceUpdate", endpointName );
+                channel.basicConsume( queueName, true, deliverCallback, consumerTag -> {});
+
+            } catch (IOException e) {
+
+                e.printStackTrace();
+
+            }
+        }
+    }
+
+
+    ////////--  TO BE REDEFINED  --////////
+
 
     /**
      * Method automatically called when a new request of adding a location is received
@@ -243,8 +410,9 @@ public abstract class Receiver extends EndPoint implements Consumer {
      * Method automatically called when a new request of removing a device is received
      * @param username Username associated on the message(needed by Federico)
      * @param name Name of the device to be removed
+     * @param dID  Unique Identifier of the device(needed by Federico)
      */
-    protected abstract void removeDevice( String username, String name );
+    protected abstract void removeDevice( String username, String name, String dID );
 
     /**
      * Method automatically called when a new request of changing a device location is received

@@ -2,6 +2,9 @@ package rest.msg.out.req;
 
 import rest.msg.RESTMessage;
 
+/**
+ * Class implementing the message body for the AddLocation REST request
+ */
 public class AddLocationReq extends RESTMessage {
 
     private String name;
@@ -18,7 +21,9 @@ public class AddLocationReq extends RESTMessage {
 
     }
 
-    public AddLocationReq(){}
+
+    ////////--  SETTERS  --////////
+
 
     public void setName( String name ){
         this.name = name;
@@ -35,6 +40,10 @@ public class AddLocationReq extends RESTMessage {
     public void setHostname( String hostname ){
         this.hostname = hostname;
     }
+
+
+    ////////--  GETTERS  --////////
+
 
     public String getName(){
         return this.name;
