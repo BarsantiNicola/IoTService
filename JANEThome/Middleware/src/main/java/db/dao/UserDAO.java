@@ -1,7 +1,7 @@
 package db.dao;
 
 import db.interfaces.IUserDAO;
-import iot.User;
+import db.model.User;
 import org.bson.types.ObjectId;
 import org.mongodb.morphia.Datastore;
 import org.mongodb.morphia.dao.BasicDAO;

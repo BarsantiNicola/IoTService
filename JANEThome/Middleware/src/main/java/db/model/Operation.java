@@ -1,4 +1,4 @@
-package iot;
+package db.model;
 
 //  utils
 import java.io.Serializable;

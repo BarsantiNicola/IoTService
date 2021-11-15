@@ -2,7 +2,7 @@ package rest.out.beans;
 
 //  internal services
 import config.interfaces.IConfiguration;
-import config.interfaces.GeneratorInterface;
+import db.interfaces.GeneratorInterface;
 import iot.DeviceType;
 import rabbit.msg.DeviceUpdate;
 import rabbit.msg.DeviceUpdateMessage;

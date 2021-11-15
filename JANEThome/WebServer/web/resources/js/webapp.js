@@ -1717,8 +1717,10 @@ function addLocationReaction(location_name){
     let form = document.getElementById("add_location_sub");
     let button = form.getElementsByClassName("location-form-button")[0];
     let loading = form.getElementsByClassName("loading_placeholder")[0];
+    let error = form.getElementsByClassName( "error_placeholder" )[0];
     addLocation(location_name);
     loading.style.display = "none";
+    error.style.display = "none";
     button.style.display = "inline";
 }
 

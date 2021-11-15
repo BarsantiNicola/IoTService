@@ -1,4 +1,4 @@
-package config.interfaces;
+package db.interfaces;
 
 import javax.ejb.Remote;
 

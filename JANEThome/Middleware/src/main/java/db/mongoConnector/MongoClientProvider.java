@@ -7,6 +7,9 @@ import db.dao.SmartHomeManagerDAO;
 import db.dao.UserDAO;
 import db.interfaces.ISmartHomeManagerDAO;
 import db.interfaces.IUserDAO;
+import db.model.Operation;
+import db.model.Statistic;
+import db.model.User;
 import iot.*;
 import org.bson.types.ObjectId;
 import org.mongodb.morphia.Datastore;
@@ -17,7 +20,6 @@ import org.mongodb.morphia.query.UpdateOperations;
 import static org.mongodb.morphia.aggregation.Group.grouping;
 
 import rabbit.msg.DeviceUpdate;
-import iot.Statistic;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -311,18 +313,6 @@ public class MongoClientProvider {
     }
 
     /**
-     * Delete all Managers with the same username
-     *
-     * @param username the username of Manager
-     * @return true/false
-     */
-    public boolean deleteManager(String username) {
-        final Query<SmarthomeManager> query = datastore.createQuery(SmarthomeManager.class)
-                .filter(ISmartHomeManagerDAO.USERNAME, username);
-        return managerDao.deleteByQuery(query).wasAcknowledged();
-    }
-
-    /**
      * Delete a manager by the ObjectID
      *
      * @param objectId the id of Manager
@@ -437,7 +427,7 @@ public class MongoClientProvider {
      * @param stat_name    the action that do you want the statistics
      * @param startTime start time of range
      * @param endTime   end time of range
-     * @return The {@link List<Statistic>} that it contains a sorted list of {@link Statistic}
+     * @return The {@link List< Statistic >} that it contains a sorted list of {@link Statistic}
      */
     public List<Statistic> getStatistics(String dID, DeviceType type, String stat_name, Date startTime, Date endTime) {
 
@@ -484,27 +474,6 @@ public class MongoClientProvider {
             logger.error(e);
         }
         return statistics;*/
-    }
-
-    private Date shiftDateForward(Date d) {
-        Calendar calendar = dateToCalendar(d);
-        calendar.add(Calendar.SECOND, 5);
-        return calendar.getTime();
-    }
-
-    private Date shiftDateBackwards(Date d) {
-        Calendar calendar = dateToCalendar(d);
-        calendar.add(Calendar.SECOND, -5);
-        return calendar.getTime();
-    }
-
-    //Convert Date to Calendar
-    private Calendar dateToCalendar(Date date) {
-
-        Calendar calendar = Calendar.getInstance();
-        calendar.setTime(date);
-        return calendar;
-
     }
 
     private SmarthomeManager getManagerByUser(String mail) {

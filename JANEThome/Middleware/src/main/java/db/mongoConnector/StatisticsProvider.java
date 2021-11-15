@@ -1,22 +1,15 @@
 package db.mongoConnector;
 
 import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
 import com.mongodb.*;
 import com.mongodb.client.MongoCollection;
-import com.mongodb.client.MongoIterable;
-import com.mongodb.client.model.Aggregates;
-import com.mongodb.client.model.Filters;
 import com.mongodb.client.model.Sorts;
-import iot.Operation;
-import iot.SmarthomeDevice;
+import db.model.Operation;
+import db.model.Statistic;
 import org.bson.codecs.configuration.CodecRegistry;
 import org.bson.codecs.pojo.PojoCodecProvider;
-import iot.Statistic;
-import org.mongodb.morphia.query.Sort;
 import iot.DeviceType;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
+
 import java.util.*;
 
 import static com.mongodb.client.model.Filters.eq;
@@ -40,7 +33,7 @@ public class StatisticsProvider {
         UNKNOWN
     }
 
-    StatisticsProvider(Properties context){
+    StatisticsProvider( Properties context ){
 
         ServerAddress server = new ServerAddress( context.getProperty("hostname") , Integer.parseInt(context.getProperty("port")));
         CodecRegistry pojoCodecRegistry = fromRegistries(MongoClient.getDefaultCodecRegistry(), fromProviders(PojoCodecProvider.builder().automatic(true).build()));

@@ -1,5 +1,8 @@
 package db.interfaces;
 
+import db.model.Operation;
+import db.model.User;
+import db.model.Statistic;
 import iot.*;
 import org.bson.types.ObjectId;
 import rabbit.msg.DeviceUpdate;

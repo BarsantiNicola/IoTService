@@ -218,7 +218,7 @@ public class WebappEndpoint {
             return;
 
         //  verification that the location can be inserted from the server prospective
-        boolean state = !smarthome.addLocation(
+        boolean state = smarthome.addLocation(
                 request.getData( "location" ),
                 "" ,
                 request.getData( "address" ),

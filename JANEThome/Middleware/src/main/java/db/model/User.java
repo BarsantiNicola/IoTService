@@ -1,7 +1,8 @@
-package iot;
+package db.model;
 
 import com.google.gson.annotations.Expose;
 import db.model.MongoEntity;
+import iot.SmarthomeManager;
 import org.bson.types.ObjectId;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Reference;

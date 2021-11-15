@@ -139,8 +139,16 @@ public class DeviceBridge {
                     return Integer.parseInt( value );
 
                 }catch( Exception e ){
-                    //  if fail we try the the float conversion
-                    return Math.round( Float.parseFloat( value ));
+
+                    try {
+                        //  if fail we try the the float conversion
+                        return Math.round(Float.parseFloat(value));
+
+                    }catch( Exception e2 ){
+
+                        //  if fail we leave the value as it is
+                        return value;
+                    }
 
                 }
         }

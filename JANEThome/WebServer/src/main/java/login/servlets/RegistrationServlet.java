@@ -3,7 +3,7 @@ package login.servlets;
 //  internal services
 import db.interfaces.DBinterface;
 import iot.SmarthomeManager;
-import iot.User;
+import db.model.User;
 import login.mail.interfaces.IEmailService;
 import login.beans.TempData;
 import login.interfaces.ITempStorage;

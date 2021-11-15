@@ -1,6 +1,6 @@
 package db.interfaces;
 
-import iot.User;
+import db.model.User;
 
 public interface IUserDAO extends IGenericDao<User>{
     String USERNAME = "username";

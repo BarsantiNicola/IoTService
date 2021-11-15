@@ -4,7 +4,7 @@ package rabbit.in;
 import config.interfaces.IConfiguration;
 import db.interfaces.DBinterface;
 import iot.DeviceType;
-import iot.Operation;
+import db.model.Operation;
 import rabbit.Receiver;
 import rabbit.msg.DeviceUpdate;
 
