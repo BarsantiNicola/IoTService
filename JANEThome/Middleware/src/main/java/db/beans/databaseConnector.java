@@ -12,6 +12,7 @@ import org.bson.types.ObjectId;
 import rabbit.msg.DeviceUpdate;
 
 import javax.annotation.PostConstruct;
+import javax.annotation.PreDestroy;
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import java.util.Date;
@@ -31,6 +32,9 @@ public class databaseConnector implements DBinterface {
     public void connectDB() {
         mongoClientProvider = new MongoClientProvider(configuration);
     }
+
+    @PreDestroy
+    public void close(){ this.mongoClientProvider.close(); }
 
     @Override
     public boolean login(String username, String password) {

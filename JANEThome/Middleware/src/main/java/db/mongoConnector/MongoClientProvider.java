@@ -37,7 +37,7 @@ public class MongoClientProvider {
     private static Morphia morphia;
     private static Datastore datastore;
     private static SmartHomeManagerDAO managerDao;
-    private static StatisticsProvider statistics;
+    private StatisticsProvider statistics;
     private static UserDAO userDAO;
     private transient Logger logger;
 
@@ -105,11 +105,11 @@ public class MongoClientProvider {
     }
 
     public void writeOperation(Operation operation){
-        MongoClientProvider.statistics.writeOperation(operation);
+        this.statistics.writeOperation(operation);
     }
 
     public void removeAllStatistics(String dID){
-        MongoClientProvider.statistics.removeAllStatistics(dID);
+        this.statistics.removeAllStatistics(dID);
     }
 
     /**
@@ -427,11 +427,11 @@ public class MongoClientProvider {
      * @param stat_name    the action that do you want the statistics
      * @param startTime start time of range
      * @param endTime   end time of range
-     * @return The {@link List< Statistic >} that it contains a sorted list of {@link Statistic}
+     * @return The {@link Statistic} that it contains a sorted list of {@link Statistic}
      */
     public List<Statistic> getStatistics(String dID, DeviceType type, String stat_name, Date startTime, Date endTime) {
 
-        return MongoClientProvider.statistics.getStatistic(stat_name, dID, type, startTime, endTime);
+        return this.statistics.getStatistic(stat_name, dID, type, startTime, endTime);
         /*
         Statistics statistics = new Statistics();
         Statistic tempStat;
@@ -485,6 +485,12 @@ public class MongoClientProvider {
         }
         manager.relink();
         return manager;
+    }
+
+    public void close(){
+
+        this.statistics.close();
+
     }
 
 }

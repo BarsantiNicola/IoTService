@@ -2,7 +2,7 @@ package rest.out.beans;
 
 //  internal services
 import config.interfaces.IConfiguration;
-import db.interfaces.GeneratorInterface;
+import db.interfaces.IGenerator;
 import iot.DeviceType;
 import rabbit.msg.DeviceUpdate;
 import rabbit.msg.DeviceUpdateMessage;
@@ -50,7 +50,7 @@ public class DeviceCommandSender implements RESTinterface {
     
     //  service for generating unique identifiers for devices and locations
     @EJB
-    GeneratorInterface idGenerator; 
+    IGenerator idGenerator;
     
     private final Logger logger;
     private Properties privateConfiguration;  //  personal configuration of the REST sender

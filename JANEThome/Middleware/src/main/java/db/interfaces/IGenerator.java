@@ -6,7 +6,7 @@ import javax.ejb.Remote;
  * Service to generate dID and lID tokens basing on a local storage file
  */
 @Remote
-public interface GeneratorInterface {
+public interface IGenerator {
 
     /**
      * Generates a new unique deviceID

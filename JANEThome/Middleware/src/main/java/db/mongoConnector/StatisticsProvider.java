@@ -18,9 +18,9 @@ import static org.bson.codecs.configuration.CodecRegistries.fromRegistries;
 
 public class StatisticsProvider {
 
-    private MongoClient client;
-    private MongoCollection<Operation> archive;
-    private MongoCollection<Statistic> statistics;
+    private final MongoClient client;
+    private final MongoCollection<Operation> archive;
+    private final MongoCollection<Statistic> statistics;
 
     private enum StatisticType{
         DEVICE_USAGE,
@@ -214,6 +214,12 @@ public class StatisticsProvider {
             default:
                 return StatisticType.UNKNOWN;
         }
+    }
+
+    public void close(){
+
+        this.client.close();
+
     }
 
 }

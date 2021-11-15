@@ -28,13 +28,4 @@ public interface IConfiguration {
      */
     Properties getConfiguration( String name );
 
-    /**
-     * Update a configuration parameter(Used by token generators)
-     * @param config Name of the configuration(name of the configuration file removing .properties)
-     * @param param Name of the parameter to update into the configuration
-     * @param value Value to be applied to the parameter
-     * @return Return true in case of success otherwise false
-     */
-    boolean setParameter(String config, String param, String value);
-
 }
