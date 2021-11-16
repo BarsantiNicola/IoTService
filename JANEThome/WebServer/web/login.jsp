@@ -1,3 +1,24 @@
+<%@ page import="login.beans.AuthData" %>
+<%@ page contentType="text/html;charset=UTF-8" %>
+<%
+    if( session != null && !session.isNew() ) {
+
+        AuthData authData = (AuthData) session.getAttribute("authData");
+        if( authData != null && request.getCookies() != null ) {
+
+
+                Cookie[] cookies = request.getCookies();
+                String authtoken = "";
+                for( Cookie cookie : cookies )
+                    if( cookie.getName().compareTo("auth") == 0 )
+                        authtoken = cookie.getValue();
+
+                if( authtoken.length() > 0 && authData.isValid( authtoken ))
+                    response.sendRedirect("webapp.jsp");
+
+        }
+    }
+%>
 <html lang="en">
 
     <head>

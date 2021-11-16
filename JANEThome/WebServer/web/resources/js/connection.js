@@ -250,6 +250,13 @@ let enableUpdate = false;
 function messageManager(update){
 
     if(!enableUpdate){
+        try{
+            if( update.type ==="EXPIRED_AUTH" ) {
+                window.location.replace("login.jsp");
+                return;
+            }
+
+        }catch(e){}
         createSmarthome(update);
         enableUpdate = true;
         return;
@@ -290,10 +297,9 @@ function messageManager(update){
             deleteDeviceAct(update.data.name.toLowerCase());
             break;
         case "STATISTIC":
-            alert(JSON.stringify(update));
+
             let data = update.data;
-            alert(data);
-            alert(data.values);
+
             data.values = JSON.parse(data.values);
             for( let a = 0; a<data.values.length; a++) {
                 data.values[a].x = new Date(Date.parse(data.values[a].x));
@@ -307,6 +313,10 @@ function messageManager(update){
             break;
         case "ERROR_LOCATION":
             errorAddLocation();
+            break;
+
+        case "EXPIRED_AUTH":
+            window.location.replace("login.jsp");
             break;
         default:
             break;

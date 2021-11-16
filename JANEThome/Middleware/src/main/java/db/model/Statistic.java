@@ -1,5 +1,7 @@
 package db.model;
 
+import org.bson.types.Decimal128;
+
 import java.io.Serializable;
 import java.util.Date;
 
@@ -9,8 +11,11 @@ import java.util.Date;
   */
 public class Statistic implements Serializable {
 
-    private final Date x;
-    private final String y;
+    private Date x;
+    private String y;
+
+    @SuppressWarnings( "unused" )
+    public Statistic(){}
 
     public Statistic( Date x, String y ){
 
@@ -19,7 +24,11 @@ public class Statistic implements Serializable {
 
     }
 
-    public Date getX(){ return x; }
+    public void setX( Decimal128 x ){ this.x = new Date(x.longValue()); }
 
-    public String getY(){ return y; }
+    public void setY( Double y ){ this.y = String.valueOf(y); }
+
+    public Decimal128 getX(){ return new Decimal128(x.getTime()); }
+
+    public Double getY(){ return Double.parseDouble(y); }
 }

@@ -14,6 +14,9 @@ public class Operation implements Serializable {
     public String value;
     public Date date;
 
+    @SuppressWarnings( "unused" )
+    public Operation(){}
+
     public Operation(String dID, String action, String value,Date date) {
 
         this.dID = dID;
@@ -22,5 +25,28 @@ public class Operation implements Serializable {
         this.date = date;
 
     }
+
+
+    ////////--  SETTERS  --////////
+
+    public void setdID( String dID ){ this.dID = dID; }
+
+    public void setAction( String action ){ this.action = action; }
+
+    public void setValue( String value ){ this.value = value; }
+
+    public void setDate( Date date ){ this.date = date; }
+
+
+    ////////--  GETTERS  --////////
+
+
+    public String getdID(){ return this.dID; }
+
+    public String getAction(){ return this.action; }
+
+    public String getValue(){ return this.value; }
+
+    public Date getDate(){ return this.date; }
 
 }

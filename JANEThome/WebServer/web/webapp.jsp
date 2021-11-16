@@ -2,7 +2,33 @@
 <%@ page import="login.beans.UserData" %>
 <%@ page contentType="text/html;charset=UTF-8" %>
 <%
-    UserData userData = (UserData)session.getAttribute("infoData");
+    UserData userData = null;
+
+    if( session != null && !session.isNew() ){
+
+        userData = (UserData)session.getAttribute("infoData");
+        AuthData authData = (AuthData)session.getAttribute("authData");
+        if( authData != null && userData != null && request.getCookies() != null ){
+
+            Cookie[] cookies = request.getCookies();
+            String authtoken = "";
+            if( cookies != null ) {
+                for (Cookie cookie : cookies)
+                    if (cookie.getName().compareTo("auth") == 0)
+                        authtoken = cookie.getValue();
+            }
+            if( authtoken.length() == 0 || !authData.isValid(authtoken)) {
+
+                session.removeAttribute("authData");
+                session.removeAttribute("infoData");
+                response.addCookie( new Cookie( "auth", "" ));
+                response.sendRedirect("login.jsp");
+            }
+
+        }else
+            response.sendRedirect("login.jsp");
+    }else
+        response.sendRedirect("login.jsp");
 %>
 <html lang="en">
 <head>
@@ -116,10 +142,10 @@
             <div class="account-wrapper">
                 <div class="account-info-wrapper">
                     <p class="account-name">
-                        <% out.print(userData.getName()); %>
+                        <% if( userData != null ) out.print(userData.getName()); %>
                     </p>
                     <p class="account-surname">
-                        <% out.print(userData.getSurname());%>
+                        <% if( userData != null ) out.print(userData.getSurname());%>
                     </p>
                 </div>
                 <img class="js-tilt" src="resources/pics/logo2.png" alt="logo" data-tilt="">

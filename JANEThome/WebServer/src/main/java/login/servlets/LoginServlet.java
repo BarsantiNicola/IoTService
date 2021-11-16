@@ -10,10 +10,8 @@ import javax.ejb.EJB;
 import javax.servlet.annotation.WebServlet;
 
 //  http protocol management
-import javax.servlet.http.Cookie;
-import javax.servlet.http.HttpServlet;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.*;
+import javax.websocket.Session;
 
 //  exceptions
 import java.io.IOException;
@@ -49,6 +47,10 @@ public class LoginServlet extends HttpServlet {
 
 
     public void service( HttpServletRequest req, HttpServletResponse resp ){
+
+       /* HttpSession session = req.getSession(true );
+        if( session.isNew() )
+            session.setMaxInactiveInterval( 3600 ); //  session will expire after 1h of inactivity*/
 
         Logger logger = LogManager.getLogger(getClass().getName());
 

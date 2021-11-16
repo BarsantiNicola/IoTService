@@ -1567,7 +1567,7 @@ function createChart(id, name, data){
 
     let node = document.getElementById("container_expand").getElementsByClassName("fa fa-search")[id - 1];
     try {
-        alert(data.toString());
+
         for (let info of data) {
             if (info.y > max)
                 max = info.y;
@@ -1575,24 +1575,35 @@ function createChart(id, name, data){
                 min = info.y;
         }
     }catch(e){
-        alert("error");
         node.className = "fa fa-search search_ok";
     }
 
-    if( max < 2 ) max = 1;
-    else
-        max = max + Math.floor( max/5 );
-    alert(max);
-    let minutes = Math.ceil((data[data.length - 1].x - data[0].x) / (1000 * 60));
-    let format;
-    if (minutes <= 60 * 24)
-        format = "hh-mm";
-    else
-        format = "DD-MMM-hh-mm"
-    alert( document.getElementById("chart_" + id).style);
     document.getElementById("chart_" + id).innerHTML = "";
 
     try {
+
+        let chart = new CanvasJS.Chart("chart_" + id, {
+            height: 235,
+            width: 430,
+            animationEnabled: true,
+            axisY: {
+                title: name,
+                includeZero: true,
+            },
+            axisX: {
+                min: data[0].x,
+                max: data[data.length -1 ].x
+            },
+            data: [{
+                type: "stepArea",
+                markerSize: 5,
+                xValueFormatString: "YYYY MMM DD HH:mm",
+                dataPoints: data
+            }]
+        });
+        chart.render();
+        /*
+
         let chart = new CanvasJS.Chart("chart_" + id,
             {
                 height: 235,
@@ -1627,7 +1638,7 @@ function createChart(id, name, data){
                 }
             });
 
-        chart.render();
+        chart.render();*/
     }catch(e){
         alert(e);
     }

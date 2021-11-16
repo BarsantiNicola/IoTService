@@ -93,8 +93,12 @@ public class WebappEndpoint {
 
             }
 
-        }else  //  user not authorized to make requests to the service. Closing the connection to prevent other requests
+        }else{  //  user not authorized to make requests to the service. Closing the connection to prevent other requests
+
+            this.sendMessage( new WebRequest( "EXPIRED_AUTH", new HashMap<>() ), session );
             this.dropClientInformation( session );
+
+        }
 
 
 
@@ -184,8 +188,12 @@ public class WebappEndpoint {
                     logger.error("Error, request unknown: " + request.requestType().toString());
             }
 
-        }else
+        }else{  //  user not authorized to make requests to the service. Closing the connection to prevent other requests
+
+            this.sendMessage( new WebRequest( "EXPIRED_AUTH", new HashMap<>() ), session );
             this.dropClientInformation( session );
+
+        }
     }
 
     @OnError
