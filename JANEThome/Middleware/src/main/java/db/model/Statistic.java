@@ -24,9 +24,17 @@ public class Statistic implements Serializable {
 
     }
 
+
+    ////////--  SETTERS  --////////
+
+
     public void setX( Decimal128 x ){ this.x = new Date(x.longValue()); }
 
     public void setY( Double y ){ this.y = String.valueOf(y); }
+
+
+    ////////--  SETTERS  --////////
+
 
     public Decimal128 getX(){ return new Decimal128(x.getTime()); }
 
