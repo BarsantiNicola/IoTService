@@ -7,9 +7,9 @@ import rest.msg.RESTMessage;
  */
 public class UpdateDeviceSubLocReq extends RESTMessage {
 
-    private String subloc_id;
+    private int subloc_id;
 
-    public UpdateDeviceSubLocReq( String subloc_id ){
+    public UpdateDeviceSubLocReq( int subloc_id ){
         this.subloc_id = subloc_id;
     }
 
@@ -19,13 +19,13 @@ public class UpdateDeviceSubLocReq extends RESTMessage {
     ////////--  SETTERS  --////////
 
 
-    public void setSubloc_id( String subloc_id ){ this.subloc_id = subloc_id; }
+    public void setSubloc_id( int subloc_id ){ this.subloc_id = subloc_id; }
 
 
     ////////--  GETTERS  --////////
 
 
-    public String getSubloc_id(){
+    public int getSubloc_id(){
         return this.subloc_id;
     }
 }

@@ -51,7 +51,7 @@ public class EmailSender implements IEmailService {
      */
     public boolean sendMailPasswordChange( String email, String content, String token ){
 
-        String object = "JANEThome Password Change Request";
+        String object = "JANEThome Confirm Request";
 
         return email != null && content != null &&  token != null &&                     //  verification of params presence
                 email.length()>0 && content.length()>0 && token.length() > 0 &&          //  verification of tainted data
@@ -74,7 +74,7 @@ public class EmailSender implements IEmailService {
 
         return email != null && content != null &&  token != null &&                       //  verification of params presence
                 email.length()>0 && content.length()>0 && token.length() > 0 &&            //  verification of tainted data
-                sendEmail(email, object, createEmailRegistrationContent(content, token));  //  email generation and sending
+                sendEmail( email, object, createEmailRegistrationContent( content, token ));  //  email generation and sending
 
     }
 

@@ -2,11 +2,10 @@
 <%@ page import="login.beans.UserData" %>
 <%@ page contentType="text/html;charset=UTF-8" %>
 <%
-    UserData userData = null;
+    UserData userData = (UserData)session.getAttribute("infoData");
 
-    if( session != null && !session.isNew() ){
+    if( !session.isNew() ){
 
-        userData = (UserData)session.getAttribute("infoData");
         AuthData authData = (AuthData)session.getAttribute("authData");
         if( authData != null && userData != null && request.getCookies() != null ){
 
@@ -142,10 +141,11 @@
             <div class="account-wrapper">
                 <div class="account-info-wrapper">
                     <p class="account-name">
-                        <% if( userData != null ) out.print(userData.getName()); %>
+                        <% assert userData != null;
+                            out.print(userData.getName()); %>
                     </p>
                     <p class="account-surname">
-                        <% if( userData != null ) out.print(userData.getSurname());%>
+                        <% out.print(userData.getSurname());%>
                     </p>
                 </div>
                 <img class="js-tilt" src="resources/pics/logo2.png" alt="logo" data-tilt="">

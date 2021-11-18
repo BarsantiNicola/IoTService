@@ -55,60 +55,64 @@ public class RESTsender implements Callable<Response> {
     @Override
     public Response call() {
 
-        switch( this.reqType ){
+        try {
+            switch (this.reqType) {
 
-            case GET:
-                return ClientBuilder
-                        .newClient()
-                        .property( ClientProperties.CONNECT_TIMEOUT, 5000 )   //  preventing never ending wait
-                        .target( "http://" + this.address + ":" + this.port ) //  destination address
-                        .path( path )                                            //  relative path for the request
-                        .request()
-                        .get();
+                case GET:
+                    return ClientBuilder
+                            .newClient()
+                            .property(ClientProperties.CONNECT_TIMEOUT, 5000)   //  preventing never ending wait
+                            .target("http://" + this.address + ":" + this.port) //  destination address
+                            .path(path)                                            //  relative path for the request
+                            .request()
+                            .get();
 
-            case PUT:
-                return ClientBuilder
-                        .newClient()
-                        .property( ClientProperties.CONNECT_TIMEOUT, 5000 )   //  preventing never ending wait
-                        .target( "http://" + this.address + ":" + this.port ) //  destination address
-                        .path( path )                                            //  relative path for the request
-                        .request( MediaType.APPLICATION_JSON )                   //  always send a json as body
-                        .put( Entity.entity( request, MediaType.APPLICATION_JSON ));
+                case PUT:
+                    return ClientBuilder
+                            .newClient()
+                            .property(ClientProperties.CONNECT_TIMEOUT, 5000)   //  preventing never ending wait
+                            .target("http://" + this.address + ":" + this.port) //  destination address
+                            .path(path)                                            //  relative path for the request
+                            .request(MediaType.APPLICATION_JSON)                   //  always send a json as body
+                            .put(Entity.entity(request, MediaType.APPLICATION_JSON));
 
-            case POST:
-                return ClientBuilder
-                        .newClient()
-                        .property( ClientProperties.CONNECT_TIMEOUT, 5000 )   //  preventing never ending wait
-                        .target( "http://" + this.address + ":" + this.port ) //  destination address
-                        .path( path )                                            //  relative path for the request
-                        .request( MediaType.APPLICATION_JSON )                   //  always send a json as body
-                        .post( Entity.entity( request, MediaType.APPLICATION_JSON ));
+                case POST:
+                    return ClientBuilder
+                            .newClient()
+                            .property(ClientProperties.CONNECT_TIMEOUT, 5000)   //  preventing never ending wait
+                            .target("http://" + this.address + ":" + this.port) //  destination address
+                            .path(path)                                            //  relative path for the request
+                            .request(MediaType.APPLICATION_JSON)                   //  always send a json as body
+                            .post(Entity.entity(request, MediaType.APPLICATION_JSON));
 
-            case DELETE:
-                return ClientBuilder
-                        .newClient()
-                        .property( ClientProperties.CONNECT_TIMEOUT, 5000 )    //  preventing never ending wait
-                        .target( "http://" + this.address + ":" + this.port )  //  destination address
-                        .path( path )                                             //  relative path for the request
-                        .request( MediaType.APPLICATION_JSON )                    //  always send a json as body
-                        .delete();
+                case DELETE:
+                    return ClientBuilder
+                            .newClient()
+                            .property(ClientProperties.CONNECT_TIMEOUT, 5000)    //  preventing never ending wait
+                            .target("http://" + this.address + ":" + this.port)  //  destination address
+                            .path(path)                                             //  relative path for the request
+                            .request(MediaType.APPLICATION_JSON)                    //  always send a json as body
+                            .delete();
 
-            case PATCH:
-                return ClientBuilder
-                        .newClient()
-                        .property( ClientProperties.CONNECT_TIMEOUT, 5000 )    //  preventing never ending wait
-                        .target( "http://" + this.address + ":" + this.port )  //  destination address
-                        .path( path )                                             //  relative path for the request
-                        .request( MediaType.APPLICATION_JSON )                    //  always send a json as body
-                        .build(
-                                "PATCH",
-                                Entity.entity(((ExecCommandsReq) request ).getRequests(), MediaType.APPLICATION_JSON ))
-                        .property( HttpUrlConnectorProvider.SET_METHOD_WORKAROUND, true )  //  force Jersey to use PATCH
-                        .invoke();
+                case PATCH:
+                    return ClientBuilder
+                            .newClient()
+                            .property(ClientProperties.CONNECT_TIMEOUT, 5000)    //  preventing never ending wait
+                            .target("http://" + this.address + ":" + this.port)  //  destination address
+                            .path(path)                                             //  relative path for the request
+                            .request(MediaType.APPLICATION_JSON)                    //  always send a json as body
+                            .build(
+                                    "PATCH",
+                                    Entity.entity(((ExecCommandsReq) request).getRequests(), MediaType.APPLICATION_JSON))
+                            .property(HttpUrlConnectorProvider.SET_METHOD_WORKAROUND, true)  //  force Jersey to use PATCH
+                            .invoke();
 
-            default:
-                return Response.serverError().build();
+                default:
+                    return Response.serverError().build();
 
+            }
+        }catch( Exception e ){
+            return Response.serverError().build();
         }
 
     }

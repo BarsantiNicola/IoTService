@@ -2,7 +2,7 @@ package rabbit.in;
 
 // internal services
 import config.interfaces.IConfiguration;
-import db.interfaces.DBinterface;
+import db.interfaces.IDatabase;
 import iot.DeviceType;
 import db.model.Operation;
 import rabbit.Receiver;
@@ -27,7 +27,7 @@ public class DatabaseUpdater extends Receiver{
     private IConfiguration configuration;
 
     @EJB
-    private DBinterface dB;
+    private IDatabase dB;
 
     public DatabaseUpdater() {}
 
@@ -218,12 +218,9 @@ public class DatabaseUpdater extends Receiver{
      * @param new_sublocation Name of the subLocation in which move the device
      */
     @Override
-    protected void changeDeviceSubLocation( String username, String location, String sublocation, String new_sublocation ){
+    protected void changeDeviceSubLocation( String username, String dID, String location, String sublocation, String new_sublocation ){
 
-        dB.moveDevice( username,
-                location,
-                sublocation,
-                new_sublocation );
+        dB.moveDevice( username, location, sublocation, new_sublocation, dID );
 
     }
 

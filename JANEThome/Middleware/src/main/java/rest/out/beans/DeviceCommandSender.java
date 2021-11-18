@@ -687,7 +687,7 @@ public class DeviceCommandSender implements RESTinterface {
                     port,                              //  port of the controller
                     "/device/" + dID,
                     RESTsender.REQ_TYPE.POST,
-                    new UpdateDeviceSubLocReq( sublocID )).get();                    //  blocking request
+                    new UpdateDeviceSubLocReq( Integer.parseInt(sublocID) )).get();            //  blocking request
 
             //  result management
             if( result != null ){
@@ -700,7 +700,7 @@ public class DeviceCommandSender implements RESTinterface {
                                 new Date(System.currentTimeMillis()),
                                 location,
                                 dID,
-                                name,
+                                subLocation,
                                 newSubLocation ));
 
                         return this.notifier.sendMessage( message ) > 0;

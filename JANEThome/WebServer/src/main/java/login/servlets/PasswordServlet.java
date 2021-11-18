@@ -1,7 +1,7 @@
 package login.servlets;
 
 //  internal services
-import db.interfaces.DBinterface;
+import db.interfaces.IDatabase;
 import login.mail.interfaces.IEmailService;
 import login.beans.AuthData;
 import login.beans.TempData;
@@ -49,7 +49,7 @@ public class PasswordServlet extends HttpServlet {
 
     //  instance of database manager
     @EJB
-    private DBinterface db;
+    private IDatabase db;
 
     enum RequestType{  //  TYPE OF REQUEST HANDLED BY THE SERVLET
         PASSWORD_REQ,
@@ -77,6 +77,7 @@ public class PasswordServlet extends HttpServlet {
 
                     String email = parameters.get( "email" );
                     logger.info( "Received request from [" + req.getRemoteAddr() + "] of type PASSWORD_REQ. Email: " + email );
+                    System.out.println("Request for email ");
 
                     if( !this.verifyEmail( email )){
 
@@ -85,7 +86,7 @@ public class PasswordServlet extends HttpServlet {
                         return;
 
                     }
-
+                    System.out.println("Email verified ");
                     if( !db.emailPresent( email )){
 
                         logger.info( "Error during password change. Provided email not present" );
@@ -93,23 +94,23 @@ public class PasswordServlet extends HttpServlet {
                         return;
 
                     }
-
+                    System.out.println("Email present ");
                     //  generation of temporary data node maintaining the user email
                     data = new TempData();
                     data.createToken( email );
-
+                    System.out.println("Token generated");
                     //  getting the email data used to send back the email
                     Scanner s = new Scanner( this.getServletContext().getResourceAsStream( "/WEB-INF/password.html" )).useDelimiter( "\\A" );
                     String emailContent = s.hasNext() ? s.next() : "";
                     s.close();
-
+                    System.out.println("data generation ");
                     for( int count = 0; count<6; count++ )
                         try {
 
                             //  storing the data for the password change
                             context.bind( "ejb:module/password_" + data.getToken(), data );
                             logger.info( "Password change instance correctly stored" );
-
+                            System.out.println("data send " + parameters.get("email"));
                             //  sending to the provided email a redirection link for password change
                             if( mailService.sendMailPasswordChange( parameters.get( "email" ), emailContent, data.getToken()))
                                 resp.setStatus( 200 );

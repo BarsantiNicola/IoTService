@@ -1,6 +1,7 @@
 
 let emailInput = document.getElementById( "emailInput" );
 let passwordInput = document.getElementById( "passInput" );
+let hideButton = document.getElementById( "passButton" );
 let errorPlaceholder = document.getElementById( "errorPlaceholder" );
 let loadPlaceholder = document.getElementById( "loadingPlaceholder" );
 let passwordButton = document.getElementById("password_button");

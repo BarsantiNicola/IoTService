@@ -99,7 +99,7 @@ public class WebUpdateReceiver extends Receiver{
         if( this.smarthome.addSubLocation( location, sublocation, subID, false )) {
 
             data.put("location", location );
-            data.put("sublocation", subID);
+            data.put("sublocation", sublocation );
 
             this.sendMessage( new WebRequest( "ADD_SUBLOCATION", data ));
         }
@@ -285,25 +285,30 @@ public class WebUpdateReceiver extends Receiver{
     /**
      * Method automatically called when a new request of changing a device location is received
      * @param username Username associated on the message(needed by Federico)
+     * @param dID      Unique identifier of a device
      * @param location Location in which the device is deployed
-     * @param sublocation Name of the current subLocation of the device
+     * @param sublocation Current subLocation name
      * @param new_sublocation Name of the subLocation in which move the device
      */
     @Override
-    protected void changeDeviceSubLocation( String username, String location, String sublocation, String new_sublocation ){
+    protected void changeDeviceSubLocation( String username, String dID, String location, String sublocation, String new_sublocation ){
 
         HashMap<String,String> data = new HashMap<>();
 
+        String name = this.smarthome.giveDeviceNameById( dID );
+
+        System.out.println("username: " + username + " loc: " + location + " name: " + name + " new_s: " + new_sublocation + " FALSE" );
         //  updating of the shared smartHome(can be already updated)
-        if( this.smarthome.changeDeviceSubLocation( location, sublocation, new_sublocation, false )){
+        if( this.smarthome.changeDeviceSubLocation( location, name, new_sublocation, false )){
 
             data.put( "location", location );
-            data.put( "sublocation", sublocation );
-            data.put( "name", new_sublocation );
+            data.put( "sublocation", new_sublocation );
+            data.put( "name", name );
 
             this.sendMessage( new WebRequest( "CHANGE_SUBLOC", data ));
 
         }
+
     }
 
     /**

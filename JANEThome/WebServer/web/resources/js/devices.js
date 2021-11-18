@@ -542,7 +542,6 @@ function createThermostat(){
 
     let temperature_title = document.createElement("p");
     let temperature_input = document.createElement("input");
-    let temperature_bar = document.createElement("div");
     let temperature_sensor = document.createElement("p");
 
     let env_temperature = document.createElement("input");
@@ -556,12 +555,10 @@ function createThermostat(){
     pic.className = "thermostat_pic";
     pic.src = "resources/pics/devices/thermostat-hot.png";
 
-    temperature_bar.className = "temperature_bar";
     temperature_sensor.textContent = "6";
     temperature_sensor.className = "temperature_sensor";
 
     pic_container.appendChild(temperature_sensor);
-    pic_container.appendChild(temperature_bar);
     pic_container.appendChild(pic);
 
     temperature_title.textContent = "Temperature Set:";
@@ -616,18 +613,21 @@ function changeTemperature(dID, temperature){
 
     let temp = device.getElementsByClassName("temperature")[0];
     let env = device.getElementsByClassName("env_temperature")[0];
+    let setted_temp = device.getElementsByClassName( "set_temperature")[0];
     let thermostat = device.getElementsByClassName("thermostat_pic")[0];
     let type = device.getElementsByClassName("type")[0];
-
+    let pic = Math.floor((parseFloat(env.value)-6)/10)+1;
     if( temp === undefined || thermostat === undefined || type === undefined )
         return false;
 
+    setted_temp.value = temperature;
     temp.value = temperature;
 
     switch( type.value ){
         case "Thermostat":
+
             if( parseFloat(temp.value) < parseFloat(env.value)){
-                thermostat.src = "resources/pics/devices/thermostat-hot.png";
+                thermostat.src = "resources/pics/devices/thermostat-hot-"+pic+".png";
                 thermostat.alt = "Thermostat-on";
             }else{
                 thermostat.src = "resources/pics/devices/thermostat-off.png";
@@ -637,10 +637,10 @@ function changeTemperature(dID, temperature){
 
         case "Conditioner":
             if( parseFloat(temp.value) < parseFloat(env.value)){
-                thermostat.src = "resources/pics/devices/thermostat-hot.png";
+                thermostat.src = "resources/pics/devices/thermostat-hot-"+pic+".png";
                 thermostat.alt = "Conditioner-hot";
             }else{
-                thermostat.src = "resources/pics/devices/thermostat-freeze.png";
+                thermostat.src = "resources/pics/devices/thermostat-freeze-"+pic+".png";
                 thermostat.alt = "Conditioner-off";
             }
             break;
@@ -663,26 +663,25 @@ function updateEnvironmentTemperature(dID, temp){
     let type = device.getElementsByClassName("type")[0];
     let env_temperature = device.getElementsByClassName("env_temperature")[0];
     let set_temperature = device.getElementsByClassName("set_temperature")[0];
-    let temperature_bar = device.getElementsByClassName("temperature_bar")[0];
     let temperature_sensor = device.getElementsByClassName("temperature_sensor")[0];
     let thermostat = device.getElementsByClassName("thermostat_pic")[0];
 
     if( type === undefined || env_temperature === undefined || set_temperature === undefined
-        || temperature_bar === undefined || temperature_sensor === undefined )
+        || temperature_sensor === undefined )
         return false;
 
     set_temperature = set_temperature.value;
     temperature_sensor.textContent = temp;
     env_temperature.value = temp;
-    temperature_bar.style.paddingBottom = (15+parseInt(temp)*70/40)+"px";
-    temperature_bar.style.top = (115 - parseInt(temp)*70/40)+"px";
-
+    let pic = Math.floor((parseFloat(temp)-6)/10)+1;
     switch( type.value ){
         case "Thermostat":
             if( parseFloat(set_temperature) > parseFloat(temp)){
-                thermostat.src = "resources/pics/devices/thermostat-hot.png";
+
+                thermostat.src = "resources/pics/devices/thermostat-hot-"+pic+".png";
                 thermostat.alt = "Thermostat-on";
             }else{
+
                 thermostat.src = "resources/pics/devices/thermostat-off.png";
                 thermostat.alt = "Thermostat-off";
             }
@@ -690,10 +689,10 @@ function updateEnvironmentTemperature(dID, temp){
 
         case "Conditioner":
             if( parseInt(set_temperature) > parseInt(temp)){
-                thermostat.src = "resources/pics/devices/thermostat-hot.png";
+                thermostat.src = "resources/pics/devices/thermostat-hot-"+pic+".png";
                 thermostat.alt = "Conditioner-hot";
             }else{
-                thermostat.src = "resources/pics/devices/thermostat-freeze.png";
+                thermostat.src = "resources/pics/devices/thermostat-freeze-"+pic+".png";
                 thermostat.alt = "Conditioner-off";
             }
             break;
@@ -719,7 +718,6 @@ function createConditioner(){
 
     let temperature_title = document.createElement("p");
     let temperature_input = document.createElement("input");
-    let temperature_bar = document.createElement("div");
     let temperature_sensor = document.createElement("p");
     let temperature = document.createElement("input");
 
@@ -746,12 +744,10 @@ function createConditioner(){
     pic2.src = "resources/pics/devices/fan-off.png";
     pic2.style.rotate = "0deg";
 
-    temperature_bar.className = "temperature_bar conditioner_bar";
     temperature_sensor.textContent = "6";
     temperature_sensor.className = "temperature_sensor conditioner_sensor";
 
     pic_container.appendChild(temperature_sensor);
-    pic_container.appendChild(temperature_bar);
     pic_container.appendChild(pic2);
     pic_container.appendChild(pic);
     pic_container.addEventListener("click", function () {

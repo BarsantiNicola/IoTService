@@ -169,10 +169,11 @@ public class SmarthomeUpdater extends Receiver{
          * @param new_sublocation Name of the subLocation in which move the device
          */
         @Override
-        protected void changeDeviceSubLocation( String username, String location, String sublocation, String new_sublocation ){
+        protected void changeDeviceSubLocation( String username, String dID, String location, String sublocation, String new_sublocation  ){
 
             //  updating of the shared smartHome(can be already updated)
-            this.smarthome.changeDeviceSubLocation( location, sublocation, new_sublocation, false );
+            String name = this.smarthome.giveDeviceNameById( dID );
+            this.smarthome.changeDeviceSubLocation( location, name, new_sublocation, false );
 
         }
 

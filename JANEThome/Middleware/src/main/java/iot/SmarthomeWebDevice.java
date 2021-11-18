@@ -16,13 +16,10 @@ import java.util.Date;
  */
 public class SmarthomeWebDevice extends SmarthomeDevice {
 
-    @Expose
     private HashMap<String, String> param = new HashMap<>();  //  set of states associated to the device
 
-    @Expose
     private boolean connectivity;  //  defines if the device is reachable or not
 
-    @Expose
     private HashMap<String, Date> expires = new HashMap<>(); //  set of timestamp associated with each trait to discard old updates
 
     private transient Logger logger;
@@ -53,6 +50,10 @@ public class SmarthomeWebDevice extends SmarthomeDevice {
 
     }
 
+    public void setConnectivity( boolean connectivity ){
+        this.connectivity = connectivity;
+    }
+
     public void setExpires( HashMap<String, Date> expires ){
 
         this.expires = expires;
@@ -75,6 +76,11 @@ public class SmarthomeWebDevice extends SmarthomeDevice {
 
     }
 
+    public boolean getConnectivity(){
+
+        return this.connectivity;
+
+    }
 
     ////////--  UTILITIES  --////////
 
@@ -139,7 +145,6 @@ public class SmarthomeWebDevice extends SmarthomeDevice {
 
         }
 
-        System.out.println( "E' IL TIMESTAMP IL PROBLEMA!!" );
         //  update is old we can discard it
         return false;
 
@@ -191,6 +196,17 @@ public class SmarthomeWebDevice extends SmarthomeDevice {
 
             //  update only if it isn't a trial
             this.connectivity = !trial || this.connectivity;
+            //  application of the update
+
+            if( this.param == null )  //  patch for mongoDB
+                this.param = new HashMap<>();
+
+            //  applying the action to the data structure
+            if( this.param.containsKey( action.substring( action.lastIndexOf( "." ) + 1 )))
+                this.param.replace( action.substring( action.lastIndexOf( "." ) + 1 ), value );
+            else
+                this.param.put( action.substring( action.lastIndexOf( "." ) + 1 ), value);
+
             return true;
 
         }
@@ -232,7 +248,7 @@ public class SmarthomeWebDevice extends SmarthomeDevice {
             this.param = new HashMap<>();
 
         //  applying the action to the data structure
-        if( this.param.containsKey( value ))
+        if( this.param.containsKey( action ))
             this.param.replace( action, value );
         else
             this.param.put( action, value);

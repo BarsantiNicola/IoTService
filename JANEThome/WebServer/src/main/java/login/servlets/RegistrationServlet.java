@@ -1,7 +1,7 @@
 package login.servlets;
 
 //  internal services
-import db.interfaces.DBinterface;
+import db.interfaces.IDatabase;
 import iot.SmarthomeManager;
 import db.model.User;
 import login.mail.interfaces.IEmailService;
@@ -47,7 +47,7 @@ public class RegistrationServlet extends HttpServlet {
 
     //  instance of database manager
     @EJB
-    private DBinterface db;
+    private IDatabase db;
 
     enum RequestType{  //  TYPE OF REQUEST HANDLED BY THE SERVLET
         REGISTRATION,
@@ -69,61 +69,61 @@ public class RegistrationServlet extends HttpServlet {
 
             InitialContext context = new InitialContext();
 
-            switch( typeOfRequest( parameters )){
+            switch( typeOfRequest( parameters )) {
 
                 case REGISTRATION:  //  registration of a new account["name","surname","email","password" parameters present]
 
-                    String email = parameters.get( "email" );
-                    logger.info("Received request from [" + req.getRemoteAddr() + "] of type REGISTRATION. Email: " + email );
+                    String email = parameters.get("email");
+                    logger.info("Received request from [" + req.getRemoteAddr() + "] of type REGISTRATION. Email: " + email);
                     data = new TempData();
 
-                    if( !this.verifyEmail( email )){
+                    if (!this.verifyEmail(email)) {
 
-                        logger.info( "Error during registration. Invalid email provided" );
-                        resp.setStatus( 500 );  //  sending an error will change the registration form to notify it
+                        logger.info("Error during registration. Invalid email provided");
+                        resp.setStatus(500);  //  sending an error will change the registration form to notify it
                         return;
 
                     }
 
-                    if( db.emailPresent( email )){
+                    if (db.emailPresent(email)) {
 
-                        logger.info( "Error during registration. The provided email is already present" );
-                        resp.setStatus( 500 ); //  sending an error will change the registration form to notify it
+                        logger.info("Error during registration. The provided email is already present");
+                        resp.setStatus(500); //  sending an error will change the registration form to notify it
                         return;
 
                     }
-                    data.setInformations( parameters.get( "name"), parameters.get( "surname" ), email, parameters.get( "password" ));
+                    data.setInformations(parameters.get("name"), parameters.get("surname"), email, parameters.get("password"));
 
                     //  getting the email data used to send back the email
-                    Scanner s = new Scanner( this.getServletContext().getResourceAsStream( "/WEB-INF/registration.html" )).useDelimiter( "\\A" );
+                    Scanner s = new Scanner(this.getServletContext().getResourceAsStream("/WEB-INF/registration.html")).useDelimiter("\\A");
                     String emailContent = s.hasNext() ? s.next() : "";
                     s.close();
 
                     //  storing of the registration information, when the user will confirm its registration by the email link
                     //  it will resend its associated token which will be used to retrieve its personal information and make the registration
-                    for( int count = 0; count<6; count++ )
-                        try{
+                    for (int count = 0; count < 6; count++)
+                        try {
 
                             //  storing the data for registration confirmation
-                            context.bind( "ejb:module/registration_" + data.getToken(), data );
+                            context.bind("ejb:module/registration_" + data.getToken(), data);
 
                             //  sending the email for password confirmation
-                            if( mailService.sendMailLoginConfirm( parameters.get("email"), emailContent, data.getToken() ))
-                                resp.setStatus( 200 ); //  sending status ok will change the registration form to notify it
+                            if (mailService.sendMailLoginConfirm(parameters.get("email"), emailContent, data.getToken()))
+                                resp.setStatus(200); //  sending status ok will change the registration form to notify it
                             else
-                                resp.setStatus( 500 ); //  sending an error will change the registration form to notify it
+                                resp.setStatus(500); //  sending an error will change the registration form to notify it
 
                             return;
 
-                        }catch( NamingException e ){
+                        } catch (NamingException e) {
 
                             //  the token is randomly generated, another instance can be already bound
 
-                            logger.info( "Token already present. Random recreation" );
-                            if( count == 5 ){
+                            logger.info("Token already present. Random recreation");
+                            if (count == 5) {
 
-                                logger.info( "Unable to create a valid token. Abort operation" );
-                                resp.setStatus( 500 ); //  sending an error will change the registration form to notify it
+                                logger.info("Unable to create a valid token. Abort operation");
+                                resp.setStatus(500); //  sending an error will change the registration form to notify it
                                 break;
 
                             }
@@ -134,43 +134,38 @@ public class RegistrationServlet extends HttpServlet {
 
                 case EMAIL_CONFIRM:  //  email confirmation of a new account["token" parameter present]
 
-                    logger.info( "Received request from [" + req.getRemoteAddr() + "] of type EMAIL_CONFIRM. Token: " + parameters.get( "token" ));
+                    logger.info("Received request from [" + req.getRemoteAddr() + "] of type EMAIL_CONFIRM. Token: " + parameters.get("token"));
                     //  retrieving the stored information during the registration phase
                     try {
 
-                        data = (TempData) context.lookup( "ejb:module/registration_" + parameters.get( "token" ));
-                        if( data != null )
-                            req.getSession().setAttribute( "userData", data );
+                        data = (TempData) context.lookup("ejb:module/registration_" + parameters.get("token"));
+                        if (data != null)
+                            req.getSession().setAttribute("userData", data);
 
-                        else{
+                        else {
 
-                            logger.info( "The required information are not present. Abort operation" );
-                            resp.sendRedirect( "registration.jsp?state=3" );
+                            logger.info("The required information are not present. Abort operation");
+                            resp.sendRedirect("registration.jsp?state=3");
                             return;
 
                         }
 
-                    }catch( NamingException e ){
+                    } catch (NamingException e) {
 
-                        logger.info( "The required information are not present. Abort operation" );
-                        resp.sendRedirect( "registration.jsp?state=3" );
+                        logger.info("The required information are not present. Abort operation");
+                        resp.sendRedirect("registration.jsp?state=3");
                         return;
 
                     }
 
-                    context.unbind( "ejb:module/registration_" + parameters.get( "token" ));
+                    context.unbind("ejb:module/registration_" + parameters.get("token"));
 
-                    //  database cannot auto generate a smarthome, we have to create it, register it on the database
-                    //  then create the user and link the smarthome to it
-                    SmarthomeManager manager = new SmarthomeManager( data.getEmail(), false, null );
-                    db.addManager( manager );
-                    User user = new User( data.getEmail(), data.getFirstName(), data.getLastName(), data.getEmail(), data.getPassword() );
-                    user.setHomeManager( manager );
+                    User user = new User(data.getEmail(), data.getFirstName(), data.getLastName(), data.getEmail(), data.getPassword());
 
-                    if( db.addUser( user ))
-                        resp.sendRedirect( "registration.jsp?state=2" );
-                    else{  //  if the user is already present, we have to destroy the uploaded smarthome
-                        db.deleteManager( manager.getKey() );
+                    if (db.addUser(user)){
+                        resp.sendRedirect("registration.jsp?state=2");
+                        db.addManager(new SmarthomeManager(data.getEmail(), false, null));
+                    }else{  //  if the user is already present, we have to destroy the uploaded smarthome
                         resp.sendRedirect(" registration.jsp?state=3" );
                     }
                     break;

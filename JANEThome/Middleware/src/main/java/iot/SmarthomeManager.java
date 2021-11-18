@@ -6,12 +6,6 @@ import config.interfaces.IConfiguration;
 
 //  database management
 import com.google.gson.Gson;
-import com.google.gson.annotations.Expose;
-import db.model.MongoEntity;
-import org.bson.types.ObjectId;
-import org.mongodb.morphia.annotations.Embedded;
-import org.mongodb.morphia.annotations.Entity;
-import org.mongodb.morphia.annotations.Transient;
 
 //  utils
 import java.io.Serializable;
@@ -27,40 +21,30 @@ import org.apache.logging.log4j.Logger;
  * Class developed to manage a user's smarthome. It will be used as a container accessed by all the user's sessions
  * The class will be used concurrently by many threads so it has to guarantee mutual exclusion access on its resources
  */
-@Entity(value = "HomeManager", noClassnameStored = true)
-public class SmarthomeManager extends MongoEntity implements Serializable {
+public class SmarthomeManager implements Serializable {
 
-    @Expose
     private String username = "";            //  username associated with the smarthome
 
-    @Expose
-    @Embedded
     private HashMap<String, SmarthomeLocation> locations = new HashMap<>();   //  locations of the smarthome
 
-    @Expose
-    @Embedded
     private HashMap<String, SmarthomeWebDevice> devices = new HashMap<>();    //  copy of all the devices for fast retrieval(optimization)
 
-    @Transient
-    private Semaphore smartHomeMutex;   //  semaphore for mutual exclusion
+    private transient Semaphore smartHomeMutex;   //  semaphore for mutual exclusion
 
-    @Transient
     private transient Logger logger;
 
-    @Transient
+
     @SuppressWarnings("unused")
-    private SmarthomeUpdater updater;  //  automatic updater of the class connected with rabbitMQ
+    private transient SmarthomeUpdater updater;  //  automatic updater of the class connected with rabbitMQ
 
     public SmarthomeManager() {
 
         this.smartHomeMutex = new Semaphore( 1 );
-        this.setKey( new ObjectId() );
 
     }
 
     public SmarthomeManager( String username, boolean connected, IConfiguration configuration ){
 
-        this.setKey( new ObjectId() );
         this.username = username;
         this.locations = new HashMap<>();
         this.devices = new HashMap<>();
@@ -75,7 +59,6 @@ public class SmarthomeManager extends MongoEntity implements Serializable {
     public SmarthomeManager( String username, boolean connected, IConfiguration configuration, List<SmarthomeLocation> locs ) {
 
         this( username, connected, configuration );
-        this.setKey( new ObjectId() );
         locs.forEach( location -> {
 
             this.locations.put( location.getLocation(), location );
@@ -93,17 +76,13 @@ public class SmarthomeManager extends MongoEntity implements Serializable {
         this.username = username;
     }
 
-    public void setLocations( List<SmarthomeLocation> locs ){
+    public void setLocations( HashMap<String, SmarthomeLocation> locs ){
 
-        locs.forEach( location -> {
-            this.locations.put( location.getLocation(), location );
-            location.giveDevices().forEach( device -> this.devices.put( device.giveDeviceName(), device ));
-        });
+        this.locations = locs;
     }
 
-    public void setDevices( List<SmarthomeWebDevice> devs ){
-        this.devices = new HashMap<>();
-        devs.forEach( device -> this.devices.put( device.giveDeviceName(), device ));
+    public void setDevices( HashMap<String,SmarthomeWebDevice> devs ){
+        this.devices = devs;
     }
 
 
@@ -548,12 +527,12 @@ public class SmarthomeManager extends MongoEntity implements Serializable {
 
     /**
      * Changes the sublocation in which the device is deployed
-     * @param name            Name of the location in which the device is deployed
      * @param new_sublocation Name of the subLocation to which move the device
+     * @param name            Name of the location in which the device is deployed
      * @param trial           if true the method only test the applicability of the request without any modification
      * @return                Returns true in case of success otherwise false
      */
-    public boolean changeDeviceSubLocation( String location, String new_sublocation, String name, boolean trial ) {
+    public boolean changeDeviceSubLocation( String location, String name, String new_sublocation, boolean trial ) {
 
         //  mutual exclusion on the interactions with the data structure
         if( this.giveSmartHomeMutex() )
@@ -568,7 +547,7 @@ public class SmarthomeManager extends MongoEntity implements Serializable {
         //  only one time)
         if( !trial && device != null &&
                 device.getStructureHint().compareTo( location ) == 0 &&
-                    device.getRoomHint().compareTo( new_sublocation ) == 0 ){ //  device present & loc:subLoc match -> request already done
+                    device.getRoomHint().compareTo( name ) == 0 ){ //  device present & loc:subLoc match -> request already done
 
             this.releaseSmarthomeMutex();
             return true;
@@ -579,7 +558,7 @@ public class SmarthomeManager extends MongoEntity implements Serializable {
         if( this.locations.containsKey( location ) && device != null ){
 
             //  forward to the sub location the execution of the command
-            result = this.locations.get( location ).changeDeviceSubLocation( device.getRoomHint(), new_sublocation, name, trial );
+            result = this.locations.get( location ).changeDeviceSubLocation( device.getRoomHint(), new_sublocation, name,  trial );
             //  we don't need to update the device information(done by the SmarthomeLocation.changeDeviceSubLocation)
 
         }
@@ -742,6 +721,8 @@ public class SmarthomeManager extends MongoEntity implements Serializable {
         this.logger = LogManager.getLogger( getClass().getName() );
         try{
 
+            if( this.smartHomeMutex == null )
+                this.smartHomeMutex = new Semaphore(1);
             this.smartHomeMutex.acquire();
             return false;
 

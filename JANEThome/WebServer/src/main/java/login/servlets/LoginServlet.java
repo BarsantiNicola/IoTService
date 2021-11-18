@@ -1,7 +1,7 @@
 package login.servlets;
 
 //  internal services
-import db.interfaces.DBinterface;
+import db.interfaces.IDatabase;
 import login.beans.AuthData;
 import login.beans.UserData;
 
@@ -11,7 +11,6 @@ import javax.servlet.annotation.WebServlet;
 
 //  http protocol management
 import javax.servlet.http.*;
-import javax.websocket.Session;
 
 //  exceptions
 import java.io.IOException;
@@ -37,7 +36,7 @@ public class LoginServlet extends HttpServlet {
 
     //  database manager instance
     @EJB
-    DBinterface db;
+    IDatabase db;
 
     private enum RequestType{  //  requests handled by the servlet
         LOGIN_REQ,
@@ -48,10 +47,9 @@ public class LoginServlet extends HttpServlet {
 
     public void service( HttpServletRequest req, HttpServletResponse resp ){
 
-       /* HttpSession session = req.getSession(true );
+        HttpSession session = req.getSession(true );
         if( session.isNew() )
             session.setMaxInactiveInterval( 3600 ); //  session will expire after 1h of inactivity*/
-
         Logger logger = LogManager.getLogger(getClass().getName());
 
         //  extraction of the eventual parameters from the request(cookies, form values)
@@ -61,10 +59,12 @@ public class LoginServlet extends HttpServlet {
 
             case LOGIN_REQ:  //  login request from the form [email and password parameters present]
 
+
                 logger.info( "Received request from [" + req.getRemoteAddr() + "] of type LOGIN_REQ. Email: " + parameters.get( "email" ));
 
                 if( db.login( parameters.get( "email" ), parameters.get( "password" )) ){
 
+                    session.removeAttribute( "smarthome" );
                     //  creation of credential cookies to enable auto login and authorize each request from now on
                     logger.info( "Login succeded, email: " + parameters.get( "email" ));
 

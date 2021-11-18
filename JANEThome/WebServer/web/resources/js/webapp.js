@@ -1457,6 +1457,9 @@ function refreshStat(node){
     let start_time = new Date(period[0].value);
     let end_time = new Date(period[1].value);
 
+    if( period[0].value == null || period[0].value.length === 0 || period[1].value == null || period[1].value.length ===  0)
+        return;
+
     if( start_time> end_time || node.className === "fa fa-search search_no")
         return;
 

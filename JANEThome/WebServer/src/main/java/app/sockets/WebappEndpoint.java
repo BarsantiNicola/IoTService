@@ -2,7 +2,7 @@ package app.sockets;
 
 //  internal services
 import config.interfaces.IConfiguration;
-import db.interfaces.DBinterface;
+import db.interfaces.IDatabase;
 import iot.DeviceType;
 import iot.SmarthomeManager;
 import login.beans.AuthData;
@@ -55,7 +55,7 @@ public class WebappEndpoint {
     private RESTinterface restInterface;  //  rest interface instance(to send commands to devices)
 
     @EJB
-    private DBinterface db;     //  database manager instance
+    private IDatabase db;     //  database manager instance
 
     /**
      * Executed during the opening of the websocket, the EndpointConfig in combination with the EndpointConfigurator.class
@@ -235,12 +235,12 @@ public class WebappEndpoint {
         //  if the addLocation test correctly done we request to insert
         //  the location in the real smarthome
         if( state )
-            state = !this.restInterface.addLocation(
-                    this.username,
+            state = this.restInterface.addLocation(
+                        this.username,
                     "websocket_"+session.getId(),
-                    request.getData( "location" ),
-                    request.getData( "address" ),
-                    Integer.parseInt( request.getData( "port" )));
+                        request.getData( "location" ),
+                        request.getData( "address" ),
+                        Integer.parseInt( request.getData( "port" )));
 
         //  add location is the only action that a webclient cannot test by itself
         //  so we need a mechanism to notify it that the request is failed
@@ -531,7 +531,7 @@ public class WebappEndpoint {
             return;
 
         //  verification that the subLocation can be moved from the server prospective
-        if ( smarthome.changeDeviceSubLocation( request.getData( "location" ), request.getData( "sublocation" ), request.getData( "name" ), true )) {
+        if ( smarthome.changeDeviceSubLocation( request.getData( "location" ), request.getData( "name" ), request.getData( "sublocation" ), true )) {
 
             String network = this.smarthome.giveDeviceNetwork( request.getData( "name" ));
             String dID = this.smarthome.giveDeviceIdByName( request.getData( "name" ));
@@ -546,6 +546,7 @@ public class WebappEndpoint {
                 String[] netInfo = network.split( ":" );
 
                 //  forward the request to the real smarthome
+
                 this.restInterface.changeDeviceSublocation(
                         this.username,
                         "websocket_"+session.getId(),
@@ -559,6 +560,7 @@ public class WebappEndpoint {
 
             }
         }
+
     }
 
     /**
@@ -626,7 +628,7 @@ public class WebappEndpoint {
         )));
 
         WebRequest response = new WebRequest( request.getStringType(), statResponse );
-        System.out.println("Results: " + clientGson.toJson( response ));
+
         this.sendMessage( response, session );
 
     }
@@ -644,10 +646,10 @@ public class WebappEndpoint {
 
             httpSession.removeAttribute( "authData" );
             httpSession.removeAttribute( "infoData" );
+            httpSession.removeAttribute( "smarthome" );
             session.close();
 
-        }catch( IOException ignored ){}
-
+        }catch( Exception ignored ){}
     }
 
     /**

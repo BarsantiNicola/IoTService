@@ -12,35 +12,33 @@ import java.util.Date;
 import java.util.List;
 
 @Remote
-public interface DBinterface {
+public interface IDatabase {
 
     void connectDB();
 
     boolean login(String email, String password);
 
-    ObjectId addManager(SmarthomeManager manager);
+    boolean addManager(SmarthomeManager manager);
 
-    boolean updateManager(String username, String field, String value);
+    boolean updateManager(SmarthomeManager manager);
 
-    ObjectId renameElementManager(String username, DeviceUpdate.UpdateType op, String oldName, String newName,
+    boolean renameElementManager(String username, DeviceUpdate.UpdateType op, String oldName, String newName,
                                   String location);
 
-    ObjectId performAction(String username, String device, String action, String value);
+    boolean performAction(String username, String device, String action, String value);
 
-    ObjectId removeElementIntoManager(String username, DeviceUpdate.UpdateType type,
+    boolean removeElementIntoManager(String username, DeviceUpdate.UpdateType type,
                                       String location, String subLocation);
 
-    ObjectId addElementManager(String username, DeviceUpdate.UpdateType type, String id, String location,
+    boolean addElementManager(String username, DeviceUpdate.UpdateType type, String id, String location,
                                String address, int port, String subLocation, String device,
                                DeviceType device_type);
 
-    ObjectId moveDevice(String username, String location, String sublocation, String device);
+    boolean moveDevice(String username, String location, String sublocation, String newSublocation, String device);
 
     void addOperation(Operation operation);
 
     boolean addUser(User user);
-
-    boolean deleteManager(ObjectId objectId);
 
     boolean emailPresent(String email);
 

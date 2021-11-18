@@ -1,28 +1,15 @@
 package db.mongoConnector;
 
-import com.mongodb.*;
-import config.beans.Configuration;
 import config.interfaces.IConfiguration;
-import db.dao.SmartHomeManagerDAO;
-import db.dao.UserDAO;
-import db.interfaces.ISmartHomeManagerDAO;
-import db.interfaces.IUserDAO;
+
 import db.model.Operation;
 import db.model.Statistic;
 import db.model.User;
 import iot.*;
 import org.bson.types.ObjectId;
-import org.mongodb.morphia.Datastore;
-import org.mongodb.morphia.Morphia;
-import org.mongodb.morphia.query.Query;
-import org.mongodb.morphia.query.UpdateOperations;
 
-import static org.mongodb.morphia.aggregation.Group.grouping;
 
 import rabbit.msg.DeviceUpdate;
-
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import java.util.*;
 import java.util.concurrent.Semaphore;
 
@@ -33,64 +20,32 @@ import java.util.concurrent.Semaphore;
  * This method must be called only one time on the lifetime of the program
  */
 public class MongoClientProvider {
-    private static MongoClient mc;
-    private static Morphia morphia;
-    private static Datastore datastore;
-    private static SmartHomeManagerDAO managerDao;
-    private StatisticsProvider statistics;
-    private static UserDAO userDAO;
-    private transient Logger logger;
+
+    private StatisticsProvider statistics = null;
+    private UserProvider users = null;
+    private SmarthomeProvider smarthomes = null;
 
     /**
      * Open DB connection
      */
-    public MongoClientProvider(IConfiguration configuration) {
-        this.logger = LogManager.getLogger(getClass());
-        init(configuration);
-    }
+    public MongoClientProvider( IConfiguration configuration ) {
 
-    private void init(IConfiguration configuration) {
         try {
+
             Properties properties = configuration.getConfiguration("db");
 
-            mc = new MongoClient(properties.getProperty("hostname"), Integer.parseInt(properties.getProperty("port")));
-            morphia = new Morphia();
-            morphia.map(SmarthomeManager.class);
-            morphia.map(User.class);
-            datastore = morphia.createDatastore(mc, properties.getProperty("db_name"));
-            datastore.ensureIndexes();
-            managerDao = new SmartHomeManagerDAO(SmarthomeManager.class, datastore);
-            userDAO = new UserDAO(User.class, datastore);
-            statistics = new StatisticsProvider( properties );
+            if( statistics == null ) {
+
+                statistics = new StatisticsProvider(properties);
+                users = new UserProvider(properties);
+                smarthomes = new SmarthomeProvider(properties);
+            }
 
         } catch (Exception e) {
-            logger.error(e);
+            e.printStackTrace();
         }
+
     }
-
-
-    /**
-     * Method to test connection: Open DB connection
-     */
-    public MongoClientProvider(Configuration configuration) {
-        try {
-            this.logger = LogManager.getLogger(getClass());
-            Properties conf = configuration.getConfiguration("db");
-//            mc = new MongoClient(new MongoClientURI(DB_HOST));
-            mc = new MongoClient(conf.getProperty("hostname"), Integer.parseInt(conf.getProperty("port")));
-            morphia = new Morphia();
-            morphia.map(SmarthomeManager.class);
-            morphia.map(User.class);
-            datastore = morphia.createDatastore(mc, conf.getProperty("db_name"));
-            datastore.ensureIndexes();
-            managerDao = new SmartHomeManagerDAO(SmarthomeManager.class, datastore);
-            userDAO = new UserDAO(User.class, datastore);
-        } catch (Exception e) {
-            assert logger != null;
-            logger.error(e);
-        }
-    }
-
 
     /////MANAGER METHODS//////
 
@@ -100,11 +55,11 @@ public class MongoClientProvider {
      * @param manager a {@link SmarthomeManager} class
      * @return the ObjectId of element on DB
      */
-    public ObjectId writeManager(SmarthomeManager manager) {
-        return (ObjectId) managerDao.save(manager).getId();
+    public boolean addManager(SmarthomeManager manager) {
+        return this.smarthomes.addSmarthome( manager );
     }
 
-    public void writeOperation(Operation operation){
+    public void addOperation(Operation operation){
         this.statistics.writeOperation(operation);
     }
 
@@ -112,18 +67,12 @@ public class MongoClientProvider {
         this.statistics.removeAllStatistics(dID);
     }
 
-    /**
-     * Update element on Manager
-     *
-     * @param username the username of manager
-     * @param field    the field to change
-     * @param value    the value of field
-     * @return a {@link Boolean}
-     */
-    public boolean updateManager(String username, String field, String value) {
-        final Query<SmarthomeManager> query = datastore.createQuery(SmarthomeManager.class).filter(ISmartHomeManagerDAO.USERNAME, username);
-        UpdateOperations<SmarthomeManager> ops = datastore.createUpdateOperations(SmarthomeManager.class).set(field, value);
-        return datastore.update(query, ops).getUpdatedExisting();
+    public SmarthomeManager getHomeManager( String username ){
+        return this.smarthomes.getSmarthome( username );
+    }
+
+    public boolean updateManager( SmarthomeManager manager ){
+        return this.smarthomes.updateSmarthome( manager );
     }
 
     /**
@@ -136,11 +85,11 @@ public class MongoClientProvider {
      * @param location name of location if want change sub location name
      * @return a {@link ObjectId}
      */
-    public ObjectId renameElementManager(String username, DeviceUpdate.UpdateType op, String oldName, String newName,
+    public boolean renameElementManager(String username, DeviceUpdate.UpdateType op, String oldName, String newName,
                                          String location) {
-        SmarthomeManager manager = getManagerByUser(username);
+        SmarthomeManager manager = this.smarthomes.getSmarthome( username );
         assert manager != null;
-        manager.addSmartHomeMutex(new Semaphore(1));
+
         switch (op) {
             case RENAME_LOCATION:
                 manager.changeLocationName(oldName, newName, false);
@@ -155,9 +104,9 @@ public class MongoClientProvider {
                 break;
 
             default:
-                return null;
+                return false;
         }
-        return writeManager(manager);
+        return this.smarthomes.updateSmarthome(manager);
     }
 
     /**
@@ -169,15 +118,18 @@ public class MongoClientProvider {
      * @param device      new name of device
      * @return a {@link ObjectId}
      */
-    public ObjectId moveDevice(String username, String location, String sublocation,
-                               String device) {
-        SmarthomeManager manager = managerDao.findOne(ISmartHomeManagerDAO.USERNAME, username);
+    @SuppressWarnings( "unused" )
+    public boolean moveDevice(String username, String location, String sublocation, String newSublocation, String device){
+
+        SmarthomeManager manager = this.smarthomes.getSmarthome( username );
         if (manager == null) {
-            return null;
+            return false;
         }
+
         manager.addSmartHomeMutex(new Semaphore(1));
-        manager.changeDeviceSubLocation(location, sublocation, device, false);
-        return writeManager(manager);
+        String name  = manager.giveDeviceNameById(device);
+        manager.changeDeviceSubLocation(location, name, newSublocation, false);
+        return this.smarthomes.updateSmarthome(manager);
     }
 
     /**
@@ -194,12 +146,12 @@ public class MongoClientProvider {
      * @param device_type The device type {@link DeviceType}
      * @return a {@link ObjectId}
      */
-    public ObjectId addElementManager(String username, DeviceUpdate.UpdateType op, String id, String location,
+    public boolean addElementManager(String username, DeviceUpdate.UpdateType op, String id, String location,
                                       String address, int port, String subLocation, String device,
                                       DeviceType device_type) {
-        SmarthomeManager manager = getManagerByUser(username);
+        SmarthomeManager manager = this.smarthomes.getSmarthome( username );
         if (manager == null) {
-            return null;
+            return false;
         }
         manager.addSmartHomeMutex(new Semaphore(1));
         switch (op) {
@@ -217,9 +169,9 @@ public class MongoClientProvider {
                 break;
 
             default:
-                return null;
+                return false;
         }
-        return writeManager(manager);
+        return this.smarthomes.updateSmarthome(manager);
     }
 
     /**
@@ -231,10 +183,10 @@ public class MongoClientProvider {
      * @param location   The name of Lacation where find the subLocation
      * @return a {@link ObjectId}
      */
-    public ObjectId removeElementIntoManager(String username, DeviceUpdate.UpdateType type, String removeName, String location) {
-        SmarthomeManager manager = getManagerByUser(username);
+    public boolean removeElementIntoManager(String username, DeviceUpdate.UpdateType type, String removeName, String location) {
+        SmarthomeManager manager = this.smarthomes.getSmarthome( username );
         if (manager == null) {
-            return null;
+            return false;
         }
         manager.addSmartHomeMutex(new Semaphore(1));
         switch (type) {
@@ -251,9 +203,9 @@ public class MongoClientProvider {
                 break;
 
             default:
-                return null;
+                return false;
         }
-        return writeManager(manager);
+        return this.smarthomes.updateSmarthome(manager);
     }
 
     /**
@@ -265,29 +217,18 @@ public class MongoClientProvider {
      * @param value    the value of field
      * @return a {@link ObjectId}
      */
-    public ObjectId performAction(String username, String device, String action, String value) {
-        SmarthomeManager manager = getManagerByUser(username);
+    public boolean performAction(String username, String device, String action, String value) {
+        SmarthomeManager manager = this.smarthomes.getSmarthome( username );
         if (manager == null) {
-            return null;
+            return false;
         }
 
         manager.addSmartHomeMutex(new Semaphore(1));
         manager.performAction(manager.giveDeviceNameById(device), action, value, new Date(), false);
 
-        return writeManager(manager);
+        return this.smarthomes.updateSmarthome(manager);
     }
 
-    /**
-     * Get a Manager by ID
-     *
-     * @param id the string of the key (ObjectId)
-     * @return a {@link SmarthomeManager}
-     */
-    public SmarthomeManager getManagerById(String id) {
-        SmarthomeManager manager = managerDao.get(new ObjectId(id));
-        manager.relink();
-        return manager;
-    }
 
     /**
      * Get a Manager by Username
@@ -296,31 +237,11 @@ public class MongoClientProvider {
      * @return a {@link SmarthomeManager}
      */
     public SmarthomeManager getManagerByUsername(String username) {
-        SmarthomeManager manager = managerDao.findOne(ISmartHomeManagerDAO.USERNAME, username);
+        SmarthomeManager manager = this.smarthomes.getSmarthome( username );
         manager.relink();
         return manager;
     }
 
-    /**
-     * get all Managers
-     *
-     * @return a list of {@link SmarthomeManager}
-     */
-    public List<SmarthomeManager> getAllManagers() {
-        List<SmarthomeManager> managers = managerDao.find().asList();
-        managers.forEach(SmarthomeManager::relink);
-        return managers;
-    }
-
-    /**
-     * Delete a manager by the ObjectID
-     *
-     * @param objectId the id of Manager
-     * @return true/false
-     */
-    public boolean deleteManager(ObjectId objectId) {
-        return managerDao.deleteById(objectId).wasAcknowledged();
-    }
 
 
     ///////USER METHODS/////////
@@ -331,51 +252,8 @@ public class MongoClientProvider {
      * @param user a {@link User} class
      * @return the ObjectId of element on DB
      */
-    public ObjectId writeUser(User user) {
-        return (ObjectId) userDAO.save(user).getId();
-    }
-
-    /**
-     * Get the User by Id
-     *
-     * @param id the string of the key (ObjectId)
-     * @return the ObjectId of element on DB
-     */
-    public User getUserById(String id) {
-        return userDAO.get(new ObjectId(id));
-    }
-
-    /**
-     * Get all users
-     *
-     * @return a list of {@link User}
-     */
-    public List<User> getAllUsers() {
-        return userDAO.find().asList();
-    }
-
-    /**
-     * Delete of users with the same username
-     *
-     * @param username a string of username
-     * @return true/false
-     */
-    public boolean deleteUser(String username) {
-        final Query<User> query = datastore.createQuery(User.class)
-                .filter(IUserDAO.USERNAME, username);
-        return userDAO.deleteByQuery(query).wasAcknowledged();
-    }
-
-    /**
-     * Get user
-     * Return the ObjectId of element on DB
-     *
-     * @param username a sring of username
-     * @return the {@link User} class
-     */
-    public User getUserByUsername(String username) {
-        final Query<User> query = datastore.createQuery(User.class).filter(IUserDAO.USERNAME, username);
-        return userDAO.findOne(query);
+    public boolean writeUser(User user) {
+        return this.users.addUser( user );
     }
 
     /**
@@ -386,9 +264,7 @@ public class MongoClientProvider {
      * @return true/false
      */
     public boolean checkUserByUserAndPass(String username, String password) {
-        final Query<User> query = datastore.createQuery(User.class).filter(IUserDAO.USERNAME, username)
-                .filter(IUserDAO.PASS, password);
-        return userDAO.exists(query);
+        return this.users.login( username, password );
     }
 
     /**
@@ -397,25 +273,17 @@ public class MongoClientProvider {
      * @param email the string of email
      * @return true/false
      */
-    public static boolean mailPresent(String email) {
-        return userDAO.exists(IUserDAO.EMAIL, email);
+    public boolean mailPresent(String email) {
+        return this.users.emailPresent( email );
     }
 
-    /**
-     * Update a fild of user
-     *
-     * @param username the string of username
-     * @param field    the field that you want change
-     * @param value    the new value of the field
-     * @return true/false
-     */
-    public boolean updateFieldOfUser(String username, String field, String value) {
-        final UpdateOperations<User> op = datastore.createUpdateOperations(User.class).set(field, value);
-        final Query<User> query = datastore.createQuery(User.class).filter(IUserDAO.USERNAME, username);
-        return userDAO.updateFirst(query, op).getUpdatedExisting();
-
+    public String[] getFirstAndLastName( String username ){
+        return this.users.getUserFirstAndLastName( username );
     }
 
+    public boolean changePassword( String username, String password ){
+        return this.users.changePassword( username, password );
+    }
     /////////STATISTICS////////////
 
     /**
@@ -432,63 +300,14 @@ public class MongoClientProvider {
     public List<Statistic> getStatistics(String dID, DeviceType type, String stat_name, Date startTime, Date endTime) {
 
         return this.statistics.getStatistic(stat_name, dID, type, startTime, endTime);
-        /*
-        Statistics statistics = new Statistics();
-        Statistic tempStat;
-        Statistic tempStatPre;
-        Statistic tempStatpost;
 
-        try {
-            Query<SmarthomeManager> query = datastore.getQueryFactory().createQuery(datastore);
-            query.field("_id").greaterThanOrEq(startTime);
-            query.field("_id").lessThanOrEq(endTime);
-            query.field("values.action").equal(action);
-
-            Projection devicesProjection = Projection.expression("devices", new BasicDBObject("$objectToArray", "$devices"));
-            Projection operationsProjection = Projection.expression("operations", new BasicDBObject("$objectToArray", "$devices.v.historical"));
-            Projection yProjection = Projection.expression("y", new BasicDBObject("$arrayElemAt", new Object[]{"$values.value", 0}));
-
-            Iterator<Statistic> aggregate = datastore.createAggregation(SmarthomeManager.class)
-                    .project(devicesProjection)
-                    .unwind("devices")
-                    .match(datastore.getQueryFactory().createQuery(datastore).field("devices.k").equal(dID))
-                    .project(operationsProjection)
-                    .unwind("operations")
-                    .group("operations.v.date", grouping("values", addToSet("operations.v")))
-                    .match(query)
-                    .project(Projection.projection("_id").suppress(), Projection.projection("x", "_id"), yProjection)
-                    .out(Statistic.class);
-
-            while (aggregate.hasNext()) {
-                tempStat = aggregate.next();
-                if (action.matches(Action.ONOFF + "|" + Action.OPENCLOSE + "|" + Action.LOCKUNLOCK)) {
-                    tempStatPre = new Statistic(shiftDateBackwards(tempStat.getX()), "0");
-                    tempStatpost = new Statistic(shiftDateForward(tempStat.getX()), "0");
-                    statistics.addStatistic(tempStatPre);
-                    statistics.addStatistic(tempStatpost);
-                }
-                statistics.addStatistic(tempStat);
-            }
-            return statistics;
-        } catch (Exception e) {
-            logger.error(e);
-        }
-        return statistics;*/
     }
 
-    private SmarthomeManager getManagerByUser(String mail) {
-        final Query<User> query = datastore.createQuery(User.class).filter(IUserDAO.EMAIL, mail);
-        User user = userDAO.findOne(query);
-        SmarthomeManager manager = user.getHomeManager();
-        if (manager == null) {
-            return null;
-        }
-        manager.relink();
-        return manager;
-    }
 
     public void close(){
 
+        this.smarthomes.close();
+        this.users.close();
         this.statistics.close();
 
     }

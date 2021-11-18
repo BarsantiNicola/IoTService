@@ -20,7 +20,7 @@ public class SmarthomeLocation implements Serializable {
     private String ipAddress;                          //  ip address used by the location
     private int port;                                  //  the port used by the location
     private int maxSublocID;                           //  value to be used for the next subLocation as sublocID
-    private final HashMap<String,SmarthomeSublocation> sublocations = new HashMap<>();   //  list of all the sublocations
+    private HashMap<String,SmarthomeSublocation> sublocations = new HashMap<>();   //  list of all the sublocations
     private transient Logger logger;
 
 
@@ -56,7 +56,7 @@ public class SmarthomeLocation implements Serializable {
 
     public void setMaxSublocID( int maxSublocID ){ this.maxSublocID = maxSublocID; }
 
-    public void setSublocations( HashMap<String, SmarthomeSublocation> sublocations ){ this.sublocations.putAll(sublocations); }
+    public void setSublocations( HashMap<String, SmarthomeSublocation> sublocations ){ this.sublocations = sublocations; }
 
 
     ////////--  GETTERS  --////////
@@ -146,7 +146,7 @@ public class SmarthomeLocation implements Serializable {
         if( !trial ){  //  if not a trial we apply the changes
 
             SmarthomeSublocation subloc = this.sublocations.remove( old_name );  //  removing old subLocation
-            subloc.setSubLocation( new_name );                                   //  changing subLocation name
+            subloc.changeSubLocation( new_name );                                   //  changing subLocation name
             this.sublocations.put( new_name, subloc );                           //  re-add the subLocation
 
         }

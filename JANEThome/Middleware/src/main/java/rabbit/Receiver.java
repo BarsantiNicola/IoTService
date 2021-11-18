@@ -138,9 +138,10 @@ public abstract class Receiver extends EndPoint implements Consumer {
                                 break;
 
                             case CHANGE_DEVICE_SUB_LOCATION:
-                                if( request.areSet( "location", "sublocation", "name" ))
+                                if( request.areSet( "location", "sublocation", "name", "dID" ))
                                     this.changeDeviceSubLocation(
                                             message.getDestination(),
+                                            request.getData("dID"),
                                             request.getData( "location" ),
                                             request.getData( "sublocation" ),
                                             request.getData( "name" ));
@@ -286,9 +287,10 @@ public abstract class Receiver extends EndPoint implements Consumer {
                             break;
 
                         case CHANGE_DEVICE_SUB_LOCATION:
-                            if( request.areSet( "location", "sublocation", "name" ))
+                            if( request.areSet( "location", "sublocation", "name", "dID" ))
                                 this.changeDeviceSubLocation(
                                         message.getDestination(),
+                                        request.getData( "dID" ),
                                         request.getData( "location" ),
                                         request.getData( "sublocation" ),
                                         request.getData( "name" ));
@@ -417,11 +419,12 @@ public abstract class Receiver extends EndPoint implements Consumer {
     /**
      * Method automatically called when a new request of changing a device location is received
      * @param username Username associated on the message(needed by Federico)
+     * @param dID      Unique identifier of a device
      * @param location Location in which the device is deployed
-     * @param sublocation Name of the current subLocation of the device
+     * @param sublocation Current subLocation name
      * @param new_sublocation Name of the subLocation in which move the device
      */
-    protected abstract void changeDeviceSubLocation( String username, String location, String sublocation, String new_sublocation );
+    protected abstract void changeDeviceSubLocation( String username, String dID, String location, String sublocation, String new_sublocation );
 
     /**
      * Method automatically called when a new request of executing a device action is received

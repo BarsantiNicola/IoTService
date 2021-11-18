@@ -18,7 +18,7 @@ public class SmarthomeSublocation implements Serializable {
     private String subLocId;           //  sublocation identifier(needed by Riccardo)
     private String subLocation;        //  sublocation name
     private transient Logger logger;
-    private final HashMap<String,SmarthomeWebDevice> devices = new HashMap<>();  //  deployed devices
+    private HashMap<String,SmarthomeWebDevice> devices = new HashMap<>();  //  deployed devices
 
     public SmarthomeSublocation(){
 
@@ -40,7 +40,8 @@ public class SmarthomeSublocation implements Serializable {
     ////////--  SETTERS  --////////
 
 
-    public void setSubLocation( String subLocation ){
+
+    public void changeSubLocation( String subLocation ){
 
         this.subLocation = subLocation;
 
@@ -49,9 +50,10 @@ public class SmarthomeSublocation implements Serializable {
 
     }
 
+    public void setSubLocation( String subLocation ){ this.subLocation = subLocation; }
     public void setSubLocId( String subLocId ){ this.subLocId = subLocId; }
 
-    public void setDevices( HashMap<String,SmarthomeWebDevice> devices ){ this.devices.putAll( devices ); }
+    public void setDevices( HashMap<String,SmarthomeWebDevice> devices ){ this.devices = devices; }
 
 
     ////////--  GETTERS  --////////

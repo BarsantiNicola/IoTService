@@ -1,14 +1,12 @@
 package db.beans;
 
 import config.interfaces.IConfiguration;
-import db.interfaces.DBinterface;
-import db.interfaces.IUserDAO;
+import db.interfaces.IDatabase;
 import db.model.Operation;
 import db.model.User;
 import db.mongoConnector.MongoClientProvider;
 import db.model.Statistic;
 import iot.*;
-import org.bson.types.ObjectId;
 import rabbit.msg.DeviceUpdate;
 
 import javax.annotation.PostConstruct;
@@ -20,17 +18,19 @@ import java.util.List;
 
 
 @Stateless
-public class databaseConnector implements DBinterface {
+public class DatabaseManager implements IDatabase {
+
     MongoClientProvider mongoClientProvider;
 
     @EJB
     private IConfiguration configuration;   //  gives the configuration for the rest interface
 
-
     @Override
     @PostConstruct
-    public void connectDB() {
-        mongoClientProvider = new MongoClientProvider(configuration);
+    public void connectDB(){
+
+        mongoClientProvider = new MongoClientProvider( configuration );
+
     }
 
     @PreDestroy
@@ -42,33 +42,28 @@ public class databaseConnector implements DBinterface {
     }
 
     @Override
-    public ObjectId addManager(SmarthomeManager manager) {
-        return mongoClientProvider.writeManager(manager);
+    public boolean addManager(SmarthomeManager manager) {
+        return mongoClientProvider.addManager(manager);
     }
 
 
     @Override
-    public boolean updateManager(String username, String field, String value) {
-        return mongoClientProvider.updateManager(username, field, value);
+    public boolean updateManager(SmarthomeManager manager) {
+        return mongoClientProvider.updateManager( manager );
     }
 
     @Override
-    public boolean deleteManager(ObjectId objectId){
-        return mongoClientProvider.deleteManager(objectId);
-    }
-
-    @Override
-    public ObjectId renameElementManager(String username, DeviceUpdate.UpdateType op, String oldName, String newName, String location) {
+    public boolean renameElementManager(String username, DeviceUpdate.UpdateType op, String oldName, String newName, String location) {
         return mongoClientProvider.renameElementManager(username, op, oldName, newName, location);
     }
 
     @Override
-    public ObjectId performAction(String username, String device, String action, String value) {
+    public boolean performAction(String username, String device, String action, String value) {
         return mongoClientProvider.performAction(username, device, action, value);
     }
 
     @Override
-    public ObjectId addElementManager(String username, DeviceUpdate.UpdateType type, String id, String location,
+    public boolean addElementManager(String username, DeviceUpdate.UpdateType type, String id, String location,
                                       String address, int port, String subLocation, String device,
                                       DeviceType device_type) {
         return mongoClientProvider.addElementManager(username, type, id, location, address, port, subLocation,
@@ -76,34 +71,34 @@ public class databaseConnector implements DBinterface {
     }
 
     @Override
-    public ObjectId moveDevice(String username, String location, String sublocation, String device) {
-        return mongoClientProvider.moveDevice(username, location, sublocation, device);
+    public boolean moveDevice(String username, String location, String sublocation, String newSublocation, String device) {
+        return mongoClientProvider.moveDevice(username, location, sublocation, newSublocation, device);
     }
 
     @Override
     public void addOperation(Operation operation) {
-        mongoClientProvider.writeOperation( operation );
+        mongoClientProvider.addOperation( operation );
     }
 
     @Override
-    public ObjectId removeElementIntoManager(String username, DeviceUpdate.UpdateType type,
+    public boolean removeElementIntoManager(String username, DeviceUpdate.UpdateType type,
                                              String location, String subLocation) {
         return mongoClientProvider.removeElementIntoManager(username, type, location, subLocation);
     }
 
     @Override
     public boolean addUser(User user) {
-        return mongoClientProvider.writeUser(user) != null;
+        return mongoClientProvider.writeUser(user);
     }
 
     @Override
     public boolean emailPresent(String email) {
-        return MongoClientProvider.mailPresent(email);
+        return mongoClientProvider.mailPresent(email);
     }
 
     @Override
     public SmarthomeManager getSmarthome(String username) {
-        return mongoClientProvider.getUserByUsername(username).getHomeManager();
+        return this.mongoClientProvider.getHomeManager( username );
     }
 
     @Override
@@ -118,14 +113,13 @@ public class databaseConnector implements DBinterface {
     }
 
     @Override
-    public String[] getUserFirstAndLastName(String username) {
-        User s = mongoClientProvider.getUserByUsername(username);
-        return new String[]{s.getFirstName(), s.getLastName()};
+    public String[] getUserFirstAndLastName (String username ) {
+        return mongoClientProvider.getFirstAndLastName(username);
     }
 
 
     @Override
     public boolean changePassword(String username, String new_password) {
-        return mongoClientProvider.updateFieldOfUser(username, IUserDAO.PASS, new_password);
+        return mongoClientProvider.changePassword( username, new_password );
     }
 }
