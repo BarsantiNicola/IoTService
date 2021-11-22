@@ -1,0 +1,92 @@
+openapi: 3.0.0
+info:
+  title: JanetHome Device API
+  version: 1.0.0
+  contact:
+    name: Nicola Barsanti
+  description: >-
+    REST interface for device update into the JanetHome Web Application. The interface is used
+    to asynchronously send devices' update to the server to notify them to the users 
+security: []
+servers:
+  - url: 'http://janethome.zapto.org/WebServer'
+    description: >-
+      Unipi Virtual Machine offered by the course
+    variables: {}
+tags:
+  - name: "devices"
+    description: "Operations to add/remove/change the devices into the user's smarthome"
+
+paths:
+  '/deviceUpdate':
+    post:
+      tags:
+        - "devices"
+      summary: "Send one or more updates to the devices of a user"
+      description: >-
+        Send one or more updates to the devices of a user specified into the user field of the request
+
+      responses:
+        '200':
+          content:  # Response body
+            text/plain:  # Media type
+              schema:          # Must-have
+                type: string   # Data type
+                example: "Request correctly managed"
+          description: The request is accepted and forwarded into the deeper components of the service. Notice that this not means that the request will be executed but only that it's valid and the service can try to execute it.
+        '400':
+          description: The request is not well formatted or some fields are missing
+          content:  # Response body
+            text/plain:  # Media type
+              schema:          # Must-have
+                type: string   # Data type
+                example: "Error invalid request"
+
+        '500':
+          description: The service has failed during the forwarding of the request to the deeper components, something into the rabbitMQ service has fail
+          content:  # Response body
+            text/plain:  # Media type
+              schema:          # Must-have
+                type: string   # Data type
+                example: "An error has occurred during the forwarding of the request"
+
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateMessage'
+        description: >-
+          The body consists of a list of updates that can be applied to the same device(different traits) or to different device(and maybe different traits for each device) but the devices has all to be of the same user specified into the request
+components:
+  schemas:
+    UpdateMessage:
+      properties:
+        user:
+          type: 'string'
+          example: 'janethome@zapto.org'
+          description: 'The email corresponding to the user'
+        request:
+          type: 'array'
+          items: 
+            $ref: '#/components/schemas/UpdateRequest'
+    
+    UpdateRequest:
+      properties:
+        dID:
+          type: 'string'
+          example: '1234'
+          description: "The unique numerical ID associated with the device in which the operation has to be applied"
+        action:
+          type: 'string'
+          example: 'action.devices.traits.OnOff'
+          description: 'The type of action to be performed into the device according to the google home device format'
+        value: 
+          type: 'string'
+          example: '1'
+          description: 'The stringed value associated with the action'
+        timestamp:
+          type: 'string'
+          example: '2020-01-24T17:11:34'
+          description: "A stringed timestamp associated with the time of execution of the operation on the device. The date must be into the format yyyy-MM-dd'T'HH:mm:ss"
+    
